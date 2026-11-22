@@ -24,6 +24,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Préparer le site
         run: mkdir -p _site && cp index.html _site/ && touch _site/.nojekyll
+      - name: Intégrer la clé de traduction
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node tools/inject-key.js _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
       - id: deployment

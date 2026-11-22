@@ -22,7 +22,9 @@ jobs:
           node-version: 20
       - name: Copier le jeu dans l'appli
         shell: bash
-        run: mkdir -p desktop/app && cp index.html desktop/app/index.html
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: mkdir -p desktop/app && cp index.html desktop/app/index.html && node tools/inject-key.js desktop/app/index.html
       - name: Construire
         working-directory: desktop
         env:

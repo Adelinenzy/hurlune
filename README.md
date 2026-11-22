@@ -4,7 +4,7 @@ Jeu de Loups-Garous en ligne inspiré du fonctionnement de Wolfy, pensé pour jo
 
 - **Sans compte** : un pseudo, un personnage, et c'est parti.
 - **Chat traduisible en un clic** (🌐). Si l'hôte a mis sa clé OpenAI dans les ⚙︎ paramètres, la traduction se fait par OpenAI pour tout le monde. Sinon, c'est Google Traduction.
-- **Interface en français et en russe.**
+- **Interface en français, russe et anglais.**
 - **29 rôles** :
   - Loups : Loup-Garou, Loup Noir, Loup Bavard, Loup Lettré, Chaperon Loup.
   - Solitaires : Loup Blanc, Mercenaire, Rat Malade.
@@ -23,6 +23,20 @@ Jeu de Loups-Garous en ligne inspiré du fonctionnement de Wolfy, pensé pour jo
 Crée une partie, puis clique sur **Inviter** et envoie le lien à tes amis. La partie démarre dès que toutes les places sont prises, ou quand l'hôte clique sur « Lancer à N ».
 
 > L'hôte (celui qui crée la partie) fait tourner le jeu : il doit garder la page ou l'appli ouverte pendant la partie.
+
+## Clé de traduction OpenAI intégrée
+
+Pour que la traduction OpenAI marche pour tout le monde, quel que soit l'hôte :
+
+1. Va dans *Settings → Secrets and variables → Actions → New repository secret*.
+2. Mets **`OPENAI_API_KEY`** comme nom et ta clé `sk-...` comme valeur.
+3. Relance le workflow « Site web (GitHub Pages) » depuis l'onglet *Actions* (bouton *Run workflow*).
+
+La clé n'est jamais écrite dans le code du dépôt : elle est ajoutée (encodée) seulement dans la version publiée. Elle reste cependant récupérable par quelqu'un de très motivé qui fouillerait la page. **Mets donc une limite de dépense** sur ton compte OpenAI (*Settings → Limits*).
+
+## Modifier le jeu
+
+Les sources sont dans `src/`. Lance `python3 tools/build.py` pour régénérer `index.html`.
 
 ## Comment ça marche (technique)
 
