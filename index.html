@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hurlune — Loups-Garous entre amis · Оборотни</title>
+<meta name="description" content="Jeu de Loups-Garous en ligne entre amis, sans compte, chat traduisible français / russe.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1b1c2a; --bg2:#222336; --panel:#262839; --panel2:#2e3046; --line:#3a3c56; --ink:#ececf4; --mute:#9b9db8;
+  --pur:#6c5ce7; --pur2:#7d6cf2; --red:#e0525a; --gold:#f5c542; --love:#b57cf0; --green:#5bd08a;
+  --sky1:#141528; --sky2:#232543; --sky3:#3a3f63; --glow:#cfd3ff; --mount3:#2b3550; --mount2:#1c2638; --snow:.12; --hill:#16302e; --lake1:#2a3e55; --lake2:#1b2a3a; --shine:#9fd6e6; --tree1:#0f201f; --tree2:#173030; --trunk:#2a1f1a; --ground:#122422; --ground2:#0d1b1a;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 Montserrat,system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:disabled{opacity:.45;cursor:not-allowed}
+input{font:inherit;color:var(--ink);background:#15161f;border:1px solid #33354d;border-radius:10px;padding:10px 12px;min-width:0;outline:none}
+input:focus{border-color:var(--pur2)}
+h1,h2,h3,h4{margin:0;font-weight:800}
+.muted{color:var(--mute)} .sm{font-size:12px}
+.row{display:flex;gap:8px;align-items:center} .row.c{justify-content:center;flex-wrap:wrap;margin-top:12px}
+.btn-primary{background:linear-gradient(180deg,var(--pur2),var(--pur));color:#fff;font-weight:700;border-radius:10px;padding:10px 18px;box-shadow:0 4px 14px rgba(108,92,231,.35)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.1)}
+.btn-primary.big{width:100%;padding:14px;font-size:16px;margin-top:14px}
+.btn-primary.sm,.btn-ghost.sm{padding:7px 12px;font-size:13px}
+.btn-ghost{background:#2c2e44;border:1px solid #3c3e5a;border-radius:10px;padding:10px 14px;font-weight:600}
+.btn-ghost:hover:not(:disabled){border-color:var(--pur2)}
+.btn-ghost.on{background:var(--pur);border-color:var(--pur);color:#fff}
+.iconbtn{width:36px;height:36px;border-radius:50%;background:rgba(20,20,32,.75);display:grid;place-items:center;font-size:17px}
+.iconbtn:hover{background:var(--pur)}
+.seg{display:inline-flex;background:#16171f;border:1px solid #33354d;border-radius:10px;overflow:hidden}
+.seg button{padding:8px 14px;font-weight:600;color:var(--mute)} .seg button.on{background:var(--pur);color:#fff}
+.chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--pur)}
+/* ---------- scene ---------- */
+.scene,.hub-scene{position:absolute;inset:0;overflow:hidden}
+.scene-svg{width:100%;height:100%;display:block}
+.scene .sun,.hub-scene .sun{opacity:0;transition:opacity 1.2s}
+.scene .moon,.scene .stars{transition:opacity 1.2s}
+.scene.day{--sky1:#6fb2e8;--sky2:#a9d4f0;--sky3:#f3d9b0;--glow:#fff2c6;--mount3:#6f88a8;--mount2:#4f6a7f;--snow:.6;--hill:#4f8a5a;--lake1:#7fc2df;--lake2:#4f97b8;--shine:#fff;--tree1:#2f5d3a;--tree2:#3f7248;--trunk:#5a3d2a;--ground:#4f7d43;--ground2:#3f6a37}
+.scene.day .sun{opacity:1} .scene.day .moon,.scene.day .stars{opacity:0}
+.scene *{transition:fill 1.2s, stop-color 1.2s}
+/* ---------- hub ---------- */
+.hub{position:relative;height:100%;overflow-y:auto;overflow-x:hidden}
+.hub-scene{position:fixed;height:100vh}
+.topnav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:14px 28px;background:linear-gradient(180deg,rgba(18,18,30,.9),rgba(18,18,30,0))}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px} .logo-svg{width:36px;height:36px}
+.topnav .sp{flex:1} .navbtn{font-size:18px;padding:6px 10px;border-radius:8px} .navbtn:hover{background:rgba(255,255,255,.08)}
+.langsw{display:flex;background:rgba(0,0,0,.35);border-radius:9px;overflow:hidden} .langsw button{padding:6px 11px;font-weight:700;color:var(--mute)} .langsw button.on{background:var(--pur);color:#fff}
+.hub-body{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:60px;min-height:calc(100vh - 70px);padding:20px}
+.island{position:relative;width:240px;height:330px;flex:none}
+.island-char{position:absolute;left:30px;bottom:70px;width:180px;animation:float 4s ease-in-out infinite}
+.island-rock{position:absolute;left:20px;bottom:20px;width:200px;height:70px;background:radial-gradient(ellipse at 50% 20%,#3f6a43 0 40%,transparent 41%),linear-gradient(180deg,#5a4639,#3a2c24);clip-path:polygon(0 18%,100% 18%,80% 70%,55% 100%,30% 75%);animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px)}}
+.hub-card{width:400px;max-width:100%;background:rgba(30,31,48,.92);backdrop-filter:blur(6px);border-radius:20px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.hub-card h1{font-size:24px} .hub-card p{margin:6px 0 16px}
+.hub-card label{display:block;font-size:12px;color:var(--mute);margin:10px 0 6px;font-weight:600}
+.hub-card .row input{flex:1}
+.av-edit{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.ae{display:flex;align-items:center;gap:4px;background:#191a26;border-radius:8px;padding:4px 6px;font-size:11.5px;color:var(--mute)} .ae span{flex:1}
+.ae button{width:22px;height:22px;border-radius:6px;background:#2c2e44;font-weight:700} .ae button:hover{background:var(--pur)}
+.or{text-align:center;color:var(--mute);font-size:12px;margin:16px 0 10px;position:relative} .or:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid #33354d} .or span{position:relative;background:#1e1f30;padding:0 10px}
+.joinhint{background:rgba(108,92,231,.18);border:1px solid rgba(108,92,231,.5);border-radius:10px;padding:10px;margin-top:12px;font-size:13px}
+.recent{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px} .recent .muted{width:100%}
+.rec{background:#2c2e44;border-radius:8px;padding:6px 10px;font-size:12.5px} .rec:hover{background:var(--pur)} .rec span{margin-left:4px}
+.roles-sec{position:relative;z-index:2;background:var(--bg);padding:50px 28px 60px} .roles-sec h2{text-align:center;font-size:28px;margin-bottom:24px}
+.roles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;max-width:1200px;margin:0 auto}
+.role-tile{display:flex;gap:12px;background:var(--bg2);border-radius:14px;padding:14px;border-left:4px solid var(--line)}
+.role-tile .ri{font-size:30px} .role-tile p{margin:6px 0 0;color:var(--mute);font-size:12.5px} .role-tile .camp{font-size:11px;font-weight:700}
+.c-wolf{border-color:var(--red)!important} .c-wolf .camp,.c-wolf.cg-h{color:var(--red)}
+.c-village{border-color:#4fa3e0!important} .c-village .camp,.c-village.cg-h{color:#6fb8ef}
+.c-solo{border-color:var(--gold)!important} .c-solo .camp,.c-solo.cg-h{color:var(--gold)}
+/* ---------- game ---------- */
+.game{display:flex;height:100vh;gap:0}
+.stage{position:relative;flex:1;min-width:0;overflow:hidden}
+.fog{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(10,10,20,.25));pointer-events:none}
+.stage.is-night .fog{background:linear-gradient(180deg,rgba(10,10,30,.15),rgba(5,5,15,.45))}
+.stage-top{position:absolute;top:14px;left:14px;right:14px;display:flex;gap:10px;align-items:center;z-index:30}
+.roomname{background:rgba(20,20,32,.75);padding:6px 12px;border-radius:20px;font-weight:700;font-size:13px}
+.pillbtn{background:rgba(20,20,32,.75);padding:7px 12px;border-radius:20px;font-weight:600;font-size:13px} .pillbtn:hover{background:var(--pur)}
+.netbad{background:var(--red);padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.chars{position:absolute;inset:0}
+.ch{position:absolute;transform:translate(-50%,-100%);width:clamp(64px,7.2vw,104px);display:flex;flex-direction:column;align-items:center;transition:opacity .3s, filter .2s}
+.ch .fig{width:100%;transition:transform .15s} .ch-svg{width:100%;display:block}
+.ch.clk{cursor:pointer} .ch.clk:hover .fig{transform:translateY(-4px) scale(1.04)} .ch.clk .fig{filter:drop-shadow(0 0 6px rgba(125,108,242,.8))}
+.ch.sel .fig{filter:drop-shadow(0 0 10px #f5c542) drop-shadow(0 0 3px #f5c542)}
+.ch.inact{opacity:.45}
+.ch.dead .fig{opacity:.9}
+.tag{display:flex;align-items:center;gap:3px;background:rgba(14,14,22,.85);border-radius:8px;padding:2px 7px;font-size:11.5px;font-weight:700;white-space:nowrap;margin-bottom:2px;max-width:150px}
+.tag .nm{overflow:hidden;text-overflow:ellipsis;cursor:pointer} .ch.me .tag{background:rgba(108,92,231,.9)} .ch.dead .tag .nm{text-decoration:line-through;opacity:.7}
+.bd{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;font-size:9.5px;flex:none}
+.bd.wolf{background:var(--red)} .bd.mayor{background:var(--gold);color:#3a2a00;font-size:11px} .bd.love{background:var(--love);font-size:10px} .bd.conta{background:var(--green);color:#063}.bd.fire{background:#ff8a3d}
+.rtag{font-size:10.5px;background:rgba(14,14,22,.7);border-radius:6px;padding:1px 6px;margin-bottom:2px;white-space:nowrap;color:#dcd6ff}
+.cand{font-size:10.5px;background:var(--gold);color:#3a2a00;border-radius:6px;padding:1px 6px;font-weight:700;margin-bottom:2px}
+.votes{position:absolute;bottom:-6px;display:flex;align-items:center;gap:2px;background:var(--pur);border-radius:12px;padding:2px 6px 2px 4px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.votes b{font-size:12px;margin-right:3px} .votes i{width:16px;height:16px;border-radius:50%;overflow:hidden;background:#1b1c2a;display:block} .votes .hd-svg{width:16px;height:16px;display:block}
+.votes.wolfv{background:var(--red);bottom:-28px}
+.center{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:40;width:min(520px,92%)}
+.card-c{background:rgba(30,31,48,.95);border-radius:18px;padding:20px;box-shadow:0 16px 50px rgba(0,0,0,.5);text-align:center;backdrop-filter:blur(4px)}
+.card-c.slim{padding:12px 16px;font-weight:600} .card-c.done{color:var(--green)}
+.card-c h3{font-size:19px;margin:4px 0} .card-c p{margin:6px 0 4px;color:#d8d8e6}
+.act-ic{font-size:36px}
+.lb-top{display:flex;gap:12px;align-items:center;text-align:left} .lb-top .logo-svg{width:48px;height:48px;flex:none}
+.invite{display:flex;gap:8px;margin:14px 0 10px} .invite input{flex:1;font-size:12px}
+.compline{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.cpill{font-size:11.5px;background:#1a1b28;border-left:3px solid;border-radius:6px;padding:3px 7px}
+.launch{margin-top:12px;font-weight:700;color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px;max-height:240px;overflow-y:auto}
+.chip{display:flex;align-items:center;gap:6px;background:#1a1b28;border:1px solid #34364f;border-radius:20px;padding:3px 10px 3px 3px;font-size:13px;font-weight:600}
+.chip .hd-svg{width:26px;height:26px;border-radius:50%;background:#2c2e44} .chip:hover{border-color:var(--pur2)} .chip.on{background:var(--pur);border-color:var(--pur)} .chip em{font-style:normal;font-size:11px;color:#ffb3b3}
+.potions{display:flex;gap:10px;justify-content:center;margin-top:8px} .pot{background:#1a1b28;border-radius:8px;padding:5px 10px;font-size:12.5px}
+.mbar{height:4px;background:#34364f;border-radius:4px;margin-top:14px;overflow:hidden} .mbar i{display:block;height:100%;width:100%;background:var(--pur2);transition:width .5s linear}
+.spinner{width:34px;height:34px;border-radius:50%;border:3px solid #3a3c56;border-top-color:var(--pur2);margin:6px auto;animation:spin 1s linear infinite} @keyframes spin{to{transform:rotate(360deg)}}
+/* ---------- side / chat ---------- */
+.side{width:400px;flex:none;display:flex;flex-direction:column;padding:14px 14px 14px 0;gap:10px;background:transparent;position:relative;z-index:20}
+.game{background:var(--bg)}
+.side-head{display:flex;gap:8px;align-items:center}
+.phase{flex:1;display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:30px;padding:6px 14px 6px 6px;min-width:0}
+.clock{width:32px;height:32px;border-radius:50%;background:#15161f;display:grid;place-items:center;font-size:16px;flex:none}
+.ph-label{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phase>div:nth-child(2){flex:1;min-width:0}
+.ph-time{font-weight:800;font-variant-numeric:tabular-nums;font-size:15px} .ph-time.hurry{color:var(--red)}
+.btn-rules{background:var(--pur);border-radius:20px;padding:9px 11px;font-weight:700;font-size:12px;white-space:nowrap}
+.panel{flex:1;min-height:0;background:var(--panel);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.chatlog{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:3px}
+.rules{flex:1;overflow-y:auto;padding:16px}
+.sysm{align-self:center;text-align:center;font-size:12.5px;background:#1d1e2d;border-radius:14px;padding:6px 12px;margin:5px 0;max-width:95%;color:#d9d9e6}
+.sysm b.mn{color:#fff;cursor:pointer}
+.sm-small{background:none;color:var(--mute);font-size:11.5px;padding:1px 6px;margin:0;align-self:flex-start;text-align:left}
+.sm-death{background:rgba(224,82,90,.16);color:#ff8f95;font-weight:600}
+.sm-night{background:#151629;color:#c7c9ff;font-weight:700}
+.sm-day{background:rgba(245,197,66,.13);color:#ffe08a;font-weight:700}
+.sm-step{background:none;color:#a8a9d6;font-style:italic;font-size:12px;margin:1px 0}
+.sm-big,.sm-win{font-weight:700;background:rgba(108,92,231,.25)}
+.sm-win{font-size:15px;padding:10px 16px}
+.sm-mayor{background:rgba(245,197,66,.15);color:#ffe08a}
+.sm-wolfsys{background:rgba(224,82,90,.14);color:#ffadb1}
+.privm{border:1px dashed rgba(181,124,240,.5);background:rgba(181,124,240,.1);color:#e7d9ff}
+.sm-warn{border-color:rgba(245,197,66,.6);color:#ffe08a}
+.msg{display:flex;gap:8px;padding:2px 4px;border-radius:10px}
+.msg.cont{padding-top:0} .msg.cont .mbody{margin-left:36px}
+.mav{width:28px;height:28px;border-radius:50%;background:#1a1b28;flex:none;overflow:hidden;display:grid;place-items:center;margin-top:3px}
+.mav .hd-svg{width:28px;height:28px}
+.mbody{min-width:0;flex:1}
+.mname{font-size:12px;margin-top:4px} .mname b{color:#bfb5ff;cursor:pointer}
+.mtext{overflow-wrap:anywhere;color:#ececf4} .mtext b.mn{color:#c6bdff;cursor:pointer}
+.msg.mention{background:rgba(245,197,66,.1)}
+.msg.ch-w{background:rgba(224,82,90,.18)} .msg.ch-w .mname b{color:#ff9ba0}
+.msg.ch-d{opacity:.6} .msg.ch-l{background:rgba(181,124,240,.16)} .msg.ch-l .mname b{color:#dcb8ff}
+.chtag{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700} .chtag.w{background:var(--red)} .chtag.d{background:#555} .chtag.l{background:var(--love)}
+.acc{font-size:12px;color:#ffd27a;font-weight:600} .acc.pres{color:var(--gold)}
+.msg.mc-accuse,.msg.mc-pres{background:rgba(245,197,66,.07);margin:3px 0;padding:6px 4px}
+.trx{color:#ececf4} .ogx{display:none} .og-open .ogx{display:block;color:var(--mute);font-size:12px;font-style:italic}
+.showog{font-size:10.5px;color:var(--mute);text-decoration:underline;padding:0}
+.og-open .showog{display:none}
+.trwait{font-size:11px;color:var(--mute)}
+.composer{display:flex;gap:6px;background:var(--panel);border-radius:16px;padding:6px}
+.composer input{flex:1;background:transparent;border:0;padding:9px 6px}
+.composer.ch-w{box-shadow:0 0 0 2px var(--red) inset} .composer.ch-d{opacity:.85;box-shadow:0 0 0 2px #555 inset} .composer.ch-l{box-shadow:0 0 0 2px var(--love) inset}
+.cbtn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:16px;background:#1d1e2d;flex:none} .cbtn:hover:not(:disabled){background:#34364f}
+.cbtn.on{background:var(--pur)} .cbtn.send{background:var(--pur)}
+/* rules panel */
+.myrole{display:flex;gap:12px;background:var(--panel2);border-radius:14px;padding:14px;border-left:4px solid}
+.myrole .ri{font-size:40px} .myrole h3{font-size:20px} .myrole p{margin:4px 0;color:#d6d6e4;font-size:13px}
+.goal{font-size:12.5px;color:var(--gold);font-weight:600}
+.infos{margin-top:10px;display:flex;flex-direction:column;gap:5px;font-size:13px} .infos div{background:#1d1e2d;border-radius:8px;padding:6px 10px}
+.rules h4{margin:18px 0 8px;font-size:14px}
+.remgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.rem{display:flex;gap:6px;align-items:center;background:#1d1e2d;border-radius:8px;padding:5px 8px;font-size:12px;border-left:3px solid} .rem b{flex:1;font-weight:600} .rem em{font-style:normal;color:var(--mute)}
+.journal{display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+/* end */
+.endov{position:fixed;inset:0;background:rgba(8,8,16,.72);z-index:60;display:grid;place-items:center;padding:20px}
+.endcard{width:min(620px,100%);background:var(--bg2);border-radius:22px;padding:26px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:92vh;overflow:auto}
+.endico{font-size:54px} .endcard h2{font-size:28px;margin:6px 0 14px}
+.w-wolf h2{color:#ff8f95} .w-village h2{color:#8fd0ff} .w-lovers h2{color:#dcb8ff} .w-white h2,.w-rat h2,.w-merc h2{color:var(--gold)}
+.winners{display:flex;justify-content:center;flex-wrap:wrap;gap:8px} .wch{width:74px;font-size:12px} .wch .ch-svg{width:74px}
+.reveal{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:5px;margin:16px 0 6px;text-align:left;font-size:12.5px}
+.reveal div{background:#1b1c2a;border-radius:8px;padding:5px 9px} .reveal div.w{outline:1px solid var(--gold)}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(8,8,16,.65);z-index:80;display:grid;place-items:center;padding:16px}
+.mcard{width:min(460px,100%);background:var(--bg2);border-radius:20px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:94vh;overflow-y:auto}
+.mcard.wide{width:min(920px,100%)}
+.mcard h2{font-size:20px;margin-bottom:12px} .mcard p{margin:4px 0 10px}
+.mcard form input{width:100%}
+.frm{margin-bottom:12px} .frm label{display:block;font-size:12px;color:var(--mute);margin-bottom:6px;font-weight:600} .frm input{width:100%}
+.frm.row2{display:flex;gap:18px;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;gap:10px} .stepper button{width:32px;height:32px;border-radius:9px;background:#2c2e44;font-weight:800;font-size:16px} .stepper b{font-size:18px;min-width:24px;text-align:center}
+.comp-h{display:flex;align-items:center;gap:12px;margin:8px 0} .comp-h .ok{color:var(--green);font-weight:700} .comp-h .bad{color:var(--red);font-weight:700} .comp-h button{margin-left:auto}
+.comp{display:flex;flex-direction:column;gap:10px}
+.cg-h{font-weight:800;font-size:12.5px;margin-bottom:5px}
+.cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:5px}
+.ct{display:flex;align-items:center;gap:6px;background:#1b1c2a;border-radius:9px;padding:5px 7px;border:1px solid transparent} .ct.on{border-color:var(--pur2);background:#24234a}
+.ct .ci{font-size:17px} .ct .cn{flex:1;font-size:12.5px;font-weight:600}
+.cc{display:flex;align-items:center;gap:4px} .cc button{width:22px;height:22px;border-radius:6px;background:#2c2e44;font-weight:800} .cc button:hover{background:var(--pur)} .cc b{min-width:14px;text-align:center}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#111;border:1px solid var(--pur);padding:10px 18px;border-radius:12px;z-index:99;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+@media (max-width:900px){
+  html,body{overflow:auto}
+  .game{flex-direction:column;height:auto;min-height:100vh}
+  .stage{height:56vh;flex:none}
+  .side{width:100%;padding:10px;height:78vh}
+  .ch{width:clamp(52px,13vw,80px)} .tag{font-size:10px} .rtag{display:none}
+  .center{top:58px}
+  .hub-body{flex-direction:column;gap:0} .island{height:240px;width:200px} .island-char{width:130px;left:35px}
+}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* ===================== ROLES ===================== */
+// camp: wolf | village | solo ; kill: can kill (for aura seer)
+const ROLES = {
+  werewolf:      {camp:"wolf",    icon:"🐺", kill:1, max:6},
+  blackWolf:     {camp:"wolf",    icon:"🐺", kill:1, max:1, tint:"#2b2b38"},
+  talkativeWolf: {camp:"wolf",    icon:"🗣️", kill:1, max:1},
+  literateWolf:  {camp:"wolf",    icon:"✒️", kill:1, max:1},
+  wolfRidingHood:{camp:"wolf",    icon:"🧣", kill:1, max:1},
+  whiteWolf:     {camp:"solo",    icon:"🤍", kill:1, max:1},
+  mercenary:     {camp:"solo",    icon:"🗡️", kill:1, max:1},
+  sickRat:       {camp:"solo",    icon:"🐀", kill:0, max:1},
+  villager:      {camp:"village", icon:"🧑‍🌾", kill:0, max:10},
+  seer:          {camp:"village", icon:"🔮", kill:0, max:1},
+  talkativeSeer: {camp:"village", icon:"📣", kill:0, max:1},
+  auraSeer:      {camp:"village", icon:"✨", kill:0, max:1},
+  witch:         {camp:"village", icon:"🧪", kill:1, max:1},
+  healerWitch:   {camp:"village", icon:"💚", kill:0, max:1},
+  poisoner:      {camp:"village", icon:"☠️", kill:1, max:1},
+  hunter:        {camp:"village", icon:"🏹", kill:1, max:1},
+  guard:         {camp:"village", icon:"🛡️", kill:0, max:1},
+  littleGirl:    {camp:"village", icon:"👧", kill:0, max:1},
+  cupid:         {camp:"village", icon:"💘", kill:0, max:1},
+  redRidingHood: {camp:"village", icon:"🔴", kill:0, max:1},
+  pinkRidingHood:{camp:"village", icon:"🩷", kill:0, max:1},
+  blueRidingHood:{camp:"village", icon:"🔵", kill:0, max:1},
+  mentalist:     {camp:"village", icon:"🧠", kill:0, max:1},
+  necromancer:   {camp:"village", icon:"💀", kill:0, max:1},
+  gravedigger:   {camp:"village", icon:"⚰️", kill:0, max:1},
+  dictator:      {camp:"village", icon:"🎖️", kill:1, max:1},
+  heir:          {camp:"village", icon:"📜", kill:0, max:1},
+  plunderer:     {camp:"village", icon:"💰", kill:0, max:1},
+  pyromancer:    {camp:"village", icon:"🔥", kill:1, max:1}
+};
+const ROLE_GROUPS = [
+  ["wolf",   ["werewolf","blackWolf","talkativeWolf","literateWolf","wolfRidingHood"]],
+  ["solo",   ["whiteWolf","mercenary","sickRat"]],
+  ["village",["villager","seer","talkativeSeer","auraSeer","witch","healerWitch","poisoner","hunter","guard","littleGirl","cupid","redRidingHood","pinkRidingHood","blueRidingHood","mentalist","necromancer","gravedigger","dictator","heir","plunderer","pyromancer"]]
+];
+const SEER_ROLES = ["seer","talkativeSeer","auraSeer"];
+const WITCH_ROLES = ["witch","healerWitch","poisoner"];
+const WOLF_ROLES = ROLE_GROUPS[0][1];
+
+function suggestComp(n){
+  const c = {};
+  const add=(r,k=1)=>c[r]=(c[r]||0)+k;
+  const wolves = n<=6?1:n<=9?2:n<=12?3:4;
+  add("werewolf", wolves);
+  add("seer");
+  if(n>=5) add("witch");
+  if(n>=6) add("hunter");
+  if(n>=7) add("cupid");
+  if(n>=8) add("guard");
+  if(n>=9) add("littleGirl");
+  if(n>=10){ c.werewolf--; add("blackWolf"); }
+  if(n>=11) add("whiteWolf");
+  if(n>=12) add("mentalist");
+  if(n>=13) add("redRidingHood");
+  if(n>=14) add("gravedigger");
+  if(n>=15) add("dictator");
+  if(n>=16) add("talkativeWolf"), c.werewolf--;
+  const tot = Object.values(c).reduce((a,b)=>a+b,0);
+  if(tot<n) add("villager", n-tot);
+  return c;
+}
+function compTotal(c){ return Object.values(c||{}).reduce((a,b)=>a+(b||0),0); }
+
+const SPEEDS = {
+  normal:{starting:10,cupid:30,heir:25,seer:25,guard:20,rat:25,pyro:20,wolves:45,witch:25,white:20,cand:45,elect:45,dictAsk:15,dict:30,vote:180,tie:20,prompt:25,dawn:4},
+  fast:  {starting:8, cupid:20,heir:15,seer:18,guard:15,rat:15,pyro:15,wolves:30,witch:18,white:15,cand:30,elect:30,dictAsk:10,dict:20,vote:120,tie:15,prompt:18,dawn:3}
+};
+
+/* ===================== UTIL / CRYPTO / NET ===================== */
+const QS = new URLSearchParams(location.search);
+const LSP = "hl." + (QS.get("u")||"") + ".";
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(LSP+k)); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(LSP+k, JSON.stringify(v)); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(LSP+k); }catch(e){} }
+function rid(n=8){ const a="abcdefghijkmnpqrstuvwxyz23456789"; let s=""; const r=crypto.getRandomValues(new Uint8Array(n)); for(const x of r) s+=a[x%a.length]; return s; }
+function b64(buf){ const u=new Uint8Array(buf); let s=""; for(let i=0;i<u.length;i++) s+=String.fromCharCode(u[i]); return btoa(s); }
+function ub64(s){ const b=atob(s); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
+const b64u = buf => b64(buf).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const ub64u = s => ub64(s.replace(/-/g,"+").replace(/_/g,"/") + "===".slice((s.length+3)%4));
+const enc = new TextEncoder(), dec = new TextDecoder();
+const clone = o => JSON.parse(JSON.stringify(o));
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+const Crypto = {
+  async genECDH(){
+    const kp = await crypto.subtle.generateKey({name:"ECDH",namedCurve:"P-256"},true,["deriveKey"]);
+    return {pub: await crypto.subtle.exportKey("jwk",kp.publicKey), priv: await crypto.subtle.exportKey("jwk",kp.privateKey)};
+  },
+  _priv:new Map(), _pair:new Map(), _room:new Map(),
+  async privKey(jwk){ const k=JSON.stringify(jwk); if(!this._priv.has(k)) this._priv.set(k, crypto.subtle.importKey("jwk",jwk,{name:"ECDH",namedCurve:"P-256"},false,["deriveKey"])); return this._priv.get(k); },
+  async pairKey(myPrivJwk, otherPubJwk){
+    const id = JSON.stringify(myPrivJwk.d)+"|"+otherPubJwk.x+otherPubJwk.y;
+    if(!this._pair.has(id)) this._pair.set(id,(async()=>{
+      const pub = await crypto.subtle.importKey("jwk",otherPubJwk,{name:"ECDH",namedCurve:"P-256"},false,[]);
+      return crypto.subtle.deriveKey({name:"ECDH",public:pub}, await this.privKey(myPrivJwk), {name:"AES-GCM",length:256}, false, ["encrypt","decrypt"]);
+    })());
+    return this._pair.get(id);
+  },
+  async roomKey(raw){ if(!this._room.has(raw)) this._room.set(raw, crypto.subtle.importKey("raw",ub64u(raw),"AES-GCM",false,["encrypt","decrypt"])); return this._room.get(raw); },
+  async seal(key,obj){ const iv=crypto.getRandomValues(new Uint8Array(12)); const c=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,enc.encode(JSON.stringify(obj))); return {iv:b64(iv),c:b64(c)}; },
+  async open(key,box){ const p=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub64(box.iv)},key,ub64(box.c)); return JSON.parse(dec.decode(p)); }
+};
+
+/* ---- Transports: MQTT relay (default) or local BroadcastChannel (tests) ---- */
+const BROKERS = ["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+
+class LocalTransport {
+  constructor(){ this.subs=new Set(); this.h=null; this.status="online"; }
+  async connect(){
+    this.bc = new BroadcastChannel("hl-bus");
+    this.bc.onmessage = e => this._deliver(e.data.topic, e.data.payload);
+    return 0;
+  }
+  _match(t){ return this.subs.has(t); }
+  _deliver(topic,payload){ if(this._match(topic) && this.h) this.h(topic,payload); }
+  sub(topic){ this.subs.add(topic); try{ const r=localStorage.getItem("hlret:"+topic); if(r) setTimeout(()=>this._deliver(topic,r),5); }catch(e){} }
+  pub(topic,payload,retain){ if(retain){ try{ localStorage.setItem("hlret:"+topic,payload);}catch(e){} } this.bc.postMessage({topic,payload}); setTimeout(()=>this._deliver(topic,payload),0); }
+  onMessage(h){ this.h=h; }
+  onStatus(){}
+}
+class MqttTransport {
+  constructor(){ this.h=null; this.subs=new Set(); this.statusH=()=>{}; }
+  async connect(pref){
+    if(typeof mqtt==="undefined"){
+      try{ await loadScript("https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"); }
+      catch(e){ await loadScript("https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"); }
+    }
+    const order = pref!=null ? [pref, ...BROKERS.map((_,i)=>i).filter(i=>i!==pref)] : BROKERS.map((_,i)=>i);
+    for(const i of order){
+      const ok = await new Promise(res=>{
+        const c = mqtt.connect(BROKERS[i],{clientId:"hl_"+rid(12),clean:true,keepalive:30,reconnectPeriod:2500,connectTimeout:7000});
+        const to=setTimeout(()=>{ c.end(true); res(null); },8000);
+        c.once("connect",()=>{ clearTimeout(to); res(c); });
+        c.once("error",()=>{});
+      });
+      if(ok){
+        this.c=ok; this.idx=i;
+        ok.on("message",(t,m)=>{ if(this.h) this.h(t,m.toString()); });
+        ok.on("connect",()=>{ this.statusH("online"); for(const s of this.subs) ok.subscribe(s,{qos:0}); });
+        ok.on("offline",()=>this.statusH("offline"));
+        ok.on("reconnect",()=>this.statusH("reconnecting"));
+        return i;
+      }
+      if(pref!=null) break; // everyone must use the same broker
+    }
+    throw new Error("relay");
+  }
+  sub(t){ this.subs.add(t); this.c.subscribe(t,{qos:0}); }
+  pub(t,p,retain){ this.c.publish(t,p,{qos:0,retain:!!retain}); }
+  onMessage(h){ this.h=h; }
+  onStatus(h){ this.statusH=h; }
+}
+const USE_LOCAL = QS.get("local")==="1";
+
+/* ---- Room connection: encrypted pub/sub ---- */
+class Room {
+  // opts: {room, key(b64u), broker, me:{pid, keys}, isHost, hostKeys}
+  constructor(o){ Object.assign(this,o); this.base="hurlune1/"+o.room; this.handlers={}; }
+  on(ev,fn){ this.handlers[ev]=fn; }
+  emit(ev,...a){ if(this.handlers[ev]) this.handlers[ev](...a); }
+  async connect(){
+    this.T = USE_LOCAL ? new LocalTransport() : new MqttTransport();
+    this.T.onStatus(s=>this.emit("status",s));
+    this.broker = await this.T.connect(this.broker);
+    this.rk = await Crypto.roomKey(this.key);
+    this.T.onMessage((t,p)=>this._in(t,p).catch(e=>console.warn("msg",e)));
+    if(this.isHost){ this.T.sub(this.base+"/h"); }
+    else { this.T.sub(this.base+"/s"); this.T.sub(this.base+"/b"); this.T.sub(this.base+"/p/"+this.me.pid); }
+    return this.broker;
+  }
+  async _in(topic,payload){
+    const box = JSON.parse(payload);
+    if(topic===this.base+"/s"){ const st=await Crypto.open(this.rk,box); this.hostPub=st.hostPub; this.emit("state",st); }
+    else if(topic===this.base+"/b"){ this.emit("bcast", await Crypto.open(this.rk,box)); }
+    else if(topic===this.base+"/p/"+this.me.pid){ if(!this.hostPub) return; const k=await Crypto.pairKey(this.me.keys.priv,this.hostPub); this.emit("priv", await Crypto.open(k,box)); }
+    else if(topic===this.base+"/h" && this.isHost){
+      const outer = await Crypto.open(this.rk, box);       // {from, pub, box}
+      const k = await Crypto.pairKey(this.hostKeys.priv, outer.pub);
+      const msg = await Crypto.open(k, outer.box);
+      this.emit("toHost", outer.from, outer.pub, msg);
+    }
+  }
+  // player -> host
+  async send(msg){
+    const k = await Crypto.pairKey(this.me.keys.priv, this.hostPub);
+    const inner = await Crypto.seal(k,msg);
+    const outer = await Crypto.seal(this.rk,{from:this.me.pid,pub:this.me.keys.pub,box:inner});
+    this.T.pub(this.base+"/h", JSON.stringify(outer));
+  }
+  // host -> all
+  async publishState(st){ this.T.pub(this.base+"/s", JSON.stringify(await Crypto.seal(this.rk,st)), true); }
+  async broadcast(m){ this.T.pub(this.base+"/b", JSON.stringify(await Crypto.seal(this.rk,m))); }
+  async sendTo(pid,pub,m){ const k=await Crypto.pairKey(this.hostKeys.priv,pub); this.T.pub(this.base+"/p/"+pid, JSON.stringify(await Crypto.seal(k,m))); }
+}
+
+/* ===================== HOST ENGINE ===================== */
+const WORDS = {
+  fr:["parapluie","girafe","chocolat","montagne","bicyclette","sardine","volcan","trompette","citrouille","pingouin","moustache","cerise","fusée","dragon","biscuit","tortue","tambour","nuage","escargot","pantoufle","cactus","boussole","lanterne","grenouille","baguette","tempête","violon","horloge","papillon","ananas"],
+  ru:["зонтик","жираф","шоколад","гора","велосипед","сардина","вулкан","труба","тыква","пингвин","усы","вишня","ракета","дракон","печенье","черепаха","барабан","облако","улитка","тапочки","кактус","компас","фонарь","лягушка","багет","буря","скрипка","часы","бабочка","ананас"]
+};
+const LETTERS = { fr:["d","p","m","c","v","b","f","g"], ru:["д","п","м","к","в","б","з","г"] };
+const ANON = ["Ombre","Croc","Griffe","Brume","Cendre","Nuit","Hurle","Givre"];
+const norm = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ё/g,"е");
+const NIGHT_ORDER = ["cupid","heir","seer","guard","rat","pyro","wolves","witch","white"];
+
+class Host {
+  constructor(cfg){
+    Object.assign(this,{players:{},order:[],msgs:[],status:"lobby",ph:{k:"lobby",seq:0},acts:{},sec:null,mseq:0,lastViews:{},cands:[],votes:{},mayor:null,winner:null,winners:[],round:1},cfg);
+    this.room=null; this.localSink=null; this._dirty=true; this._lastStateJson=""; this._lastPub=0;
+  }
+  serial(){ const o={}; for(const k of ["roomId","key","broker","hostKeys","hostId","settings","players","order","msgs","status","ph","acts","sec","mseq","cands","votes","mayor","winner","winners","round"]) o[k]=this[k]; return o; }
+  save(){ if(this._saveT) return; this._saveT=setTimeout(()=>{ this._saveT=null; lsSet("host."+this.roomId,this.serial()); },800); }
+  attach(room){
+    this.room=room;
+    room.on("toHost",(from,pub,msg)=>this.onMsg(from,pub,msg));
+    if(this._tick) clearInterval(this._tick);
+    this._tick=setInterval(()=>this.tick(),400);
+    this.flush(true);
+  }
+  get S(){ return this.settings; }
+  dur(k){ const sp=(window.TEST_SPEED)||SPEEDS[this.S.speed]||SPEEDS.normal; return (sp[k]||20)*1000; }
+  // ---------- helpers ----------
+  P(pid){ return this.players[pid]; }
+  R(pid){ return this.sec&&this.sec.R[pid]; }
+  alive(pid){ const r=this.R(pid); return !!(r&&r.alive); }
+  aliveIds(){ return this.order.filter(p=>this.alive(p)); }
+  role(pid){ return this.R(pid)&&this.R(pid).role; }
+  camp(pid){ return this.R(pid)&&this.R(pid).camp; }
+  aliveWith(roles){ roles=[].concat(roles); return this.aliveIds().filter(p=>roles.includes(this.role(p))); }
+  wolfVoters(){ return this.aliveIds().filter(p=>this.camp(p)==="wolf"||this.role(p)==="whiteWolf"); }
+  wolfSees(pid){ return this.camp(pid)==="wolf"||this.role(pid)==="whiteWolf"; }
+  name(pid){ return (this.P(pid)&&this.P(pid).name)||"?"; }
+  isNight(){ return this.ph.k.startsWith("n_"); }
+  visible(pid,aud){
+    if(this.status==="ended") return true;
+    if(aud==="all") return true;
+    if(aud==="wolf") return this.wolfSees(pid);
+    if(aud==="dead") return (this.sec&&!this.alive(pid)&&this.R(pid)) || this.role(pid)==="necromancer";
+    if(aud&&aud.ids) return aud.ids.includes(pid);
+    return false;
+  }
+  // ---------- messaging ----------
+  msg(m,aud="all"){
+    m.id="m"+(++this.mseq); m.t=Date.now();
+    this.msgs.push({m,aud}); if(this.msgs.length>900) this.msgs.splice(0,this.msgs.length-900);
+    this.deliver({t:"m",m},aud);
+    if(m.x&&this.translator){
+      const langs=[...new Set(Object.values(this.players).map(p=>p.lang==="ru"?"ru":"fr"))];
+      this.translator(m.x,langs).then(tr=>{ if(!tr) return; m.tr=tr; this.deliver({t:"tr",id:m.id,tr},aud); this.save(); }).catch(e=>console.warn("tr",e));
+    }
+    this.save();
+  }
+  deliver(o,aud){
+    if(aud==="all"){ if(this.room) this.room.broadcast(o); if(this.localSink) this.localSink.priv(o); }
+    else for(const pid of this.order) if(this.visible(pid,aud)) this.sendPriv(pid,o);
+  }
+  sys(k,p,cls,aud){ this.msg({ch:aud&&aud!=="all"?"ps":"s",k,p:p||{},cls:cls||"info"},aud||"all"); }
+  priv(pid,k,p,cls){ this.msg({ch:"ps",k,p:p||{},cls:cls||"priv"},{ids:[pid]}); }
+  sendPriv(pid,obj){
+    if(pid===this.hostId){ if(this.localSink) this.localSink.priv(obj); return; }
+    const P=this.P(pid); if(P&&P.pub&&this.room) this.room.sendTo(pid,P.pub,obj).catch(e=>console.warn(e));
+  }
+  resync(pid){ const msgs=this.msgs.filter(x=>this.visible(pid,x.aud)).slice(-400).map(x=>x.m); this.lastViews[pid]=null; this.sendPriv(pid,{t:"sync",msgs,v:this.view(pid)}); }
+  // ---------- public state ----------
+  buildState(){
+    const now=Date.now();
+    return {
+      hostPub:this.hostKeys.pub, room:this.roomId, hostId:this.hostId, status:this.status, round:this.round,
+      name:this.S.name, seats:this.S.seats, comp:this.S.comp, mode:this.S.mode, speed:this.S.speed,
+      players:this.order.map(pid=>{ const P=this.P(pid),R=this.R(pid); return {
+        id:pid, n:P.name, av:P.av, lang:P.lang,
+        alive: R?R.alive:true, role: R&&(R.revealed||this.status==="ended")?R.role:null,
+        inf: R&&this.status==="ended"?!!R.infected:undefined,
+        inact: pid!==this.hostId && now-(P.seen||0)>25000 };}),
+      ph:{k:this.ph.k,n:this.ph.n,end:this.ph.end,seq:this.ph.seq,kind:this.ph.data&&this.ph.data.kind,who:this.ph.k==="prompt"||this.ph.k==="d_dict"?this.ph.data&&this.ph.data.who:undefined},
+      votes:this.votes, cands:this.cands, mayor:this.mayor, day:this.sec?this.sec.day:0, night:this.sec?this.sec.night:0,
+      winner:this.winner, winners:this.winners, lovers:this.status==="ended"&&this.sec?this.sec.lovers:null,
+      dict:this.sec&&this.sec.dictPublic||null, oa:!!this.translator, now
+    };
+  }
+  flush(force){
+    const st=this.buildState(); const j=JSON.stringify({...st,now:0});
+    const now=Date.now();
+    if(force||j!==this._lastStateJson||now-this._lastPub>20000){
+      this._lastStateJson=j; this._lastPub=now;
+      if(this.room) this.room.publishState(st).catch(e=>console.warn(e));
+      if(this.localSink) this.localSink.state(st);
+    }
+    for(const pid of this.order){
+      const v=this.view(pid); const vj=JSON.stringify(v);
+      if(vj!==this.lastViews[pid]){ this.lastViews[pid]=vj; this.sendPriv(pid,{t:"v",v}); }
+    }
+    this.save();
+  }
+  // ---------- private view ----------
+  view(pid){
+    const R=this.R(pid); const v={me:pid,host:pid===this.hostId};
+    if(!R) return v;
+    const sec=this.sec, k=this.ph.k;
+    Object.assign(v,{role:R.role,orig:R.orig,camp:R.camp,infected:!!R.infected,alive:R.alive});
+    if(this.wolfSees(pid)) v.wolves=this.order.filter(p=>this.wolfSees(p));
+    if(R.lover){ v.lover=R.lover; v.loverRole=this.role(R.lover); }
+    if(R.role==="cupid"&&sec.lovers) v.couple=sec.lovers;
+    if(R.role==="sickRat"||sec.contaminated.includes(pid)) v.conta=sec.contaminated.slice();
+    if(R.seen&&R.seen.length) v.seen=R.seen;
+    if(WITCH_ROLES.includes(R.role)) v.pot={heal:R.heal,poison:R.poison};
+    if(R.role==="guard") v.guardLast=R.guardLast||null;
+    if(R.role==="pyromancer") v.barrels=sec.barrels.slice();
+    if(R.role==="heir"&&R.testator) v.testator=R.testator;
+    if(R.role==="mercenary"&&R.mercTarget&&sec.day>=1&&R.camp==="solo") v.merc=R.mercTarget;
+    if(R.word) v.word=R.word, v.saidWord=!!R.saidWord;
+    if(R.letter) v.letter=R.letter, v.usedLetter=!!R.usedLetter;
+    if(this.status!=="running"){ return v; }
+    // chat rights
+    const night=this.isNight();
+    v.chat={v:R.alive&&!night, w:R.alive&&k==="n_wolves"&&this.wolfSees(pid), d:!R.alive||(R.role==="necromancer"&&night), l:!!(R.lover&&R.alive),
+            seeW:this.wolfSees(pid)||(R.role==="littleGirl"&&R.alive), seeD:!R.alive||R.role==="necromancer"};
+    // prompt
+    let pr=null; const a=this.acts[pid];
+    if(R.alive){
+      if(k==="n_cupid"&&R.role==="cupid") pr={k:"cupid",n:2,self:1};
+      else if(k==="n_heir"&&R.role==="heir"&&!R.testator) pr={k:"heir",n:1};
+      else if(k==="n_seer"&&SEER_ROLES.includes(R.role)) pr={k:"seer",n:1};
+      else if(k==="n_guard"&&R.role==="guard") pr={k:"guard",n:1,self:1,not:R.guardLast||null};
+      else if(k==="n_rat"&&R.role==="sickRat") pr={k:"rat",n:2};
+      else if(k==="n_pyro"&&R.role==="pyromancer") pr={k:"pyro",n:1,barrels:sec.barrels.slice()};
+      else if(k==="n_wolves"&&this.wolfSees(pid)){ pr={k:"wolves",n:1,infect:R.role==="blackWolf"&&!sec.infectUsed}; v.wolfVotes=sec.nt.wolfVotes; }
+      else if(k==="n_witch"&&WITCH_ROLES.includes(R.role)) pr={k:"witch",victim:R.heal>0?this.effVictim():null,heal:R.heal,poison:R.poison};
+      else if(k==="n_white"&&R.role==="whiteWolf") pr={k:"white",n:1};
+      else if(k==="d_dictAsk"&&R.role==="dictator") pr={k:"dictAsk"};
+      else if(k==="d_dict"&&R.role==="dictator") pr={k:"dict",n:1};
+      else if(k==="d_tie"&&this.mayor===pid) pr={k:"tie",n:1,opts:this.ph.data.opts};
+      else if(k==="d_cand"&&!this.cands.includes(pid)) pr={k:"cand"};
+    }
+    if(k==="prompt"&&this.ph.data.who===pid) pr={k:this.ph.data.kind,n:1,dead:1};
+    if(pr){ pr.seq=this.ph.seq; pr.acted=!!a; v.prompt=pr; }
+    return v;
+  }
+  effVictim(){ const nt=this.sec.nt; if(!nt||!nt.victim) return null; if(nt.infect) return null; if(this.protectedFromWolves(nt.victim)) return null; return nt.victim; }
+  protectedFromWolves(v){
+    const sec=this.sec, nt=sec.nt;
+    if(nt&&nt.guarded===v) return true;
+    const r=this.role(v);
+    if(r==="redRidingHood"){ const h=this.aliveWith("hunter"); if(h.some(x=>!this.R(x).infected)) return true; }
+    if(r==="pinkRidingHood"&&sec.lovers&&sec.lovers.every(x=>this.alive(x))) return true;
+    if(r==="blueRidingHood"&&this.aliveWith("villager").some(x=>x!==v)) return true;
+    return false;
+  }
+  // ---------- incoming ----------
+  onMsg(from,pub,msg){
+    let P=this.players[from];
+    if(P&&P.pub&&(P.pub.x!==pub.x||P.pub.y!==pub.y)) return; // identity mismatch
+    if(P){ P.seen=Date.now(); }
+    if(msg.t==="hello"){ this.hello(from,pub,msg); return; }
+    if(!P) { this.sendTo0(from,pub,{t:"err",k:"notInGame"}); return; }
+    this.handle(from,msg);
+  }
+  sendTo0(pid,pub,obj){ if(this.room) this.room.sendTo(pid,pub,obj).catch(()=>{}); }
+  local(msg){ // host's own client
+    const pid=this.hostId;
+    if(msg.t==="hello"){ this.hello(pid,this.hostKeys.pub,msg); return; }
+    this.handle(pid,msg);
+  }
+  hello(pid,pub,msg){
+    let P=this.players[pid];
+    const name=String(msg.name||"").trim().slice(0,18)||"Joueur";
+    if(!P){
+      if(this.status!=="lobby"&&this.status!=="starting"){ this.sendTo0(pid,pub,{t:"err",k:"started"}); return; }
+      if(this.order.length>=this.S.seats){ this.sendTo0(pid,pub,{t:"err",k:"full"}); return; }
+      let n=name,i=2; while(Object.values(this.players).some(x=>x.name.toLowerCase()===n.toLowerCase())) n=name+i++;
+      P=this.players[pid]={name:n,av:msg.av,lang:msg.lang,pub,seen:Date.now()};
+      this.order.push(pid);
+      this.sys("joined",{a:{pid}},"small");
+      this.checkFull();
+    } else { P.av=msg.av||P.av; P.lang=msg.lang||P.lang; P.seen=Date.now(); }
+    this.resync(pid); this.flush(true);
+  }
+  checkFull(){
+    if(this.status==="lobby"&&this.order.length>=this.S.seats&&compTotal(this.S.comp)===this.S.seats){
+      this.status="starting"; this.ph={k:"starting",seq:this.ph.seq+1,end:Date.now()+this.dur("starting")};
+      this.sys("launching",{},"info");
+    }
+  }
+  handle(pid,msg){
+    const P=this.P(pid); P.seen=Date.now();
+    switch(msg.t){
+      case "ping": break;
+      case "chat": this.chat(pid,msg); break;
+      case "act": this.act(pid,msg); break;
+      case "leave":
+        if(this.status==="lobby"||this.status==="starting"){
+          this.order=this.order.filter(x=>x!==pid); delete this.players[pid];
+          this.sys("left",{n:P.name},"small");
+          if(this.status==="starting"){ this.status="lobby"; this.ph={k:"lobby",seq:this.ph.seq+1}; }
+        }
+        break;
+      case "cfg": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")) this.cfg(msg.cfg); break;
+      case "kick": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")&&msg.pid!==this.hostId){ const n=this.name(msg.pid); this.sendPriv(msg.pid,{t:"err",k:"kicked"}); this.order=this.order.filter(x=>x!==msg.pid); delete this.players[msg.pid]; this.sys("left",{n},"small"); if(this.status==="starting"){this.status="lobby";this.ph={k:"lobby",seq:this.ph.seq+1};} } break;
+      case "again": if(pid===this.hostId&&this.status==="ended") this.again(); break;
+      case "forceStart": if(pid===this.hostId&&this.status==="lobby"&&this.order.length>=3){ this.S.seats=this.order.length; this.S.comp=suggestCompFit(this.S.comp,this.order.length); this.checkFull(); } break;
+    }
+    this.flush();
+  }
+  cfg(c){
+    const S=this.S;
+    if(c.name!=null) S.name=String(c.name).slice(0,40);
+    if(c.seats!=null){ const s=Math.max(3,Math.min(16,c.seats|0)); if(s>=this.order.length) S.seats=s; }
+    if(c.comp) S.comp=c.comp;
+    if(c.mode) S.mode=c.mode==="serious"?"serious":"fun";
+    if(c.speed) S.speed=c.speed==="fast"?"fast":"normal";
+    if(this.status==="starting"&&(this.order.length<S.seats||compTotal(S.comp)!==S.seats)){ this.status="lobby"; this.ph={k:"lobby",seq:this.ph.seq+1}; }
+    this.checkFull();
+  }
+  // ---------- chat ----------
+  chat(pid,msg){
+    let x=String(msg.x||"").replace(/\s+/g," ").trim().slice(0,400); if(!x) return;
+    const ch=msg.ch, P=this.P(pid), m={ch,a:pid,n:P.name,x};
+    if(this.status!=="running"){ if(ch==="v") this.msg(m,"all"); return; }
+    const R=this.R(pid), night=this.isNight();
+    if(ch==="v"){
+      if(!R.alive||night) return;
+      if(R.role==="talkativeWolf"&&R.word&&!R.saidWord&&norm(x).includes(norm(R.word))){ R.saidWord=true; }
+      if(R.role==="literateWolf"&&R.letter&&!R.usedLetter&&norm(x).includes(norm(R.letter))){ R.usedLetter=true; this.priv(pid,"letterUsed",{l:R.letter},"warn"); }
+      this.msg(m,"all");
+    } else if(ch==="w"){
+      if(!R.alive||this.ph.k!=="n_wolves"||!this.wolfSees(pid)) return;
+      this.msg(m,"wolf");
+      for(const g of this.aliveWith("littleGirl")) if(!this.wolfSees(g)){
+        const nt=this.sec.nt; nt.anon=nt.anon||{}; if(!nt.anon[pid]) nt.anon[pid]=ANON[Object.keys(nt.anon).length%ANON.length];
+        this.msg({ch:"w",a:"anon:"+nt.anon[pid],n:nt.anon[pid],x,anon:1},{ids:[g]});
+      }
+    } else if(ch==="d"){
+      const necro=R.alive&&R.role==="necromancer";
+      if(R.alive&&!(necro&&night)) return;
+      if(necro){ m.a=null; m.necro=1; m.n=""; }
+      this.msg(m,"dead");
+    } else if(ch==="l"){
+      if(!R.lover||!R.alive) return;
+      this.msg(m,{ids:[pid,R.lover]});
+    }
+  }
+  // ---------- actions ----------
+  act(pid,msg){
+    if(this.status!=="running") return;
+    const R=this.R(pid); const k=this.ph.k; const d=msg.d||{};
+    if(msg.seq!==this.ph.seq) return;
+    const v=this.view(pid); const pr=v.prompt;
+    const validT=(t,{self=false,anyDead=false}={})=>t&&this.players[t]&&(anyDead||this.alive(t))&&(self||t!==pid);
+    if(k==="d_vote"||k==="d_elect"){
+      if(!R.alive) return;
+      let t=d.t||null;
+      if(t&&(!validT(t,{self:k==="d_elect"})||(k==="d_elect"&&!this.cands.includes(t)))) return;
+      const prev=this.votes[pid]||null; if(prev===t) return;
+      if(t){
+        if(k==="d_vote"){
+          const others=Object.entries(this.votes).filter(([a,b])=>b===t&&a!==pid).length;
+          const why=String(d.why||"").replace(/\s+/g," ").trim().slice(0,200);
+          if(!others&&!why){ this.sendPriv(pid,{t:"err",k:"needWhy"}); return; }
+          this.votes[pid]=t;
+          if(!others) this.msg({ch:"v",cls:"accuse",a:pid,n:this.name(pid),x:why,k:"accuse",p:{t:{pid:t}}},"all");
+          else this.sys("voted",{a:{pid},t:{pid:t}},"small");
+          // majority -> 30s
+          const cnt=Object.values(this.votes).filter(x=>x===t).length;
+          if(cnt>this.aliveIds().length/2&&this.ph.end-Date.now()>30500){ this.ph.end=Date.now()+30000; this.sys("timerCut",{t:{pid:t}},"info"); }
+        } else { this.votes[pid]=t; this.sys("votedMayor",{a:{pid},t:{pid:t}},"small"); }
+      } else { delete this.votes[pid]; this.sys("unvoted",{a:{pid}},"small"); }
+      return;
+    }
+    if(!pr||pr.seq!==this.ph.seq) return;
+    if(pr.k==="cand"){ const why=String(d.x||"").replace(/\s+/g," ").trim().slice(0,300); this.cands.push(pid); this.msg({ch:"v",cls:"pres",a:pid,n:this.name(pid),x:why,k:"presents"},"all"); return; }
+    let ok=false;
+    switch(pr.k){
+      case "cupid": ok=Array.isArray(d.ts)&&d.ts.length===2&&d.ts[0]!==d.ts[1]&&d.ts.every(t=>validT(t,{self:true})); break;
+      case "heir": case "seer": case "white": case "dict": ok=validT(d.t); break;
+      case "guard": ok=validT(d.t,{self:true})&&d.t!==R.guardLast; break;
+      case "rat": ok=Array.isArray(d.ts)&&d.ts.length>=1&&d.ts.length<=2&&d.ts.every(t=>validT(t))&&new Set(d.ts).size===d.ts.length; break;
+      case "pyro": ok=d.ignite===true||(validT(d.t)&&!this.sec.barrels.includes(d.t)); break;
+      case "wolves": ok=validT(d.t)&&!(this.camp(d.t)==="wolf"); break;
+      case "witch": ok=d.skip===true||(d.heal===true&&R.heal>0&&!!pr.victim)||(validT(d.poison)&&R.poison>0); break;
+      case "dictAsk": ok=typeof d.yes==="boolean"; break;
+      case "tie": ok=pr.opts.includes(d.t); break;
+      case "hunter": ok=d.none===true||validT(d.t); break;
+      case "grave": ok=validT(d.t,{anyDead:true}); break;
+      case "succ": ok=validT(d.t); break;
+    }
+    if(!ok) return;
+    if(pr.k==="wolves"){
+      const nt=this.sec.nt; nt.wolfVotes[pid]=d.t; if(d.infect!=null&&R.role==="blackWolf") nt.infectWish=!!d.infect;
+      this.acts[pid]=d;
+      this.sys("wolfVote",{a:{pid},t:{pid:d.t}},"wolfsys","wolf");
+    } else {
+      if(this.acts[pid]&&pr.k!=="wolves") return; // single action
+      this.acts[pid]=d;
+    }
+    if(pr.k==="seer") this.seerResult(pid,d.t);
+    this.checkDone();
+  }
+  seerResult(pid,t){
+    const R=this.R(pid), r=this.role(t);
+    R.seen=R.seen||[];
+    if(R.role==="auraSeer"){ const dark=!!(ROLES[r]&&ROLES[r].kill); R.seen.push({t,aura:dark?"dark":"light"}); this.priv(pid,"auraResult",{t:{pid:t},a:dark?"auraDark":"auraLight"},"seer"); }
+    else { R.seen.push({t,r}); this.priv(pid,"seerResult",{t:{pid:t},r:{role:r}},"seer"); if(R.role==="talkativeSeer") this.sec.nt.talk.push({t,r}); }
+  }
+  actors(){
+    const k=this.ph.k;
+    const m={n_cupid:()=>this.aliveWith("cupid"),n_heir:()=>this.aliveWith("heir").filter(p=>!this.R(p).testator),n_seer:()=>this.aliveWith(SEER_ROLES),n_guard:()=>this.aliveWith("guard"),
+      n_rat:()=>this.aliveWith("sickRat"),n_pyro:()=>this.aliveWith("pyromancer"),n_wolves:()=>this.wolfVoters(),n_witch:()=>this.aliveWith(WITCH_ROLES).filter(p=>this.R(p).heal>0||this.R(p).poison>0),
+      n_white:()=>this.aliveWith("whiteWolf"),d_dictAsk:()=>this.aliveWith("dictator"),d_dict:()=>this.aliveWith("dictator"),d_tie:()=>this.mayor&&this.alive(this.mayor)?[this.mayor]:[],
+      prompt:()=>[this.ph.data.who]};
+    return m[k]?m[k]():null;
+  }
+  checkDone(){
+    const a=this.actors(); if(!a) return;
+    let done=a.length>0&&a.every(p=>this.acts[p]);
+    if(this.ph.k==="n_wolves"&&done){ const vs=a.map(p=>this.sec.nt.wolfVotes[p]); done=vs.every(x=>x===vs[0]); }
+    if(done&&!this.ph.doneAt) this.ph.doneAt=Date.now()+(this.ph.k==="n_wolves"?2500:1200);
+    if(!done) this.ph.doneAt=null;
+  }
+  // ---------- phase machine ----------
+  setPhase(k,durKey,data,n){
+    this.ph={k,seq:this.ph.seq+1,end:Date.now()+this.dur(durKey),data:data||{},n:n!=null?n:(k.startsWith("n_")?this.sec.night:this.sec.day)};
+    this.acts={};
+    if(k.startsWith("n_")) this.sys("step_"+k.slice(2),{},"step");
+    this.checkDone();
+    this.flush();
+  }
+  tick(){
+    try{
+      const now=Date.now();
+      if(this.status==="starting"&&now>=this.ph.end){ this.startGame(); return; }
+      if(this.status!=="running"){ this.flush(); return; }
+      if(this.ph.k==="d_vote"&&!this.sec.mentalistDone&&this.ph.end-now<=30000){ this.sec.mentalistDone=true; this.mentalist(); }
+      if(now>=this.ph.end||(this.ph.doneAt&&now>=this.ph.doneAt)) this.endPhase();
+      else this.flush();
+    }catch(e){ console.error("tick",e); }
+  }
+  mentalist(){
+    const ms=this.aliveWith("mentalist"); if(!ms.length) return;
+    const c={}; for(const t of Object.values(this.votes)) c[t]=(c[t]||0)+1;
+    let best=null,max=0,tie=false; for(const t in c){ if(c[t]>max){max=c[t];best=t;tie=false;} else if(c[t]===max) tie=true; }
+    const res=!best||tie?"mentNone":this.camp(best)==="wolf"?"mentGood":"mentBad";
+    for(const m of ms) this.priv(m,res,best&&!tie?{t:{pid:best}}:{},"seer");
+  }
+  startGame(){
+    const S=this.S; const deck=[];
+    for(const r in S.comp) for(let i=0;i<(S.comp[r]||0);i++) deck.push(r);
+    while(deck.length<this.order.length) deck.push("villager");
+    const roles=shuffle(deck).slice(0,this.order.length);
+    this.sec={R:{},day:0,night:0,lovers:null,contaminated:[],barrels:[],infectUsed:false,firstDeath:false,pending:[],after:null,nt:null,mentalistDone:false,mayorDone:false,dictPublic:null};
+    this.order.forEach((pid,i)=>{ const r=roles[i]; this.sec.R[pid]={role:r,orig:r,camp:ROLES[r].camp,alive:true,
+      heal:r==="witch"?1:r==="healerWitch"?2:0, poison:r==="witch"?1:r==="poisoner"?2:0}; });
+    for(const pid of this.aliveWith("mercenary")){ const o=this.order.filter(x=>x!==pid); this.R(pid).mercTarget=pick(o); }
+    this.status="running"; this.mayor=null; this.votes={}; this.cands=[]; this.winner=null; this.winners=[];
+    this.sys("gameStart",{n:this.order.length},"big");
+    for(const pid of this.order) this.priv(pid,"yourRole",{r:{role:this.role(pid)}},"role");
+    for(const pid of this.order) this.resync(pid);
+    this.startNight();
+  }
+  startNight(){
+    const sec=this.sec; sec.night++; this.votes={}; this.cands=[];
+    sec.nt={wolfVotes:{},victim:null,infect:false,infectWish:false,guarded:null,healed:false,poisons:[],white:null,ignite:false,talk:[],idx:-1};
+    this.sys("nightFalls",{n:sec.night},"night");
+    this.nextNightStep();
+  }
+  stepActive(s){
+    const n=this.sec.night;
+    switch(s){
+      case "cupid": return n===1&&this.aliveWith("cupid").length>0;
+      case "heir": return n===1&&this.aliveWith("heir").some(p=>!this.R(p).testator);
+      case "seer": return this.aliveWith(SEER_ROLES).length>0;
+      case "guard": return this.aliveWith("guard").length>0;
+      case "rat": return this.aliveWith("sickRat").length>0;
+      case "pyro": return this.aliveWith("pyromancer").length>0;
+      case "wolves": return this.wolfVoters().length>0;
+      case "witch": return this.aliveWith(WITCH_ROLES).some(p=>this.R(p).heal>0||this.R(p).poison>0);
+      case "white": return n>=2&&n%2===0&&this.aliveWith("whiteWolf").length>0;
+    }
+  }
+  nextNightStep(){
+    const nt=this.sec.nt;
+    for(let i=nt.idx+1;i<NIGHT_ORDER.length;i++){ if(this.stepActive(NIGHT_ORDER[i])){ nt.idx=i; this.setPhase("n_"+NIGHT_ORDER[i],NIGHT_ORDER[i]); return; } }
+    this.dawn();
+  }
+  endPhase(){
+    const k=this.ph.k, sec=this.sec, nt=sec.nt, A=this.acts;
+    const one=role=>{ const p=this.aliveWith(role)[0]; return p?[p,A[p]]:[null,null]; };
+    switch(k){
+      case "n_cupid": { const [p,a]=one("cupid"); if(a&&a.ts){ const [x,y]=a.ts; sec.lovers=[x,y]; this.R(x).lover=y; this.R(y).lover=x;
+          this.priv(x,"inLove",{t:{pid:y},r:{role:this.role(y)}},"love"); this.priv(y,"inLove",{t:{pid:x},r:{role:this.role(x)}},"love");
+          if(p!==x&&p!==y) this.priv(p,"cupidDone",{a:{pid:x},b:{pid:y}},"love"); }
+        this.nextNightStep(); return; }
+      case "n_heir": for(const p of this.aliveWith("heir")) if(A[p]&&A[p].t){ this.R(p).testator=A[p].t; this.priv(p,"heirChose",{t:{pid:A[p].t}},"priv"); } this.nextNightStep(); return;
+      case "n_seer": this.nextNightStep(); return;
+      case "n_guard": for(const p of this.aliveWith("guard")){ const t=A[p]&&A[p].t||null; this.R(p).guardLast=t; nt.guarded=t; } this.nextNightStep(); return;
+      case "n_rat": for(const p of this.aliveWith("sickRat")) if(A[p]&&A[p].ts){ for(const t of A[p].ts) if(!sec.contaminated.includes(t)){ sec.contaminated.push(t); this.priv(t,"contaminated",{},"conta"); } } this.nextNightStep(); return;
+      case "n_pyro": for(const p of this.aliveWith("pyromancer")){ const a=A[p]; if(a&&a.ignite) nt.ignite=true; else if(a&&a.t){ sec.barrels.push(a.t); } } this.nextNightStep(); return;
+      case "n_wolves": {
+        const c={}; for(const p of this.wolfVoters()){ const t=nt.wolfVotes[p]; if(t&&this.alive(t)&&this.camp(t)!=="wolf") c[t]=(c[t]||0)+1; }
+        let max=0,best=[]; for(const t in c){ if(c[t]>max){max=c[t];best=[t];} else if(c[t]===max) best.push(t); }
+        nt.victim=best.length?pick(best):null;
+        nt.infect=!!(nt.infectWish&&!sec.infectUsed&&this.aliveWith("blackWolf").length&&nt.victim&&!this.protectedFromWolves(nt.victim));
+        if(nt.victim) this.sys("wolvesChose",{t:{pid:nt.victim}},"wolfsys","wolf");
+        this.nextNightStep(); return; }
+      case "n_witch": for(const p of this.aliveWith(WITCH_ROLES)){ const a=A[p],R=this.R(p); if(!a||a.skip) continue;
+          if(a.heal&&R.heal>0&&this.effVictim()){ R.heal--; nt.healed=true; }
+          else if(a.poison&&R.poison>0&&this.alive(a.poison)){ R.poison--; nt.poisons.push(a.poison); } }
+        this.nextNightStep(); return;
+      case "n_white": { const [p,a]=one("whiteWolf"); if(a&&a.t) nt.white=a.t; this.nextNightStep(); return; }
+      case "prompt": this.endPrompt(); return;
+      case "d_cand": if(!this.cands.length) this.cands=this.aliveIds(); this.votes={}; this.setPhase("d_elect","elect"); return;
+      case "d_elect": {
+        const c={}; for(const t of Object.values(this.votes)) if(this.cands.includes(t)&&this.alive(t)) c[t]=(c[t]||0)+1;
+        let max=0,best=[]; for(const t in c){ if(c[t]>max){max=c[t];best=[t];} else if(c[t]===max) best.push(t); }
+        const m=best.length?pick(best):pick(this.cands.filter(x=>this.alive(x))); this.mayor=m||null; sec.mayorDone=true; this.votes={}; this.cands=[];
+        if(m) this.sys("mayorElected",{t:{pid:m}},"mayor");
+        this.afterElection(); return; }
+      case "d_dictAsk": { const [p,a]=one("dictator"); if(p&&a&&a.yes){ this.R(p).dictUsed=true; sec.dictPublic=p; this.sys("coup",{t:{pid:p}},"big"); this.setPhase("d_dict","dict",{who:p}); } else this.setPhase("d_vote","vote"); return; }
+      case "d_dict": { const p=this.ph.data.who; const a=A[p]; sec.dictPublic=null;
+        if(a&&a.t&&this.alive(a.t)&&this.alive(p)){ const wolf=this.camp(a.t)==="wolf"; this.kill(a.t,"dict");
+          if(wolf){ this.mayor=p; this.sys("dictWin",{t:{pid:p}},"mayor"); } else this.kill(p,"dictFail"); }
+        else this.sys("dictNothing",{},"info");
+        this.finishDay(); return; }
+      case "d_vote": this.resolveVote(); return;
+      case "d_tie": { const a=A[this.mayor]; if(a&&a.t) this.lynch(a.t); else this.sys("tieNobody",{},"info"); this.finishDay(); return; }
+    }
+  }
+  dawn(){
+    const sec=this.sec, nt=sec.nt; const deaths=[];
+    let v=this.effVictim();
+    if(nt.victim&&nt.infect&&!this.protectedFromWolves(nt.victim)){ this.infect(nt.victim); sec.infectUsed=true; v=null; }
+    if(v&&!nt.healed) deaths.push([v,"wolf"]);
+    for(const t of nt.poisons) deaths.push([t,"poison"]);
+    if(nt.white) deaths.push([nt.white,"white"]);
+    const pyro=this.aliveWith("pyromancer")[0];
+    if(nt.ignite&&pyro&&!deaths.some(d=>d[0]===pyro)){ for(const b of sec.barrels) deaths.push([b,"fire"]); sec.barrels=[]; this.sys("explosion",{},"big"); }
+    this.ph={k:"dawn",seq:this.ph.seq+1,end:Date.now()+this.dur("dawn"),data:{},n:sec.night}; this.acts={};
+    this.sys("dawn",{},"day");
+    for(const x of nt.talk) this.sys("talkSeer",{t:{pid:x.t},r:{role:x.r}},"seer");
+    const seen=new Set(); const list=deaths.filter(([p])=>this.alive(p)&&!seen.has(p)&&seen.add(p));
+    if(!list.length) this.sys("noDeath",{},"info");
+    for(const [p,c] of list) this.kill(p,c);
+    if(sec.night===1) for(const p of this.aliveWith("mercenary")) this.priv(p,"mercTarget",{t:{pid:this.R(p).mercTarget}},"priv");
+    sec.after="day"; this.runPending();
+  }
+  infect(v){ const R=this.R(v); R.infected=true; R.camp="wolf"; this.priv(v,"youInfected",{},"wolfsys"); this.sys("joinedPack",{t:{pid:v}},"wolfsys","wolf"); this.resync(v); }
+  kill(pid,cause){
+    const R=this.R(pid); if(!R||!R.alive) return;
+    R.alive=false; R.revealed=true;
+    this.sys("died",{t:{pid},r:{role:R.role},c:"c_"+cause,inf:R.infected?1:0},"death");
+    const sec=this.sec;
+    if(R.role==="hunter") sec.pending.push({kind:"hunter",who:pid});
+    if(R.role==="gravedigger") sec.pending.push({kind:"grave",who:pid});
+    if(this.mayor===pid) sec.pending.push({kind:"succ",who:pid});
+    for(const h of this.aliveWith("heir")) if(this.R(h).testator===pid) this.inherit(h,pid);
+    if(!sec.firstDeath){ sec.firstDeath=true; for(const h of this.aliveWith("plunderer")) if(h!==pid) this.inherit(h,pid); }
+    if(R.lover&&this.alive(R.lover)) this.kill(R.lover,"love");
+    this.resync(pid);
+  }
+  inherit(h,from){
+    const r=this.R(from).role, H=this.R(h), was=H.role;
+    if(r==="hunter"||r==="gravedigger"){ this.priv(h,"inheritNothing",{t:{pid:from}},"priv"); H.testator=null; return; }
+    H.role=r; H.testator=null;
+    const F=this.R(from); H.heal=F.heal||0; H.poison=F.poison||0; H.dictUsed=F.dictUsed; H.guardLast=null;
+    if(r==="mercenary"){ H.mercTarget=F.mercTarget; }
+    H.camp=H.infected?"wolf":(r==="mercenary"&&this.sec.day>1?"village":ROLES[r].camp);
+    this.priv(h,"inherited",{t:{pid:from},r:{role:r}},"role");
+    if(H.camp==="wolf"&&!H.infected){ this.sys("joinedPack",{t:{pid:h}},"wolfsys","wolf"); }
+    this.resync(h);
+  }
+  runPending(){
+    if(this.checkWin()) return;
+    const p=this.sec.pending.shift();
+    if(!p){ this.continueAfter(); return; }
+    if(p.kind==="succ"&&!this.aliveIds().length){ this.runPending(); return; }
+    this.setPhase("prompt","prompt",{kind:p.kind,who:p.who});
+  }
+  endPrompt(){
+    const {kind,who}=this.ph.data; const a=this.acts[who]||{};
+    if(kind==="hunter"){ if(a.t&&this.alive(a.t)) { this.sys("hunterShot",{a:{pid:who},t:{pid:a.t}},"big"); this.kill(a.t,"hunter"); } else this.sys("hunterNone",{},"info"); }
+    else if(kind==="grave"){
+      const t=a.t&&this.players[a.t]?a.t:pick(this.order.filter(x=>x!==who));
+      if(t){ const wolf=this.camp(t)==="wolf"; const pool=this.order.filter(x=>x!==who&&x!==t&&((this.camp(x)==="wolf")!==wolf)); const o=pool.length?pick(pool):null;
+        const pair=shuffle([t,o].filter(Boolean)); this.sys("graves",{a:{pid:pair[0]},b:pair[1]?{pid:pair[1]}:"—"},"big"); }
+    } else if(kind==="succ"){
+      const al=this.aliveIds(); const t=a.t&&this.alive(a.t)?a.t:pick(al); this.mayor=t||null; if(t) this.sys("newMayor",{t:{pid:t}},"mayor");
+    }
+    this.runPending();
+  }
+  continueAfter(){ const a=this.sec.after; this.sec.after=null; if(a==="day") this.startDay(); else this.startNight(); }
+  startDay(){
+    const sec=this.sec; sec.day++; this.votes={}; sec.mentalistDone=false;
+    for(const p of this.aliveWith("talkativeWolf")){ const R=this.R(p),L=this.P(p).lang==="ru"?"ru":"fr"; R.word=pick(WORDS[L]); R.saidWord=false; this.priv(p,"yourWord",{w:R.word},"warn"); }
+    for(const p of this.aliveWith("literateWolf")){ const R=this.R(p),L=this.P(p).lang==="ru"?"ru":"fr"; R.letter=pick(LETTERS[L]); R.usedLetter=false; this.priv(p,"yourLetter",{l:R.letter},"warn"); }
+    if(sec.day===2&&!sec.mayorDone&&this.aliveIds().length>=3){ this.cands=[]; this.setPhase("d_cand","cand"); return; }
+    this.afterElection();
+  }
+  afterElection(){
+    const d=this.aliveWith("dictator").filter(p=>!this.R(p).dictUsed);
+    if(d.length) this.setPhase("d_dictAsk","dictAsk");
+    else this.setPhase("d_vote","vote");
+  }
+  resolveVote(){
+    const c={}; for(const [v,t] of Object.entries(this.votes)) if(this.alive(v)&&this.alive(t)) c[t]=(c[t]||0)+1;
+    let max=0,best=[]; for(const t in c){ if(c[t]>max){max=c[t];best=[t];} else if(c[t]===max) best.push(t); }
+    if(best.length>1){
+      if(this.mayor&&this.alive(this.mayor)){ this.sys("tieMayor",{t:{pid:this.mayor}},"info"); this.setPhase("d_tie","tie",{opts:best}); return; }
+      this.sys("tieNobody",{},"info");
+    } else if(best.length===1) this.lynch(best[0]);
+    else this.sys("noVote",{},"info");
+    this.finishDay();
+  }
+  lynch(t){
+    if(this.role(t)==="wolfRidingHood"&&this.aliveWith("blackWolf").length){ this.sys("cwSaved",{t:{pid:t}},"info"); return; }
+    this.kill(t,"vote");
+    const sec=this.sec;
+    if(sec.day===1) for(const m of this.aliveWith("mercenary")) if(this.R(m).camp==="solo"&&this.R(m).mercTarget===t) sec.mercWin=m;
+  }
+  finishDay(){
+    const sec=this.sec; this.votes={};
+    for(const p of this.aliveWith("talkativeWolf")) if(this.R(p).word&&!this.R(p).saidWord) this.kill(p,"word");
+    for(const p of this.aliveWith("literateWolf")) if(this.R(p).usedLetter) this.kill(p,"letter");
+    for(const p of this.order){ const R=this.R(p); R.word=null; R.letter=null; }
+    if(sec.mercWin){ this.endGame("merc",[sec.mercWin]); return; }
+    if(sec.day===1) for(const m of this.order) if(this.role(m)==="mercenary"&&this.R(m).camp==="solo"){ this.R(m).camp="village"; if(this.alive(m)) this.priv(m,"mercFailed",{},"priv"); }
+    sec.after="night"; this.runPending();
+  }
+  checkWin(){
+    if(this.status!=="running") return true;
+    const al=this.aliveIds(), sec=this.sec;
+    if(!al.length){ this.endGame("draw",[]); return true; }
+    const L=sec.lovers;
+    if(L&&al.length===2&&L.every(x=>this.alive(x))&&this.camp(L[0])!==this.camp(L[1])){ this.endGame("lovers",L.slice()); return true; }
+    if(al.length===1&&this.role(al[0])==="whiteWolf"){ this.endGame("white",al.slice()); return true; }
+    const rat=this.aliveWith("sickRat")[0];
+    if(rat&&al.filter(x=>x!==rat).every(x=>sec.contaminated.includes(x))&&al.length>1){ this.endGame("rat",[rat]); return true; }
+    if(al.every(x=>this.camp(x)==="wolf")){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; }
+    if(!al.some(x=>this.camp(x)==="wolf"||this.camp(x)==="solo")){ this.endGame("village",this.order.filter(x=>this.camp(x)==="village")); return true; }
+    return false;
+  }
+  endGame(w,winners){
+    this.status="ended"; this.winner=w; this.winners=winners; this.ph={k:"ended",seq:this.ph.seq+1,n:0}; this.acts={};
+    for(const p of this.order) this.R(p).revealed=true;
+    this.sys("win_"+w,{},"win");
+    for(const p of this.order) this.resync(p);
+    this.flush(true);
+  }
+  again(){
+    this.status="lobby"; this.sec=null; this.ph={k:"lobby",seq:this.ph.seq+1}; this.acts={}; this.votes={}; this.cands=[]; this.mayor=null; this.winner=null; this.winners=[]; this.round++;
+    const now=Date.now();
+    for(const pid of this.order.slice()) if(pid!==this.hostId&&now-(this.P(pid).seen||0)>30000){ this.order=this.order.filter(x=>x!==pid); delete this.players[pid]; }
+    if(this.order.length>this.S.seats) this.S.seats=this.order.length;
+    this.sys("newRound",{},"big");
+    for(const p of this.order) this.resync(p);
+    this.checkFull(); this.flush(true);
+  }
+}
+function suggestCompFit(comp,n){
+  const c=clone(comp||{}); let tot=compTotal(c);
+  while(tot>n){ if(c.villager>0){c.villager--;} else { const ks=Object.keys(c).filter(k=>c[k]>0&&!(k==="werewolf"&&c[k]===1)); const k=ks.reverse().find(k=>k!=="werewolf")||ks[0]; if(!k) break; c[k]--; } tot--; }
+  if(tot<n) c.villager=(c.villager||0)+(n-tot);
+  for(const k in c) if(!c[k]) delete c[k];
+  return c;
+}
+
+/* ===================== ART (original SVG) ===================== */
+function sceneSVG(){
+  let stars="";
+  const rnd=(i)=>{ const x=Math.sin(i*999.13)*10000; return x-Math.floor(x); };
+  for(let i=0;i<90;i++){ const x=rnd(i)*1600, y=rnd(i+300)*430, r=rnd(i+600)*1.4+0.4; stars+=`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(2)}" fill="#fff" opacity="${(0.35+rnd(i+900)*0.65).toFixed(2)}"/>`; }
+  const pine=(x,y,s,c)=>`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-4" y="-10" width="8" height="22" fill="var(--trunk)"/><path d="M0 -150 L34 -80 L18 -82 L46 -30 L24 -32 L56 18 L-56 18 L-24 -32 L-46 -30 L-18 -82 L-34 -80Z" fill="${c}"/></g>`;
+  let trees="";
+  [[60,640,1.5],[150,670,1.15],[230,610,.9],[1500,650,1.5],[1420,680,1.1],[1350,620,.85],[1560,560,1.2],[30,560,1.1]].forEach(([x,y,s])=>trees+=pine(x,y,s,"var(--tree1)"));
+  [[330,560,.6],[400,575,.5],[1240,565,.6],[1180,580,.45],[460,560,.42],[1110,560,.4]].forEach(([x,y,s])=>trees+=pine(x,y,s,"var(--tree2)"));
+  return `<svg class="scene-svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset=".6" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient>
+    <radialGradient id="moonG" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#f4f1e6"/><stop offset="1" stop-color="#bdb9ad"/></radialGradient>
+    <radialGradient id="glowG"><stop offset="0" style="stop-color:var(--glow)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--glow)" stop-opacity="0"/></radialGradient>
+    <linearGradient id="lakeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--lake1)"/><stop offset="1" style="stop-color:var(--lake2)"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#skyG)"/>
+  <g class="stars">${stars}</g>
+  <circle cx="560" cy="250" r="260" fill="url(#glowG)"/>
+  <g class="moon"><circle cx="560" cy="250" r="140" fill="url(#moonG)"/>
+    <circle cx="510" cy="215" r="26" fill="#a9a597" opacity=".55"/><circle cx="600" cy="300" r="34" fill="#a9a597" opacity=".45"/><circle cx="620" cy="200" r="14" fill="#a9a597" opacity=".5"/><circle cx="480" cy="300" r="18" fill="#a9a597" opacity=".4"/><path d="M450 240 q40 -30 70 10 q30 30 60 0" stroke="#a9a597" stroke-width="10" fill="none" opacity=".35"/></g>
+  <g class="sun"><circle cx="560" cy="250" r="110" fill="#ffd77a"/><circle cx="560" cy="250" r="150" fill="#ffd77a" opacity=".25"/></g>
+  <path d="M0 520 L140 380 L260 450 L420 300 L560 430 L700 340 L860 470 L1000 330 L1150 420 L1290 290 L1440 410 L1600 330 L1600 900 L0 900Z" fill="var(--mount3)"/>
+  <path d="M0 560 L200 440 L330 500 L520 400 L690 520 L880 420 L1060 520 L1240 410 L1400 500 L1600 420 L1600 900 L0 900Z" fill="var(--mount2)"/>
+  <path d="M420 300 L470 345 L440 340 L420 370 L400 335 L380 342Z M1290 290 L1330 330 L1305 326 L1290 350 L1272 324 L1250 330Z" fill="#fff" opacity="var(--snow)"/>
+  <path d="M0 600 C200 560 380 590 560 575 C760 560 980 590 1180 572 C1360 556 1500 580 1600 570 L1600 900 L0 900Z" fill="var(--hill)"/>
+  <ellipse cx="800" cy="640" rx="430" ry="46" fill="url(#lakeG)"/>
+  <g opacity=".6" stroke="var(--shine)" stroke-width="3" stroke-linecap="round"><line x1="1010" y1="628" x2="1080" y2="628"/><line x1="1030" y1="642" x2="1120" y2="642"/></g>
+  ${trees}
+  <path d="M0 700 C300 660 600 690 800 680 C1050 670 1300 690 1600 670 L1600 900 L0 900Z" fill="var(--ground)"/>
+  <path d="M0 780 C400 750 800 770 1600 750 L1600 900 L0 900Z" fill="var(--ground2)"/>
+  </svg>`;
+}
+
+const SKIN=["#f5d0b0","#e8b48a","#c98e62","#8d5a3b","#f1c6a2","#5c3a26"];
+const HAIRC=["#2a1d15","#5a3a22","#c9a15a","#e6d28f","#a33a2a","#d9d9de","#3b3f8f","#e07fb0"];
+const TOPC=["#2f4a8f","#7a2f3a","#3f6e4a","#5b3f86","#8a6a2f","#2e2e3a","#c35a3a","#2f7a8a","#d0d0dc","#9c3d7a"];
+function randomAvatar(){ const r=n=>Math.floor(Math.random()*n); return {s:r(SKIN.length),h:r(6),hc:r(HAIRC.length),t:r(TOPC.length),o:r(4),a:r(5)}; }
+function shade(hex,f){ const n=parseInt(hex.slice(1),16); let r=n>>16,g=(n>>8)&255,b=n&255; r=Math.round(r*f);g=Math.round(g*f);b=Math.round(b*f); const c=x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,"0"); return "#"+c(r)+c(g)+c(b); }
+function charSVG(av,opt={}){
+  av=av||{s:0,h:0,hc:0,t:0,o:0,a:0};
+  const sk=SKIN[av.s%SKIN.length], hc=HAIRC[av.hc%HAIRC.length], tc=TOPC[av.t%TOPC.length], tcd=shade(tc,.72), skd=shade(sk,.86);
+  const eyes = opt.sleep ? `<path d="M41 47 q4 3 8 0 M55 47 q4 3 8 0" stroke="#3a2a22" stroke-width="2" fill="none" stroke-linecap="round"/>`
+                         : `<circle cx="45" cy="47" r="2.6" fill="#2a1d15"/><circle cx="59" cy="47" r="2.6" fill="#2a1d15"/>`;
+  let body="";
+  switch(av.o%4){
+    case 0: body=`<path d="M30 74 h44 l4 52 h-52z" fill="${tc}"/><path d="M52 74 h22 l4 52 h-26z" fill="${tcd}"/><path d="M46 74 l6 14 l6 -14z" fill="#eee"/>${[88,98,108].map(y=>`<circle cx="49" cy="${y}" r="1.8" fill="#d8c27a"/><circle cx="56" cy="${y}" r="1.8" fill="#d8c27a"/>`).join("")}`; break;
+    case 1: body=`<path d="M34 74 h36 l14 60 h-64z" fill="${tc}"/><path d="M52 74 h18 l14 60 h-32z" fill="${tcd}"/><rect x="34" y="92" width="36" height="5" fill="${shade(tc,.5)}"/>`; break;
+    case 2: body=`<path d="M31 74 h42 l3 50 h-48z" fill="${tc}"/><path d="M52 74 h21 l3 50 h-24z" fill="${tcd}"/><rect x="29" y="100" width="46" height="7" fill="#6b4a2a"/><rect x="48" y="99" width="8" height="9" fill="#d8c27a"/>`; break;
+    case 3: body=`<path d="M26 76 q26 -8 52 0 l8 58 h-68z" fill="${tc}"/><path d="M52 72 q13 0 26 4 l8 58 h-34z" fill="${tcd}"/><path d="M44 74 l8 10 l8 -10" stroke="#eee" stroke-width="3" fill="none"/>`; break;
+  }
+  const legs = av.o%4===1 ? `<rect x="40" y="132" width="8" height="12" fill="#2a2630"/><rect x="56" y="132" width="8" height="12" fill="#2a2630"/>`
+                          : `<rect x="36" y="124" width="13" height="22" fill="#26232e"/><rect x="55" y="124" width="13" height="22" fill="#1d1b24"/>`;
+  const shoes=`<rect x="33" y="143" width="17" height="6" rx="3" fill="#15131a"/><rect x="54" y="143" width="17" height="6" rx="3" fill="#15131a"/>`;
+  const arms=`<rect x="22" y="78" width="10" height="40" rx="5" fill="${tc}"/><rect x="72" y="78" width="10" height="40" rx="5" fill="${tcd}"/><circle cx="27" cy="120" r="5" fill="${sk}"/><circle cx="77" cy="120" r="5" fill="${skd}"/>`;
+  const head=`<rect x="34" y="22" width="36" height="50" rx="16" fill="${sk}"/><path d="M52 22 h2 a16 16 0 0 1 16 16 v18 a16 16 0 0 1 -16 16 h-2z" fill="${skd}"/>${eyes}<path d="M52 52 q2 5 0 9" stroke="${shade(sk,.7)}" stroke-width="2" fill="none"/>`;
+  let hair="";
+  switch(av.h%6){
+    case 0: hair=`<path d="M33 40 q0 -22 19 -22 q19 0 19 22 q-6 -12 -19 -12 q-13 0 -19 12z" fill="${hc}"/>`; break;
+    case 1: hair=`<path d="M31 46 v-10 q0 -20 21 -20 q21 0 21 20 v10 h-6 v-14 h-30 v14z" fill="${hc}"/>`; break;
+    case 2: hair=`<path d="M30 80 v-42 q0 -22 22 -22 q22 0 22 22 v42 h-8 v-44 q-14 -8 -28 0 v44z" fill="${hc}"/>`; break;
+    case 3: hair=`<path d="M33 36 l3 -16 l6 8 l5 -12 l6 10 l6 -11 l4 12 l7 -7 l1 16 q-19 -8 -38 0z" fill="${hc}"/>`; break;
+    case 4: hair=`<circle cx="52" cy="14" r="9" fill="${hc}"/><path d="M33 40 q0 -22 19 -22 q19 0 19 22 q-19 -14 -38 0z" fill="${hc}"/>`; break;
+    case 5: hair=``; break;
+  }
+  let hat="";
+  switch(av.a%5){
+    case 1: hat=`<rect x="30" y="18" width="44" height="5" rx="2" fill="#1a1820"/><rect x="38" y="-4" width="28" height="24" rx="3" fill="#22202a"/><rect x="38" y="12" width="28" height="4" fill="#7a2f3a"/>`; break;
+    case 2: hat=`<path d="M28 60 q-2 -46 24 -46 q26 0 24 46 q-6 -30 -24 -30 q-18 0 -24 30z" fill="${shade(tc,.85)}"/>`; break;
+    case 3: hat=`<circle cx="38" cy="22" r="5" fill="#f2a0c0"/><circle cx="48" cy="17" r="5" fill="#f7e17a"/><circle cx="58" cy="17" r="5" fill="#a0d8f2"/><circle cx="67" cy="22" r="5" fill="#f2a0c0"/>`; break;
+    case 4: hat=`<ellipse cx="54" cy="22" rx="22" ry="7" fill="#3a2f5a"/><circle cx="60" cy="15" r="3" fill="#3a2f5a"/>`; break;
+  }
+  return `<svg viewBox="0 -8 104 160" class="ch-svg" xmlns="http://www.w3.org/2000/svg"><ellipse cx="52" cy="148" rx="30" ry="5" fill="#000" opacity=".28"/>${legs}${shoes}${arms}${body}${hair.includes("v-42")?hair:""}${head}${hair.includes("v-42")?"":hair}${hat}</svg>`;
+}
+function headSVG(av){
+  av=av||{s:0,h:0,hc:0,t:0,o:0,a:0};
+  return `<svg viewBox="22 0 60 80" class="hd-svg">${charSVG(av).replace(/^<svg[^>]*>/,"").replace(/<\/svg>$/,"")}</svg>`;
+}
+function tombSVG(){
+  return `<svg viewBox="0 -8 104 160" class="ch-svg"><ellipse cx="52" cy="148" rx="34" ry="6" fill="#000" opacity=".3"/><path d="M26 146 v-60 q0 -30 26 -30 q26 0 26 30 v60z" fill="#6c6f80"/><path d="M52 56 q26 0 26 30 v60 h-26z" fill="#585a6a"/><circle cx="52" cy="94" r="12" fill="#c94a4a"/><circle cx="47.5" cy="92" r="3" fill="#2b1d22"/><circle cx="56.5" cy="92" r="3" fill="#2b1d22"/><rect x="48" y="100" width="8" height="5" rx="1" fill="#2b1d22"/><rect x="18" y="140" width="68" height="8" rx="3" fill="#3b4a3a"/></svg>`;
+}
+function logoSVG(){
+  return `<svg viewBox="0 0 64 64" class="logo-svg"><circle cx="32" cy="32" r="30" fill="#14141f"/><path d="M40 10 a22 22 0 1 0 14 34 a18 18 0 1 1 -14 -34z" fill="#f2efe6"/><path d="M22 44 l4 -14 l3 5 l4 -10 l3 9 l4 -3 l-2 13z" fill="#14141f"/></svg>`;
+}
+
+/* ===================== I18N ===================== */
+const I18N = {
+fr:{
+ oaKey:"Clé API OpenAI (optionnel)",oaModel:"Modèle OpenAI",oaHelp:"Si tu es l’hôte, ta clé traduit tous les messages de la partie pour tout le monde (tes amis n’ont besoin de rien). La clé reste enregistrée uniquement sur cet appareil. Sans clé : Google Traduction.",oaErr:"Erreur OpenAI ({e}) : vérifie ta clé ou le modèle. Google Traduction est utilisé en secours.",
+ play:"Jouer",hubTitle:"Le village a besoin de toi",hubSub:"Loups-Garous en ligne entre amis — sans compte, en français et en russe.",
+ pseudo:"Ton pseudo",pseudoPh:"Écris ton pseudo…",newLook:"Nouveau look",av_skin:"Peau",av_hair:"Coiffure",av_hairc:"Cheveux",av_color:"Couleur",av_outfit:"Tenue",av_acc:"Accessoire",
+ createGame:"Créer une partie",orJoin:"ou rejoindre",joinPh:"Colle le lien de la partie",join:"Rejoindre",invited:"Tu as été invité·e à une partie ! Choisis ton pseudo puis rejoins-la.",joinThis:"Rejoindre la partie",
+ recent:"Parties récentes",rolesTitle:"Les rôles du village",needPseudo:"Choisis d’abord un pseudo.",badCode:"Lien de partie invalide.",
+ camp_wolf:"Camp des Loups-Garous",camp_village:"Camp du Village",camp_solo:"Solitaire",
+ defaultGameName:"Partie de {n}",editGame:"Modifier la partie",gameName:"Nom de la partie",seats:"Joueurs",type:"Type",fun:"Fun",serious:"Sérieuse",speed:"Rythme",normal:"Normal",fast:"Rapide",
+ composition:"Composition",rolesWord:"rôles",suggested:"Composition suggérée",cancel:"Annuler",create:"Créer",save:"Enregistrer",
+ home:"Accueil",invite:"Inviter",linkCopied:"Lien copié ! Envoie-le à tes amis.",copy:"Copier",rulesBtn:"Règles",chatBtn:"Chat",translate:"Traduire le chat",loversChat:"Chat des amoureux",
+ net_offline:"Connexion perdue…",net_reconnecting:"Reconnexion…",connecting:"Connexion au village…",
+ e_relayErr:"Impossible de joindre le relais",e_relayErr_d:"Vérifie ta connexion internet puis réessaie.",e_notFound:"Partie introuvable",e_notFound_d:"L’hôte n’est peut-être pas connecté. Demande-lui d’ouvrir la partie, puis réessaie.",
+ e_started:"La partie a déjà commencé",e_started_d:"Attends la prochaine partie.",e_full:"La partie est complète",e_full_d:"Toutes les places sont prises.",e_kicked:"Tu as été retiré·e de la partie",e_kicked_d:"",e_notInGame:"Tu ne fais pas partie de cette partie",e_notInGame_d:"",e_needWhy:"Justifie ton vote : personne n’accuse encore ce joueur.",
+ ph_wait:"Attente",ph_launch:"Lancement",ph_ended:"Fin de partie",ph_n_cupid:"Tour de Cupidon",ph_n_heir:"Tour de l’Héritier",ph_n_seer:"Tour de la Voyante",ph_n_guard:"Tour du Garde",ph_n_rat:"Tour du Rat Malade",ph_n_pyro:"Tour du Pyromancien",ph_n_wolves:"Tour des Loups-Garous",ph_n_witch:"Tour de la Sorcière",ph_n_white:"Tour du Loup Blanc",
+ ph_d_vote:"Vote du village",ph_d_cand:"Candidatures (maire)",ph_d_elect:"Élection du maire",ph_d_dictAsk:"Aube",ph_d_dict:"Coup d’État",ph_d_tie:"Égalité",ph_dawn:"Aube",ph_prompt_hunter:"Le Chasseur tire",ph_prompt_grave:"Le Fossoyeur creuse",ph_prompt_succ:"Succession du maire",
+ waitingPlayers:"{n}/{m} joueurs",launchingSoon:"Toutes les places sont prises : la partie va commencer !",startNow:"Lancer à {n}",hostNote:"Tu es l’hôte : garde cette page ouverte pendant la partie.",
+ you:"toi",wolf:"Loup-Garou",mayor:"Maire",candidate:"Candidat",
+ pt_cupid:"Cupidon",pt_heir:"Héritier",pt_seer:"Vision",pt_guard:"Protection",pt_rat:"Contamination",pt_pyro:"Pyromancie",pt_wolves:"Chasse de la meute",pt_witch:"Potions",pt_white:"Loup Blanc",pt_dictAsk:"Coup d’État ?",pt_dict:"Exécution",pt_tie:"Départage",pt_hunter:"Dernier tir",pt_grave:"Fossoyeur",pt_succ:"Ton successeur",
+ pd_cupid:"Choisis deux joueurs qui tomberont amoureux (tu peux te choisir).",pd_heir:"Choisis le joueur dont tu hériteras le rôle à sa mort.",pd_seer_seer:"Choisis un joueur pour découvrir son rôle.",pd_seer_talkativeSeer:"Choisis un joueur : son rôle sera révélé à tout le village à l’aube.",pd_seer_auraSeer:"Choisis un joueur pour lire son aura.",pd_guard:"Choisis le joueur à protéger cette nuit.",pd_rat:"Choisis jusqu’à deux joueurs à contaminer.",pd_pyro:"Arrose un joueur de feu grégeois, ou fais tout exploser.",pd_wolves:"Votez pour la victime de cette nuit. Discutez dans le chat de la meute.",pd_witchVictim:"Les loups ont attaqué <b>{n}</b>. Une seule potion par nuit.",pd_witchNone:"Personne ne va mourir sous les crocs cette nuit.",pd_white:"Tu peux dévorer un joueur de ton choix, même un loup.",pd_dictAsk:"Veux-tu prendre le contrôle du vote d’aujourd’hui ? Si tu exécutes un loup, tu deviens maire. Sinon, tu meurs.",pd_dict:"Choisis le joueur à exécuter.",pd_tie:"Égalité ! En tant que maire, choisis qui est éliminé.",pd_hunter:"Tu meurs… Choisis qui tu emportes avec toi.",pd_grave:"Choisis la tombe à creuser : un joueur du camp opposé sera aussi révélé.",pd_succ:"Désigne le nouveau maire.",
+ dictYes:"Prendre le pouvoir",no:"Non",healLeft:"Vie : {n}",poisonLeft:"Mort : {n}",healBtn:"Sauver {n}",poisonBtn:"Empoisonner…",poisonOn:"Poison : {n}",pickTarget:"Clique sur un joueur",doNothing:"Ne rien faire",confirm:"Valider",ignite:"Tout faire exploser ({n} tonneaux)",infectOpt:"Infecter la victime au lieu de la tuer (une seule fois)",noOne:"Personne",
+ candInfo:"L’élection du maire commence : présente-toi si tu veux être candidat !",candBtn:"Me présenter",actionDone:"Action enregistrée. Patiente…",youDead:"Tu es mort·e. Discute avec les autres morts.",sleeping:"Le village dort…",voteHelp:"Clique sur un personnage pour voter. Reclique pour retirer ton vote.",electHelp:"Clique sur un candidat pour voter.",candWait:"Les candidats se présentent…",waitPrompt:"{n} fait son dernier choix…",dictWait:"Le Dictateur {n} choisit qui exécuter…",tieWait:"Le maire départage…",
+ typeMsg:"Écrire un message…",typeWolf:"Message à la meute…",typeDead:"Message aux morts…",typeNecro:"Message aux morts (anonyme)…",typeLove:"Message à ton amoureux…",deadNoTalk:"Les morts ne parlent qu’entre eux.",nightQuiet:"La nuit, le village se tait…",cantTalk:"Tu ne peux pas parler pour l’instant.",
+ wolves:"Meute",graveyard:"Cimetière",lovers:"Amoureux",original:"original",
+ yourRole:"Ton rôle",noRoleYet:"Les rôles seront distribués au lancement.",remaining:"Rôles restants",deathJournal:"Journal des morts",howTo:"Comment jouer",
+ howToText:"La nuit, chaque rôle joue à son tour. Au lever du jour, les morts sont annoncés. Le jour, débattez puis votez en cliquant sur un personnage (le premier vote contre quelqu’un doit être justifié). Si un joueur a la majorité, le minuteur passe à 30 s. Au 2e jour, le village élit un maire qui départage les égalités.",
+ goal_wolf:"Éliminer tous les innocents et les solitaires.",goal_village:"Éliminer les loups-garous et les solitaires.",goal_white:"Être le dernier survivant.",goal_rat:"Contaminer tous les joueurs.",goal_merc:"Faire éliminer ta cible au premier vote.",
+ i_infected:"Tu as été infecté·e : tu joues désormais avec les loups.",i_orig:"Rôle de départ : {r}",i_pack:"Ta meute : {n}",i_lover:"Tu es amoureux·se de {n} ({r}).",i_couple:"Tu as uni {a} et {b}.",i_seen:"{n} est {r}",i_aura:"{n} : aura {a}",i_pot:"Potions — vie : {h}, mort : {p}",i_guard:"Protégé la nuit dernière : {n}",i_barrels:"Tonneaux : {n}",i_testator:"Tu hériteras de {n}",i_merc:"Ta cible : {n}",i_word:"Mot à placer aujourd’hui : « {w} »",i_letter:"Lettre interdite aujourd’hui : {l}",i_conta:"Contaminés : {n}",
+ auraDarkS:"obscure",auraLightS:"claire",
+ whyTitle:"Accuser {n}",whyHelp:"Personne n’accuse encore ce joueur : explique pourquoi tu votes contre lui.",whyPh:"Ta raison…",accuseBtn:"Voter",candTitle:"Candidature à la mairie",candHelp:"Présente-toi au village en une phrase.",candPh:"Votez pour moi parce que…",
+ settings:"Paramètres",language:"Langue",autoTr:"Traduire automatiquement le chat",autoTrHelp:"Les messages des autres sont traduits dans ta langue (Google Traduction). Le bouton 🌐 à côté du chat fait la même chose.",sounds:"Sons",
+ playAgain:"Rejouer",waitAgain:"L’hôte peut relancer une partie.",seeChat:"Voir le chat",
+ win_village:"Victoire du Village !",win_wolf:"Victoire des Loups-Garous !",win_lovers:"Victoire des Amoureux !",win_white:"Victoire du Loup Blanc !",win_rat:"Victoire du Rat Malade !",win_merc:"Victoire du Mercenaire !",win_draw:"Égalité : tout le monde est mort…",
+ c_wolf:"dévoré·e par les loups",c_poison:"empoisonné·e",c_white:"dévoré·e par le Loup Blanc",c_fire:"brûlé·e vif",c_love:"mort·e de chagrin",c_hunter:"abattu·e par le Chasseur",c_vote:"éliminé·e par le village",c_dict:"exécuté·e par le Dictateur",c_dictFail:"le coup d’État a échoué",c_word:"n’a pas prononcé son mot",c_letter:"a utilisé la lettre interdite",
+ m_joined:"▸ {a} a rejoint la partie",m_left:"▸ {n} a quitté la partie",m_launching:"Toutes les places sont prises. Lancement de la partie…",m_gameStart:"La partie commence avec {n} joueurs. Bonne chance !",m_yourRole:"Tu es {r}.",
+ m_nightFalls:"🌙 La nuit {n} tombe sur le village…",m_step_cupid:"Cupidon se réveille…",m_step_heir:"L’Héritier se réveille…",m_step_seer:"La Voyante se réveille…",m_step_guard:"Le Garde se réveille…",m_step_rat:"Le Rat Malade se réveille…",m_step_pyro:"Le Pyromancien se réveille…",m_step_wolves:"Les Loups-Garous se réveillent…",m_step_witch:"La Sorcière se réveille…",m_step_white:"Le Loup Blanc se réveille…",
+ m_seerResult:"🔮 {t} est {r}.",m_auraResult:"✨ L’aura de {t} est {a}.",auraDark:"obscure (rôle capable de tuer)",auraLight:"claire",m_inLove:"💘 Cupidon t’a uni·e à {t} ({r}). Si l’un meurt, l’autre aussi.",m_cupidDone:"💘 Tu as uni {a} et {b}.",m_heirChose:"📜 Tu hériteras du rôle de {t}.",m_contaminated:"🐀 Tu as été contaminé·e par le Rat Malade.",
+ m_wolfVote:"🐺 {a} vote pour {t}",m_wolvesChose:"🐺 La meute a choisi {t}.",m_dawn:"☀️ Le jour se lève sur le village.",m_talkSeer:"📣 La Voyante Bavarde révèle : {t} est {r}.",m_noDeath:"Personne n’est mort cette nuit.",
+ m_mercTarget:"🗡️ Ta cible est {t} : fais-la éliminer au vote d’aujourd’hui !",m_youInfected:"🦠 Le Loup Noir t’a infecté·e : tu rejoins la meute en gardant ton rôle.",m_joinedPack:"🐺 {t} a rejoint la meute.",
+ m_died:"💀 {t} est mort·e ({c}). C’était {r}.",m_inheritNothing:"📜 {t} est mort·e, mais tu n’hérites de rien.",m_inherited:"📜 {t} est mort·e : tu deviens {r} !",m_hunterShot:"🏹 {a} tire sur {t} !",m_hunterNone:"🏹 Le Chasseur n’a tiré sur personne.",
+ m_graves:"⚰️ Le Fossoyeur a creusé les tombes de {a} et {b} : l’un d’eux est un loup, l’autre un innocent.",m_newMayor:"★ {t} devient maire.",m_yourWord:"🗣️ Ton mot du jour : « {w} ». Place-le dans le chat avant la fin du vote, sinon tu meurs.",m_yourLetter:"✒️ Lettre interdite aujourd’hui : « {l} ». Si tu l’écris dans le chat, tu mourras ce soir.",m_letterUsed:"✒️ Tu as écrit la lettre interdite « {l} »… tu mourras ce soir.",
+ m_accuse:"accuse {t}",m_voted:"▸ {a} vote contre {t}",m_votedMayor:"▸ {a} vote pour {t}",m_unvoted:"▸ {a} retire son vote",m_timerCut:"⏱️ {t} a la majorité : plus que 30 secondes !",
+ m_mentNone:"🧠 Le vote n’a pas de cible claire.",m_mentGood:"🧠 Le vote est favorable : {t} est dans le camp des loups.",m_mentBad:"🧠 Le vote est défavorable : {t} n’est pas un loup.",
+ m_presents:"se présente à la mairie",m_mayorElected:"★ {t} est élu·e maire !",m_coup:"🎖️ {t} est le Dictateur et prend le contrôle du vote !",m_dictWin:"🎖️ Le Dictateur {t} a exécuté un loup et devient maire !",m_dictNothing:"🎖️ Le Dictateur n’a exécuté personne.",
+ m_tieMayor:"⚖️ Égalité ! Le maire {t} va départager.",m_tieNobody:"⚖️ Égalité : personne n’est éliminé.",m_noVote:"Personne n’a été éliminé aujourd’hui.",m_cwSaved:"🧣 {t} est protégé·e du vote par le Loup Noir !",m_mercFailed:"🗡️ Tu as raté ta cible : tu rejoins le village.",m_explosion:"🔥 Une série d’explosions secoue le village !",
+ m_win_village:"🏆 Victoire du Village !",m_win_wolf:"🐺 Victoire des Loups-Garous !",m_win_lovers:"💘 Victoire des Amoureux !",m_win_white:"🤍 Victoire du Loup Blanc !",m_win_rat:"🐀 Victoire du Rat Malade !",m_win_merc:"🗡️ Victoire du Mercenaire !",m_win_draw:"⚖️ Égalité : tout le monde est mort.",m_newRound:"↻ Nouvelle partie ! En attente des joueurs…",
+ r_werewolf:"Loup-Garou",r_blackWolf:"Loup Noir",r_talkativeWolf:"Loup Bavard",r_literateWolf:"Loup Lettré",r_wolfRidingHood:"Chaperon Loup",r_whiteWolf:"Loup Blanc",r_mercenary:"Mercenaire",r_sickRat:"Rat Malade",r_villager:"Simple Villageois",r_seer:"Voyante",r_talkativeSeer:"Voyante Bavarde",r_auraSeer:"Voyante d’Aura",r_witch:"Sorcière",r_healerWitch:"Guérisseuse",r_poisoner:"Empoisonneuse",r_hunter:"Chasseur",r_guard:"Garde",r_littleGirl:"Petite Fille",r_cupid:"Cupidon",r_redRidingHood:"Chaperon Rouge",r_pinkRidingHood:"Chaperon Rose",r_blueRidingHood:"Chaperon Bleu",r_mentalist:"Mentaliste",r_necromancer:"Nécromancien",r_gravedigger:"Fossoyeur",r_dictator:"Dictateur",r_heir:"Héritier",r_plunderer:"Pillard",r_pyromancer:"Pyromancien",
+ d_werewolf:"La nuit, la meute se réunit et vote pour éliminer un joueur. Le jour, il faut éviter d’être démasqué.",d_blackWolf:"Loup de la meute qui, une seule fois, peut infecter la victime au lieu de la tuer : elle rejoint les loups en gardant son rôle.",d_talkativeWolf:"Chaque jour, il reçoit un mot à placer dans le chat avant la fin du vote. S’il échoue, il meurt.",d_literateWolf:"Chaque jour, une lettre lui est interdite. S’il l’écrit dans le chat, il meurt le soir.",d_wolfRidingHood:"Loup protégé des votes du village tant que le Loup Noir est en vie.",
+ d_whiteWolf:"Se réveille avec la meute, qui le croit alliée. Une nuit sur deux, il peut dévorer n’importe qui, même un loup. Il veut finir seul.",d_mercenary:"Reçoit une cible le premier jour : s’il la fait éliminer par le vote, il gagne seul. Sinon, il rejoint le village.",d_sickRat:"Chaque nuit, contamine jusqu’à deux joueurs. Il gagne quand tous les vivants sont contaminés.",
+ d_villager:"Pas de pouvoir, juste sa parole et son vote pour démasquer les loups.",d_seer:"Chaque nuit, découvre le rôle d’un joueur de son choix.",d_talkativeSeer:"Chaque nuit, découvre un rôle… qui est révélé à tout le village au lever du jour.",d_auraSeer:"Chaque nuit, lit l’aura d’un joueur : obscure s’il peut tuer, claire sinon.",
+ d_witch:"Possède une potion de vie (sauver la victime des loups) et une potion de mort. Une seule potion par nuit.",d_healerWitch:"Possède deux potions de vie pour sauver la victime des loups.",d_poisoner:"Possède deux potions de mort pour éliminer un joueur la nuit.",d_hunter:"À sa mort, peut emporter un joueur de son choix.",d_guard:"Chaque nuit, protège un joueur des loups (peut se protéger, jamais deux fois de suite le même).",
+ d_littleGirl:"Espionne la discussion des loups pendant leur tour, sans connaître leurs vrais noms.",d_cupid:"La première nuit, unit deux amoureux : si l’un meurt, l’autre aussi.",d_redRidingHood:"Protégée des loups tant que le Chasseur est en vie.",d_pinkRidingHood:"Protégée des loups tant que le couple est en vie.",d_blueRidingHood:"Protégé des loups tant qu’un Simple Villageois est en vie.",
+ d_mentalist:"30 secondes avant la fin du vote, sait si le joueur visé est un loup.",d_necromancer:"La nuit, peut lire et répondre au chat des morts.",d_gravedigger:"À sa mort, creuse la tombe d’un joueur : un joueur du camp opposé est révélé avec lui.",d_dictator:"Une fois, peut prendre le contrôle du vote : s’il exécute un loup il devient maire, sinon il meurt.",
+ d_heir:"La première nuit, choisit un joueur dont il héritera du rôle à sa mort.",d_plunderer:"Récupère le rôle du premier joueur mort de la partie.",d_pyromancer:"Chaque nuit, arrose un joueur de feu grégeois ou déclenche l’explosion de tous les tonneaux."
+},
+ru:{
+ oaKey:"Ключ API OpenAI (необязательно)",oaModel:"Модель OpenAI",oaHelp:"Если ты хост, твой ключ переводит все сообщения игры для всех (друзьям ничего не нужно). Ключ хранится только на этом устройстве. Без ключа используется Google Переводчик.",oaErr:"Ошибка OpenAI ({e}): проверь ключ или модель. Используется Google Переводчик.",
+ play:"Играть",hubTitle:"Деревне нужна твоя помощь",hubSub:"Оборотни онлайн с друзьями — без регистрации, на французском и русском.",
+ pseudo:"Твой ник",pseudoPh:"Введи свой ник…",newLook:"Новый образ",av_skin:"Кожа",av_hair:"Причёска",av_hairc:"Волосы",av_color:"Цвет",av_outfit:"Одежда",av_acc:"Аксессуар",
+ createGame:"Создать игру",orJoin:"или войти",joinPh:"Вставь ссылку на игру",join:"Войти",invited:"Тебя пригласили в игру! Выбери ник и заходи.",joinThis:"Войти в игру",
+ recent:"Недавние игры",rolesTitle:"Роли деревни",needPseudo:"Сначала выбери ник.",badCode:"Неверная ссылка на игру.",
+ camp_wolf:"Лагерь оборотней",camp_village:"Лагерь деревни",camp_solo:"Одиночка",
+ defaultGameName:"Игра {n}",editGame:"Изменить игру",gameName:"Название игры",seats:"Игроки",type:"Тип",fun:"Весёлая",serious:"Серьёзная",speed:"Темп",normal:"Обычный",fast:"Быстрый",
+ composition:"Состав",rolesWord:"ролей",suggested:"Предложенный состав",cancel:"Отмена",create:"Создать",save:"Сохранить",
+ home:"Главная",invite:"Пригласить",linkCopied:"Ссылка скопирована! Отправь её друзьям.",copy:"Копировать",rulesBtn:"Правила",chatBtn:"Чат",translate:"Перевести чат",loversChat:"Чат влюблённых",
+ net_offline:"Нет соединения…",net_reconnecting:"Переподключение…",connecting:"Подключение к деревне…",
+ e_relayErr:"Не удалось подключиться к серверу",e_relayErr_d:"Проверь интернет и попробуй снова.",e_notFound:"Игра не найдена",e_notFound_d:"Возможно, хост не в сети. Попроси его открыть игру и попробуй снова.",
+ e_started:"Игра уже началась",e_started_d:"Дождись следующей игры.",e_full:"Все места заняты",e_full_d:"В игре нет свободных мест.",e_kicked:"Тебя исключили из игры",e_kicked_d:"",e_notInGame:"Ты не участвуешь в этой игре",e_notInGame_d:"",e_needWhy:"Объясни свой голос: этого игрока ещё никто не обвиняет.",
+ ph_wait:"Ожидание",ph_launch:"Запуск",ph_ended:"Конец игры",ph_n_cupid:"Ход Купидона",ph_n_heir:"Ход Наследника",ph_n_seer:"Ход Провидицы",ph_n_guard:"Ход Стража",ph_n_rat:"Ход Больной крысы",ph_n_pyro:"Ход Пироманта",ph_n_wolves:"Ход оборотней",ph_n_witch:"Ход Ведьмы",ph_n_white:"Ход Белого волка",
+ ph_d_vote:"Голосование деревни",ph_d_cand:"Кандидаты в мэры",ph_d_elect:"Выборы мэра",ph_d_dictAsk:"Рассвет",ph_d_dict:"Переворот",ph_d_tie:"Ничья",ph_dawn:"Рассвет",ph_prompt_hunter:"Охотник стреляет",ph_prompt_grave:"Могильщик копает",ph_prompt_succ:"Преемник мэра",
+ waitingPlayers:"{n}/{m} игроков",launchingSoon:"Все места заняты: игра сейчас начнётся!",startNow:"Начать с {n}",hostNote:"Ты хост: не закрывай эту страницу во время игры.",
+ you:"ты",wolf:"Оборотень",mayor:"Мэр",candidate:"Кандидат",
+ pt_cupid:"Купидон",pt_heir:"Наследник",pt_seer:"Видение",pt_guard:"Защита",pt_rat:"Заражение",pt_pyro:"Пиромантия",pt_wolves:"Охота стаи",pt_witch:"Зелья",pt_white:"Белый волк",pt_dictAsk:"Переворот?",pt_dict:"Казнь",pt_tie:"Решение мэра",pt_hunter:"Последний выстрел",pt_grave:"Могильщик",pt_succ:"Твой преемник",
+ pd_cupid:"Выбери двух игроков, которые влюбятся (можно выбрать себя).",pd_heir:"Выбери игрока, чью роль ты унаследуешь после его смерти.",pd_seer_seer:"Выбери игрока, чтобы узнать его роль.",pd_seer_talkativeSeer:"Выбери игрока: на рассвете его роль узнает вся деревня.",pd_seer_auraSeer:"Выбери игрока, чтобы прочитать его ауру.",pd_guard:"Выбери, кого защитить этой ночью.",pd_rat:"Выбери до двух игроков для заражения.",pd_pyro:"Облей игрока греческим огнём или взорви все бочки.",pd_wolves:"Голосуйте за жертву этой ночи. Обсуждайте в чате стаи.",pd_witchVictim:"Оборотни напали на <b>{n}</b>. Только одно зелье за ночь.",pd_witchNone:"Этой ночью никто не умрёт от клыков.",pd_white:"Ты можешь съесть любого игрока, даже оборотня.",pd_dictAsk:"Взять под контроль сегодняшнее голосование? Если казнишь оборотня — станешь мэром. Иначе умрёшь.",pd_dict:"Выбери, кого казнить.",pd_tie:"Ничья! Как мэр, реши, кто выбывает.",pd_hunter:"Ты умираешь… Выбери, кого забрать с собой.",pd_grave:"Выбери, чью могилу выкопать: вместе с ним будет назван игрок из противоположного лагеря.",pd_succ:"Назначь нового мэра.",
+ dictYes:"Захватить власть",no:"Нет",healLeft:"Жизнь: {n}",poisonLeft:"Смерть: {n}",healBtn:"Спасти {n}",poisonBtn:"Отравить…",poisonOn:"Яд: {n}",pickTarget:"Нажми на игрока",doNothing:"Ничего не делать",confirm:"Подтвердить",ignite:"Взорвать всё ({n} бочек)",infectOpt:"Заразить жертву вместо убийства (один раз)",noOne:"Никого",
+ candInfo:"Начинаются выборы мэра: выдвигай свою кандидатуру!",candBtn:"Выдвинуться",actionDone:"Действие принято. Жди…",youDead:"Ты погиб(ла). Общайся с другими мёртвыми.",sleeping:"Деревня спит…",voteHelp:"Нажми на персонажа, чтобы проголосовать. Нажми ещё раз, чтобы отменить голос.",electHelp:"Нажми на кандидата, чтобы проголосовать.",candWait:"Кандидаты представляются…",waitPrompt:"{n} делает последний выбор…",dictWait:"Диктатор {n} выбирает, кого казнить…",tieWait:"Мэр решает исход ничьей…",
+ typeMsg:"Написать сообщение…",typeWolf:"Сообщение стае…",typeDead:"Сообщение мёртвым…",typeNecro:"Сообщение мёртвым (анонимно)…",typeLove:"Сообщение возлюбленному…",deadNoTalk:"Мёртвые говорят только между собой.",nightQuiet:"Ночью деревня молчит…",cantTalk:"Сейчас ты не можешь писать.",
+ wolves:"Стая",graveyard:"Кладбище",lovers:"Влюблённые",original:"оригинал",
+ yourRole:"Твоя роль",noRoleYet:"Роли раздадут при запуске.",remaining:"Оставшиеся роли",deathJournal:"Журнал смертей",howTo:"Как играть",
+ howToText:"Ночью роли ходят по очереди. На рассвете объявляют погибших. Днём обсуждайте и голосуйте, нажимая на персонажа (первый голос против игрока нужно обосновать). Если у игрока большинство, таймер сокращается до 30 с. На 2-й день деревня выбирает мэра, который решает ничьи.",
+ goal_wolf:"Уничтожить всех мирных и одиночек.",goal_village:"Уничтожить оборотней и одиночек.",goal_white:"Остаться последним выжившим.",goal_rat:"Заразить всех игроков.",goal_merc:"Добиться изгнания своей цели в первый день.",
+ i_infected:"Тебя заразили: теперь ты играешь за оборотней.",i_orig:"Начальная роль: {r}",i_pack:"Твоя стая: {n}",i_lover:"Ты влюблён(а) в {n} ({r}).",i_couple:"Ты соединил(а) {a} и {b}.",i_seen:"{n} — {r}",i_aura:"{n}: аура {a}",i_pot:"Зелья — жизнь: {h}, смерть: {p}",i_guard:"Прошлой ночью защищён: {n}",i_barrels:"Бочки: {n}",i_testator:"Ты унаследуешь роль {n}",i_merc:"Твоя цель: {n}",i_word:"Слово на сегодня: «{w}»",i_letter:"Запрещённая буква сегодня: {l}",i_conta:"Заражённые: {n}",
+ auraDarkS:"тёмная",auraLightS:"светлая",
+ whyTitle:"Обвинить {n}",whyHelp:"Этого игрока ещё никто не обвиняет: объясни, почему голосуешь против него.",whyPh:"Твоя причина…",accuseBtn:"Голосовать",candTitle:"Кандидатура в мэры",candHelp:"Представься деревне одной фразой.",candPh:"Голосуйте за меня, потому что…",
+ settings:"Настройки",language:"Язык",autoTr:"Автоматически переводить чат",autoTrHelp:"Сообщения других игроков переводятся на твой язык (Google Переводчик). Кнопка 🌐 рядом с чатом делает то же самое.",sounds:"Звуки",
+ playAgain:"Сыграть ещё",waitAgain:"Хост может начать новую игру.",seeChat:"Открыть чат",
+ win_village:"Победа деревни!",win_wolf:"Победа оборотней!",win_lovers:"Победа влюблённых!",win_white:"Победа Белого волка!",win_rat:"Победа Больной крысы!",win_merc:"Победа Наёмника!",win_draw:"Ничья: все погибли…",
+ c_wolf:"растерзан(а) оборотнями",c_poison:"отравлен(а)",c_white:"растерзан(а) Белым волком",c_fire:"сгорел(а) заживо",c_love:"умер(ла) от горя",c_hunter:"застрелен(а) Охотником",c_vote:"изгнан(а) деревней",c_dict:"казнён(а) Диктатором",c_dictFail:"переворот провалился",c_word:"не произнёс своё слово",c_letter:"использовал запрещённую букву",
+ m_joined:"▸ {a} присоединился(ась) к игре",m_left:"▸ {n} покинул(а) игру",m_launching:"Все места заняты. Запуск игры…",m_gameStart:"Игра начинается, игроков: {n}. Удачи!",m_yourRole:"Твоя роль: {r}.",
+ m_nightFalls:"🌙 На деревню опускается ночь {n}…",m_step_cupid:"Просыпается Купидон…",m_step_heir:"Просыпается Наследник…",m_step_seer:"Просыпается Провидица…",m_step_guard:"Просыпается Страж…",m_step_rat:"Просыпается Больная крыса…",m_step_pyro:"Просыпается Пиромант…",m_step_wolves:"Просыпаются оборотни…",m_step_witch:"Просыпается Ведьма…",m_step_white:"Просыпается Белый волк…",
+ m_seerResult:"🔮 {t} — {r}.",m_auraResult:"✨ Аура игрока {t}: {a}.",auraDark:"тёмная (роль может убивать)",auraLight:"светлая",m_inLove:"💘 Купидон связал тебя с {t} ({r}). Если один умрёт, умрёт и другой.",m_cupidDone:"💘 Ты соединил(а) {a} и {b}.",m_heirChose:"📜 Ты унаследуешь роль игрока {t}.",m_contaminated:"🐀 Тебя заразила Больная крыса.",
+ m_wolfVote:"🐺 {a} голосует за {t}",m_wolvesChose:"🐺 Стая выбрала: {t}.",m_dawn:"☀️ Над деревней встаёт солнце.",m_talkSeer:"📣 Болтливая провидица раскрывает: {t} — {r}.",m_noDeath:"Этой ночью никто не погиб.",
+ m_mercTarget:"🗡️ Твоя цель — {t}: добейся её изгнания сегодня!",m_youInfected:"🦠 Чёрный волк заразил тебя: ты переходишь в стаю, сохраняя свою роль.",m_joinedPack:"🐺 {t} присоединился(ась) к стае.",
+ m_died:"💀 {t} погиб(ла) ({c}). Роль: {r}.",m_inheritNothing:"📜 {t} погиб(ла), но ты ничего не наследуешь.",m_inherited:"📜 {t} погиб(ла): теперь ты {r}!",m_hunterShot:"🏹 {a} стреляет в {t}!",m_hunterNone:"🏹 Охотник ни в кого не выстрелил.",
+ m_graves:"⚰️ Могильщик выкопал могилы {a} и {b}: один из них оборотень, другой мирный.",m_newMayor:"★ {t} становится мэром.",m_yourWord:"🗣️ Твоё слово дня: «{w}». Напиши его в чате до конца голосования, иначе умрёшь.",m_yourLetter:"✒️ Запрещённая буква сегодня: «{l}». Если напишешь её в чате, умрёшь вечером.",m_letterUsed:"✒️ Ты написал(а) запрещённую букву «{l}»… вечером ты умрёшь.",
+ m_accuse:"обвиняет {t}",m_voted:"▸ {a} голосует против {t}",m_votedMayor:"▸ {a} голосует за {t}",m_unvoted:"▸ {a} отменяет голос",m_timerCut:"⏱️ У игрока {t} большинство: осталось 30 секунд!",
+ m_mentNone:"🧠 У голосования нет явной цели.",m_mentGood:"🧠 Голосование удачное: {t} из лагеря оборотней.",m_mentBad:"🧠 Голосование неудачное: {t} не оборотень.",
+ m_presents:"выдвигается в мэры",m_mayorElected:"★ {t} избран(а) мэром!",m_coup:"🎖️ {t} — Диктатор, и он захватывает голосование!",m_dictWin:"🎖️ Диктатор {t} казнил оборотня и становится мэром!",m_dictNothing:"🎖️ Диктатор никого не казнил.",
+ m_tieMayor:"⚖️ Ничья! Мэр {t} примет решение.",m_tieNobody:"⚖️ Ничья: никто не выбывает.",m_noVote:"Сегодня никого не изгнали.",m_cwSaved:"🧣 {t} защищён(а) от голосования Чёрным волком!",m_mercFailed:"🗡️ Ты промахнулся: теперь ты играешь за деревню.",m_explosion:"🔥 Деревню сотрясает серия взрывов!",
+ m_win_village:"🏆 Победа деревни!",m_win_wolf:"🐺 Победа оборотней!",m_win_lovers:"💘 Победа влюблённых!",m_win_white:"🤍 Победа Белого волка!",m_win_rat:"🐀 Победа Больной крысы!",m_win_merc:"🗡️ Победа Наёмника!",m_win_draw:"⚖️ Ничья: все погибли.",m_newRound:"↻ Новая игра! Ждём игроков…",
+ r_werewolf:"Оборотень",r_blackWolf:"Чёрный волк",r_talkativeWolf:"Болтливый волк",r_literateWolf:"Грамотный волк",r_wolfRidingHood:"Волчья Шапочка",r_whiteWolf:"Белый волк",r_mercenary:"Наёмник",r_sickRat:"Больная крыса",r_villager:"Мирный житель",r_seer:"Провидица",r_talkativeSeer:"Болтливая провидица",r_auraSeer:"Провидица ауры",r_witch:"Ведьма",r_healerWitch:"Целительница",r_poisoner:"Отравительница",r_hunter:"Охотник",r_guard:"Страж",r_littleGirl:"Маленькая девочка",r_cupid:"Купидон",r_redRidingHood:"Красная Шапочка",r_pinkRidingHood:"Розовая Шапочка",r_blueRidingHood:"Синяя Шапочка",r_mentalist:"Менталист",r_necromancer:"Некромант",r_gravedigger:"Могильщик",r_dictator:"Диктатор",r_heir:"Наследник",r_plunderer:"Мародёр",r_pyromancer:"Пиромант",
+ d_werewolf:"Ночью стая собирается и голосует, кого убить. Днём нужно не выдать себя.",d_blackWolf:"Волк стаи, который один раз может заразить жертву вместо убийства: она переходит к волкам, сохраняя роль.",d_talkativeWolf:"Каждый день получает слово, которое нужно написать в чате до конца голосования. Иначе умирает.",d_literateWolf:"Каждый день ему запрещена одна буква. Если напишет её в чате — вечером умрёт.",d_wolfRidingHood:"Волк, защищённый от голосования деревни, пока жив Чёрный волк.",
+ d_whiteWolf:"Просыпается со стаей, которая считает его своим. Через ночь может съесть любого, даже волка. Хочет остаться один.",d_mercenary:"В первый день получает цель: если её изгонят голосованием, он побеждает один. Иначе переходит в деревню.",d_sickRat:"Каждую ночь заражает до двух игроков. Побеждает, когда заражены все живые.",
+ d_villager:"Никаких сил — только слово и голос, чтобы вычислить оборотней.",d_seer:"Каждую ночь узнаёт роль выбранного игрока.",d_talkativeSeer:"Каждую ночь узнаёт роль… и на рассвете её узнаёт вся деревня.",d_auraSeer:"Каждую ночь видит ауру игрока: тёмную, если он может убивать, иначе светлую.",
+ d_witch:"Есть зелье жизни (спасти жертву оборотней) и зелье смерти. Только одно зелье за ночь.",d_healerWitch:"Есть два зелья жизни, чтобы спасать жертву оборотней.",d_poisoner:"Есть два зелья смерти, чтобы убить игрока ночью.",d_hunter:"Умирая, может забрать с собой выбранного игрока.",d_guard:"Каждую ночь защищает игрока от оборотней (можно себя, но не одного и того же два раза подряд).",
+ d_littleGirl:"Подслушивает чат оборотней во время их хода, не зная их настоящих имён.",d_cupid:"В первую ночь связывает двух влюблённых: если один умрёт, умрёт и другой.",d_redRidingHood:"Защищена от оборотней, пока жив Охотник.",d_pinkRidingHood:"Защищена от оборотней, пока живы влюблённые.",d_blueRidingHood:"Защищён от оборотней, пока жив хотя бы один Мирный житель.",
+ d_mentalist:"За 30 секунд до конца голосования узнаёт, является ли цель оборотнем.",d_necromancer:"Ночью читает чат мёртвых и может отвечать.",d_gravedigger:"После смерти выкапывает могилу игрока: вместе с ним называют игрока из противоположного лагеря.",d_dictator:"Один раз может захватить голосование: если казнит оборотня — станет мэром, иначе погибнет.",
+ d_heir:"В первую ночь выбирает игрока, чью роль унаследует после его смерти.",d_plunderer:"Получает роль первого погибшего игрока.",d_pyromancer:"Каждую ночь обливает игрока греческим огнём или взрывает все бочки."
+}};
+
+/* ===================== CLIENT / UI ===================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let LANG = (lsGet("lang"))||((navigator.language||"").toLowerCase().startsWith("ru")?"ru":"fr");
+function t(k,p){ let s=(I18N[LANG]&&I18N[LANG][k])||I18N.fr[k]||k; if(p) for(const x in p) s=s.split("{"+x+"}").join(p[x]); return s; }
+const roleName=r=>t("r_"+r), roleDesc=r=>t("d_"+r);
+
+const APP = {
+  me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), clockOff:0, view:"hub",
+  set:Object.assign({sound:true,tr:false},lsGet("settings")||{}),
+  ui:{panel:"chat",lovers:false,sel:[],modal:null,toast:null,joinErr:null,connecting:false,netStatus:"online",lastPhaseSeq:-1},
+  game:null // {room,key,b}
+};
+function saveSettings(){ lsSet("settings",APP.set); }
+
+/* ---------- identity ---------- */
+async function ensureMe(){
+  let me=lsGet("me");
+  if(!me||!me.keys){ me={pid:rid(10),name:"",av:randomAvatar(),keys:await Crypto.genECDH()}; lsSet("me",me); }
+  APP.me=me;
+}
+function saveMe(){ lsSet("me",APP.me); }
+
+/* ---------- names / formatting ---------- */
+function pl(id){ return APP.st&&APP.st.players.find(p=>p.id===id); }
+function pname(id){ const p=pl(id); return p?p.n:"?"; }
+function fmt(k,p){
+  const out={};
+  for(const x in (p||{})){ const v=p[x];
+    if(v&&typeof v==="object"&&v.pid) out[x]=`<b class="mn" data-n="${esc(pname(v.pid))}">${esc(pname(v.pid))}</b>`;
+    else if(v&&typeof v==="object"&&v.role) out[x]=`<b class="rl">${ROLES[v.role]?ROLES[v.role].icon:""} ${esc(roleName(v.role))}</b>`;
+    else if(typeof v==="string"&&(v.startsWith("c_")||v.startsWith("aura"))) out[x]=esc(t(v));
+    else out[x]=esc(v);
+  }
+  return t("m_"+k,out);
+}
+function now(){ return Date.now()+APP.clockOff; }
+
+/* ---------- sound ---------- */
+let AC=null;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function sfx(kind){
+  if(!APP.set.sound) return; const c=ac(); if(!c||c.state==="suspended"&&c.resume&&c.resume()&&false) return;
+  try{
+    const T=c.currentTime;
+    if(kind==="thunder"){
+      const len=1.8, b=c.createBuffer(1,c.sampleRate*len,c.sampleRate), d=b.getChannelData(0);
+      for(let i=0;i<d.length;i++){ const e=Math.pow(1-i/d.length,2.2); d[i]=(Math.random()*2-1)*e*(i<c.sampleRate*.05?i/(c.sampleRate*.05):1); }
+      const s=c.createBufferSource(); s.buffer=b; const f=c.createBiquadFilter(); f.type="lowpass"; f.frequency.value=420; const g=c.createGain(); g.gain.value=.9;
+      s.connect(f).connect(g).connect(c.destination); s.start();
+    } else {
+      const o=c.createOscillator(), g=c.createGain(); o.type=kind==="night"?"sine":"triangle";
+      const seq=kind==="mention"?[880,1320]:kind==="night"?[392,330,262]:kind==="day"?[523,659,784]:[660];
+      g.gain.setValueAtTime(0.0001,T); g.gain.exponentialRampToValueAtTime(.18,T+.02); g.gain.exponentialRampToValueAtTime(.0001,T+.18*seq.length+.2);
+      seq.forEach((f,i)=>o.frequency.setValueAtTime(f,T+i*.16)); o.connect(g).connect(c.destination); o.start(T); o.stop(T+.18*seq.length+.25);
+    }
+  }catch(e){}
+}
+document.addEventListener("pointerdown",()=>{ const c=ac(); if(c&&c.state==="suspended") c.resume(); },{once:false});
+
+/* ---------- translation (Google, no account; MyMemory fallback) ---------- */
+const TR={cache:new Map(),pending:new Set(),q:[],active:0,fail:0};
+function trKey(x){ return LANG+"|"+x; }
+function needTr(m){ return APP.set.tr&&m.x&&m.a!==APP.me.pid; }
+function trGet(m){
+  if(m.tr&&m.tr[LANG]!=null){ const x=m.tr[LANG]; return norm(x).trim()===norm(m.x).trim()?{same:1}:{x}; }
+  if(S().oa&&Date.now()+APP.clockOff-(m.t||0)<15000) return null; // host translation (OpenAI) on its way
+  return TR.cache.get(trKey(m.x));
+}
+function trRequest(m){
+  const key=trKey(m.x); if(TR.cache.has(key)||TR.pending.has(key)) return;
+  TR.pending.add(key); TR.q.push({x:m.x,L:LANG,key}); trPump();
+}
+async function trPump(){
+  while(TR.active<3&&TR.q.length){
+    const job=TR.q.shift(); TR.active++;
+    trOne(job.x,job.L).then(r=>{ TR.cache.set(job.key,r); }).catch(()=>{ TR.cache.set(job.key,{fail:1}); })
+      .finally(()=>{ TR.active--; TR.pending.delete(job.key); scheduleChat(); trPump(); });
+  }
+}
+async function trOne(x,L){
+  if(window.TEST_TRANSLATE) return window.TEST_TRANSLATE(x,L);
+  try{
+    const r=await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="+L+"&dt=t&q="+encodeURIComponent(x));
+    if(!r.ok) throw 0; const j=await r.json();
+    const out=(j[0]||[]).map(s=>s[0]).join(""); const src=j[2];
+    if(src===L) return {same:1}; return {x:out,src};
+  }catch(e){
+    const src=L==="ru"?"fr":"ru";
+    const r=await fetch("https://api.mymemory.translated.net/get?langpair="+src+"|"+L+"&q="+encodeURIComponent(x));
+    const j=await r.json(); const out=j&&j.responseData&&j.responseData.translatedText;
+    if(!out) throw 0; if(out.trim().toLowerCase()===x.trim().toLowerCase()) return {same:1};
+    return {x:out,src};
+  }
+}
+
+/* ---------- OpenAI translation (host only, key stays on this computer) ---------- */
+function oaKey(){ return (lsGet("oaKey")||"").trim(); }
+function oaModel(){ return (lsGet("oaModel")||"gpt-5.6-luna").trim(); }
+async function openaiTranslate(x,langs){
+  const key=oaKey(); if(!key||!langs.length) return null;
+  const names={fr:"French",ru:"Russian"};
+  const body=m=>({model:m,response_format:{type:"json_object"},messages:[
+    {role:"system",content:"You translate chat messages of an online Werewolf (Loup-Garou / Оборотни) party game played by French and Russian friends. Keep the casual tone, slang, jokes, emojis, @mentions and player names. Return ONLY a JSON object whose keys are the requested language codes and whose values are the translation of the message into that language (if the message is already in that language, return it unchanged)."},
+    {role:"user",content:JSON.stringify({languages:langs.map(l=>l+" ("+names[l]+")"),message:x})}]});
+  const call=async m=>{ const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body(m))});
+    if(!r.ok){ const e=new Error("openai "+r.status); e.status=r.status; e.txt=await r.text().catch(()=>""); throw e; } const j=await r.json(); return JSON.parse(j.choices[0].message.content); };
+  let out;
+  try{ out=await call(oaModel()); }
+  catch(e){ if(e.status===404||e.status===400){ out=await call("gpt-4.1-nano"); } else { APP.oaErr=e.status||"net"; throw e; } }
+  APP.oaErr=null;
+  const res={}; for(const l of langs) if(typeof out[l]==="string") res[l]=out[l];
+  return res;
+}
+function hostTranslator(){ return oaKey()?openaiTranslate:null; }
+
+/* ---------- networking glue ---------- */
+function parseHash(){
+  const h=location.hash.slice(1); const m=h.match(/^g=([a-z0-9]+)\.([A-Za-z0-9_-]+)(?:\.(\d))?/);
+  return m?{room:m[1],key:m[2],b:m[3]!=null?+m[3]:null}:null;
+}
+const PUBLIC_URL="https://adelinenzy.github.io/hurlune/";
+function gameLink(){ const g=APP.game; const base=location.protocol==="file:"?PUBLIC_URL:location.href.split("#")[0].split("?")[0]+(USE_LOCAL?location.search:""); return base+"#g="+g.room+"."+g.key+(g.b!=null?"."+g.b:""); }
+function addRecent(){ const g=APP.game; let r=lsGet("recent")||[]; r=r.filter(x=>x.room!==g.room); r.unshift({room:g.room,key:g.key,b:g.b,name:(APP.st&&APP.st.name)||g.name||"",t:Date.now()}); lsSet("recent",r.slice(0,6)); }
+
+async function createGame(cfg){
+  const g={room:rid(8),key:b64u(crypto.getRandomValues(new Uint8Array(16))),b:null,name:cfg.name};
+  const hostKeys=await Crypto.genECDH();
+  const host=new Host({roomId:g.room,key:g.key,broker:null,hostKeys,hostId:APP.me.pid,settings:cfg});
+  APP.game=g; await startHostSession(host);
+}
+async function startHostSession(host){
+  APP.view="game"; APP.ui.connecting=true; render();
+  const room=new Room({room:host.roomId,key:host.key,broker:host.broker,me:{pid:APP.me.pid,keys:APP.me.keys},isHost:true,hostKeys:host.hostKeys});
+  try{ host.broker=await room.connect(); }catch(e){ APP.ui.connecting=false; APP.ui.joinErr="relayErr"; render(); return; }
+  room.on("status",s=>{ APP.ui.netStatus=s; render(); });
+  APP.game={room:host.roomId,key:host.key,b:host.broker,name:host.S.name};
+  history.replaceState(null,"",gameLink());
+  APP.host=host; APP.room=room; window.HOST=host;
+  host.localSink={state:onState,priv:onPriv}; host.translator=hostTranslator();
+  host.attach(room);
+  host.local({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG});
+  APP.ui.connecting=false; addRecent(); render();
+}
+async function joinGame(g){
+  const saved=lsGet("host."+g.room);
+  APP.game=g;
+  if(saved&&saved.hostId===APP.me.pid){ await startHostSession(new Host(saved)); return; }
+  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); render();
+  const room=new Room({room:g.room,key:g.key,broker:g.b,me:{pid:APP.me.pid,keys:APP.me.keys},isHost:false});
+  APP.room=room;
+  room.on("state",st=>{ const first=!APP.st; onState(st); if(first||!APP._synced) sendHello(); });
+  room.on("bcast",onPriv); room.on("priv",onPriv);
+  room.on("status",s=>{ APP.ui.netStatus=s; if(s==="online") sendHello(); render(); });
+  try{ await room.connect(); }catch(e){ APP.ui.connecting=false; APP.ui.joinErr="relayErr"; render(); return; }
+  setTimeout(()=>{ if(!APP.st&&APP.room===room){ APP.ui.connecting=false; APP.ui.joinErr="notFound"; render(); } },9000);
+}
+function sendHello(){ APP._helloAt=Date.now(); send({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG}); }
+function send(msg){
+  if(APP.host){ APP.host.local(msg); return; }
+  if(APP.room&&APP.room.hostPub) APP.room.send(msg).catch(e=>console.warn(e));
+}
+setInterval(()=>{ if(APP.view==="game"&&APP.room&&!APP.host){ if(!APP._synced&&APP.st&&Date.now()-(APP._helloAt||0)>4000) sendHello(); else send({t:"ping"}); } },8000);
+
+function onState(st){
+  APP.clockOff=st.now-Date.now();
+  const prev=APP.st; APP.st=st; APP.ui.connecting=false;
+  if(st.ph&&st.ph.seq!==APP.ui.lastPhaseSeq){
+    APP.ui.lastPhaseSeq=st.ph.seq; APP.ui.sel=[]; if(APP.ui.modal&&APP.ui.modal.kind!=="settings"&&APP.ui.modal.kind!=="create") APP.ui.modal=null;
+    if(prev&&prev.ph){ const wasN=prev.ph.k.startsWith("n_"), isN=st.ph.k.startsWith("n_"); if(!wasN&&isN) sfx("night"); if(wasN&&!isN&&st.status==="running") sfx("day"); }
+  }
+  if(prev&&prev.round!==st.round){ APP.ui.endClosed=false; }
+  addRecent(); render();
+}
+function onPriv(o){
+  if(o.t==="sync"){ APP._synced=true; APP.msgs=o.msgs; APP.msgIds=new Set(o.msgs.map(m=>m.id)); APP.v=o.v||{}; render(); scrollChat(true); return; }
+  if(o.t==="v"){ APP.v=o.v||{}; render(); return; }
+  if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift();
+    if(m.cls==="death") sfx("thunder");
+    else if(m.x&&APP.me.name&&m.a!==APP.me.pid&&norm(m.x).includes("@"+norm(APP.me.name))) sfx("mention");
+    else if(m.cls==="seer"||m.cls==="role"||m.cls==="love") sfx("ping");
+    scheduleChat(); return; }
+  if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); } return; }
+  if(o.t==="err"){ if(o.k==="started"||o.k==="full"||o.k==="kicked"||o.k==="notInGame"){ APP.ui.joinErr=o.k; } else toast(t("e_"+o.k)); render(); }
+}
+function toast(s){ APP.ui.toast=s; renderToast(); clearTimeout(APP._tt); APP._tt=setTimeout(()=>{ APP.ui.toast=null; renderToast(); },3500); }
+function leaveToHub(){
+  if(APP.st&&(APP.st.status==="lobby"||APP.st.status==="starting")&&!APP.host) send({t:"leave"});
+  if(APP.host&&APP.host._tick){ /* host keeps running only while page open; leaving stops the game */ }
+  location.hash=""; location.reload();
+}
+
+/* ---------- derived ---------- */
+const S=()=>APP.st||{players:[],ph:{k:"lobby"}};
+const V=()=>APP.v||{};
+function meP(){ return pl(APP.me.pid); }
+function amAlive(){ const v=V(); if(S().status!=="running") return true; return !!v.alive; }
+function isNight(){ return (S().ph.k||"").startsWith("n_"); }
+function phaseLabel(){
+  const st=S(), k=st.ph.k;
+  if(st.status==="lobby") return t("ph_wait");
+  if(st.status==="starting") return t("ph_launch");
+  if(st.status==="ended") return t("ph_ended");
+  if(k.startsWith("n_")) return t("ph_"+k);
+  if(k==="prompt") return t("ph_prompt_"+st.ph.kind);
+  return t("ph_"+k,{n:st.ph.n||st.day});
+}
+function timeLeft(){ const st=S(); if(!st.ph||!st.ph.end) return null; return Math.max(0,Math.ceil((st.ph.end-now())/1000)); }
+function chatChannel(){
+  const v=V(), st=S();
+  if(st.status!=="running") return "v";
+  if(APP.ui.lovers&&v.chat&&v.chat.l) return "l";
+  if(v.chat){ if(v.chat.w) return "w"; if(v.chat.v) return "v"; if(v.chat.d) return "d"; }
+  return null;
+}
+function compRemaining(){
+  const st=S(); const c=Object.assign({},st.comp||{});
+  if(st.status==="running") for(const p of st.players) if(!p.alive&&p.role&&c[p.role]>0) c[p.role]--;
+  return c;
+}
+
+/* ---------- RENDER ---------- */
+let _chatT=null; function scheduleChat(){ if(_chatT) return; _chatT=requestAnimationFrame(()=>{ _chatT=null; renderChat(); }); }
+function render(){
+  document.documentElement.lang=LANG;
+  const app=$("#app");
+  const key=APP.view;
+  if(app.dataset.view!==key){ app.dataset.view=key; app.innerHTML=key==="hub"?hubSkeleton():gameSkeleton(); bindStatic(); }
+  if(key==="hub") renderHub(); else renderGame();
+  renderModal(); renderToast();
+}
+function hubSkeleton(){
+  return `<div class="hub"><div class="hub-scene night">${sceneSVG()}</div>
+  <nav class="topnav"><div class="brand">${logoSVG()}<span>Hurlune</span></div><div class="sp"></div>
+   <button class="navbtn" id="gearHub">⚙︎</button>
+   <div class="langsw"><button data-lang="fr">FR</button><button data-lang="ru">RU</button></div>
+   <button class="btn-primary sm" id="navPlay">▶ ${esc(t("play"))}</button></nav>
+  <div class="hub-body">
+    <div class="island"><div class="island-char" id="heroChar"></div><div class="island-rock"></div></div>
+    <div class="hub-card">
+      <h1>${esc(t("hubTitle"))}</h1><p class="muted">${esc(t("hubSub"))}</p>
+      <label>${esc(t("pseudo"))}</label>
+      <div class="row"><input id="pseudo" maxlength="18" autocomplete="off" placeholder="${esc(t("pseudoPh"))}"><button class="btn-ghost" id="rndAv" title="${esc(t("newLook"))}">🎲</button></div>
+      <div id="avEdit" class="av-edit"></div>
+      <div id="joinBox"></div>
+      <button class="btn-primary big" id="createBtn">▶ ${esc(t("createGame"))}</button>
+      <div class="or"><span>${esc(t("orJoin"))}</span></div>
+      <div class="row"><input id="joinCode" placeholder="${esc(t("joinPh"))}"><button class="btn-ghost" id="joinBtn">${esc(t("join"))}</button></div>
+      <div id="recent"></div>
+    </div>
+  </div>
+  <section class="roles-sec"><h2>${esc(t("rolesTitle"))}</h2><div class="roles-grid" id="rolesGrid"></div></section>
+  </div>`;
+}
+function gameSkeleton(){
+  return `<div class="game">
+   <div class="stage" id="stage"><div class="scene" id="scene">${sceneSVG()}</div><div class="fog"></div>
+     <div class="stage-top"><button class="iconbtn" id="homeBtn" title="${esc(t("home"))}">⌂</button><span class="roomname" id="roomName"></span><button class="pillbtn" id="inviteBtn">🔗 ${esc(t("invite"))}</button><span class="net" id="net"></span></div>
+     <div class="chars" id="chars"></div>
+     <div class="center" id="center"></div>
+   </div>
+   <aside class="side">
+     <div class="side-head"><div class="phase"><div class="clock">🕐</div><div><div class="ph-label" id="phLabel"></div></div><div class="ph-time" id="phTime"></div></div>
+       <button class="btn-rules" id="rulesBtn"></button><button class="iconbtn" id="gearBtn">⚙︎</button></div>
+     <div class="panel" id="panel">
+       <div class="chatlog" id="chatlog"></div>
+       <div class="rules" id="rules" hidden></div>
+     </div>
+     <form class="composer" id="composer"><button type="button" class="cbtn" id="trBtn" title="${esc(t("translate"))}">🌐</button><input id="msgIn" maxlength="400" autocomplete="off"><button type="button" class="cbtn" id="loveBtn" hidden title="${esc(t("loversChat"))}">💜</button><button class="cbtn send" id="sendBtn">➤</button></form>
+   </aside>
+   <div class="endov" id="endov" hidden></div>
+  </div>`;
+}
+function bindStatic(){
+  document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
+  if(APP.view==="hub"){
+    const ps=$("#pseudo"); ps.value=APP.me.name||"";
+    ps.oninput=()=>{ APP.me.name=ps.value.trim().slice(0,18); saveMe(); renderHubButtons(); };
+    $("#rndAv").onclick=()=>{ APP.me.av=randomAvatar(); saveMe(); renderHub(); };
+    $("#createBtn").onclick=()=>{ if(!APP.me.name){ ps.focus(); toast(t("needPseudo")); return; } openCreate(); };
+    $("#navPlay").onclick=$("#createBtn").onclick;
+    $("#gearHub").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
+    $("#joinBtn").onclick=()=>{
+      if(!APP.me.name){ ps.focus(); toast(t("needPseudo")); return; }
+      const v=$("#joinCode").value.trim(); const m=v.match(/g=([a-z0-9]+)\.([A-Za-z0-9_-]+)(?:\.(\d))?/);
+      if(!m){ toast(t("badCode")); return; }
+      location.hash="g="+m[1]+"."+m[2]+(m[3]?"."+m[3]:""); joinGame({room:m[1],key:m[2],b:m[3]!=null?+m[3]:null});
+    };
+    const grid=$("#rolesGrid");
+    grid.innerHTML=ROLE_GROUPS.map(([g,rs])=>rs.map(r=>`<div class="role-tile c-${g}"><div class="ri">${ROLES[r].icon}</div><div><b>${esc(roleName(r))}</b><div class="camp">${esc(t("camp_"+ROLES[r].camp))}</div><p>${esc(roleDesc(r))}</p></div></div>`).join("")).join("");
+  } else {
+    $("#homeBtn").onclick=()=>leaveToHub();
+    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("linkCopied")); };
+    $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
+    $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
+    $("#trBtn").onclick=()=>{ APP.set.tr=!APP.set.tr; saveSettings(); renderComposer(); renderChat(); };
+    $("#loveBtn").onclick=()=>{ APP.ui.lovers=!APP.ui.lovers; renderComposer(); };
+    $("#composer").onsubmit=e=>{ e.preventDefault(); const i=$("#msgIn"); const x=i.value.trim(); const ch=chatChannel(); if(!x||!ch) return; send({t:"chat",ch,x}); i.value=""; };
+    $("#chatlog").onclick=e=>{ const b=e.target.closest(".mn"); if(b){ const i=$("#msgIn"); i.value=(i.value+" @"+b.dataset.n+" ").replace(/^ /,""); i.focus(); } const o=e.target.closest(".showog"); if(o){ o.parentElement.classList.add("og-open"); } };
+  }
+}
+function copyText(s){ try{ navigator.clipboard.writeText(s); }catch(e){ const ta=document.createElement("textarea"); ta.value=s; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(_){} ta.remove(); } }
+function setLang(l){ LANG=l; lsSet("lang",l); const app=$("#app"); app.dataset.view=""; render(); if(APP.room&&APP._synced) send({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG}); }
+
+/* ---------- HUB ---------- */
+function renderHub(){
+  document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
+  $("#heroChar").innerHTML=charSVG(APP.me.av);
+  const ae=$("#avEdit"); const av=APP.me.av;
+  const opt=(k,n,lab)=>`<div class="ae"><span>${esc(t(lab))}</span><button data-ae="${k}" data-d="-1">‹</button><button data-ae="${k}" data-d="1">›</button></div>`;
+  ae.innerHTML=opt("s",SKIN.length,"av_skin")+opt("h",6,"av_hair")+opt("hc",HAIRC.length,"av_hairc")+opt("t",TOPC.length,"av_color")+opt("o",4,"av_outfit")+opt("a",5,"av_acc");
+  const lens={s:SKIN.length,h:6,hc:HAIRC.length,t:TOPC.length,o:4,a:5};
+  ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ae; av[k]=(av[k]+(+b.dataset.d)+lens[k])%lens[k]; saveMe(); $("#heroChar").innerHTML=charSVG(av); });
+  const jb=$("#joinBox"); const g=parseHash();
+  jb.innerHTML=g?`<div class="joinhint">${esc(t("invited"))}</div>`:"";
+  if(g){ $("#createBtn").innerHTML="▶ "+esc(t("joinThis")); $("#createBtn").onclick=()=>{ if(!APP.me.name){ $("#pseudo").focus(); toast(t("needPseudo")); return; } joinGame(g); }; }
+  const rec=(lsGet("recent")||[]).filter(r=>!g||r.room!==g.room);
+  $("#recent").innerHTML=rec.length?`<div class="recent"><div class="muted sm">${esc(t("recent"))}</div>${rec.map(r=>`<button class="rec" data-r="${esc(r.room)}">${esc(r.name||r.room)}<span>${lsGet("host."+r.room)?"⭐":""}</span></button>`).join("")}</div>`:"";
+  $("#recent").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{ if(!APP.me.name){ toast(t("needPseudo")); return; } const r=rec.find(x=>x.room===b.dataset.r); location.hash="g="+r.room+"."+r.key+(r.b!=null?"."+r.b:""); joinGame({room:r.room,key:r.key,b:r.b}); });
+  renderHubButtons();
+}
+function renderHubButtons(){}
+
+/* ---------- create / edit game ---------- */
+function openCreate(edit){
+  const st=S();
+  const base= edit ? {name:st.name,seats:st.seats,comp:clone(st.comp),mode:st.mode,speed:st.speed}
+                   : {name:t("defaultGameName",{n:APP.me.name}),seats:8,comp:suggestComp(8),mode:"fun",speed:"normal"};
+  APP.ui.modal={kind:"create",edit:!!edit,cfg:base}; render();
+}
+function createModal(m){
+  const c=m.cfg, tot=compTotal(c.comp), min=APP.st&&m.edit?Math.max(3,APP.st.players.length):3;
+  const grp=ROLE_GROUPS.map(([g,rs])=>`<div class="cg"><div class="cg-h c-${g}">${esc(t("camp_"+g))}</div><div class="cg-grid">${rs.map(r=>{ const n=c.comp[r]||0; return `<div class="ct ${n?"on":""}" title="${esc(roleDesc(r))}"><span class="ci">${ROLES[r].icon}</span><span class="cn">${esc(roleName(r))}</span><span class="cc"><button data-cr="${r}" data-d="-1">−</button><b>${n}</b><button data-cr="${r}" data-d="1">+</button></span></div>`; }).join("")}</div></div>`).join("");
+  return `<div class="mcard wide"><h2>${esc(t(m.edit?"editGame":"createGame"))}</h2>
+   <div class="frm"><label>${esc(t("gameName"))}</label><input id="cName" maxlength="40" value="${esc(c.name)}"></div>
+   <div class="frm row2"><div><label>${esc(t("seats"))}</label><div class="stepper"><button data-seat="-1">−</button><b>${c.seats}</b><button data-seat="1">+</button></div></div>
+     <div><label>${esc(t("type"))}</label><div class="seg"><button data-mode="fun" class="${c.mode==="fun"?"on":""}">${esc(t("fun"))}</button><button data-mode="serious" class="${c.mode==="serious"?"on":""}">${esc(t("serious"))}</button></div></div>
+     <div><label>${esc(t("speed"))}</label><div class="seg"><button data-speed="normal" class="${c.speed==="normal"?"on":""}">${esc(t("normal"))}</button><button data-speed="fast" class="${c.speed==="fast"?"on":""}">${esc(t("fast"))}</button></div></div></div>
+   <div class="comp-h"><b>${esc(t("composition"))}</b><span class="${tot===c.seats?"ok":"bad"}">${tot}/${c.seats} ${esc(t("rolesWord"))}</span><button class="btn-ghost sm" id="sugg">✨ ${esc(t("suggested"))}</button></div>
+   <div class="comp">${grp}</div>
+   <div class="mfoot"><button class="btn-ghost" id="mCancel">${esc(t("cancel"))}</button><button class="btn-primary" id="mOk" ${tot!==c.seats||!(c.comp.werewolf||c.comp.blackWolf||c.comp.talkativeWolf||c.comp.literateWolf||c.comp.wolfRidingHood||c.comp.whiteWolf)?"disabled":""}>${esc(t(m.edit?"save":"create"))}</button></div></div>`;
+  // min used in binder
+}
+function bindCreate(m){
+  const c=m.cfg; const min=m.edit&&APP.st?Math.max(3,APP.st.players.length):3;
+  const re=()=>{ c.name=$("#cName").value; renderModal(); };
+  document.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{ const r=b.dataset.cr; const n=Math.max(0,Math.min(ROLES[r].max,(c.comp[r]||0)+(+b.dataset.d))); if(n) c.comp[r]=n; else delete c.comp[r]; re(); });
+  document.querySelectorAll("[data-seat]").forEach(b=>b.onclick=()=>{ c.seats=Math.max(min,Math.min(16,c.seats+(+b.dataset.seat))); re(); });
+  document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{ c.mode=b.dataset.mode; re(); });
+  document.querySelectorAll("[data-speed]").forEach(b=>b.onclick=()=>{ c.speed=b.dataset.speed; re(); });
+  $("#sugg").onclick=()=>{ c.comp=suggestComp(c.seats); re(); };
+  $("#mCancel").onclick=()=>{ APP.ui.modal=null; render(); };
+  $("#mOk").onclick=async()=>{ c.name=$("#cName").value.trim()||t("defaultGameName",{n:APP.me.name});
+    APP.ui.modal=null;
+    if(m.edit){ send({t:"cfg",cfg:c}); render(); }
+    else { render(); await createGame(clone(c)); } };
+}
+
+/* ---------- GAME ---------- */
+function renderGame(){
+  const st=S(), v=V();
+  const night = st.status==="running"&&isNight();
+  const scene=$("#scene"); scene.classList.toggle("night",!(st.status==="running"&&!night)); scene.classList.toggle("day",st.status==="running"&&!night);
+  $("#stage").classList.toggle("is-night",night);
+  $("#roomName").textContent=st.name||"";
+  const ns=APP.ui.netStatus; $("#net").innerHTML=ns==="online"?"":`<span class="netbad">⚠︎ ${esc(t("net_"+ns))}</span>`;
+  $("#phLabel").textContent=phaseLabel();
+  updTimer();
+  const rb=$("#rulesBtn"); rb.textContent=APP.ui.panel==="chat"?"📖 "+t("rulesBtn"):"💬 "+t("chatBtn");
+  $("#chatlog").hidden=APP.ui.panel!=="chat"; $("#rules").hidden=APP.ui.panel!=="rules";
+  if(APP.ui.connecting||APP.ui.joinErr||!APP.st){ $("#chars").innerHTML=""; $("#center").innerHTML=connCard(); bindConn(); renderComposer(); return; }
+  renderChars(); renderCenter(); renderComposer(); renderChat(); if(APP.ui.panel==="rules") renderRules(); renderEnd();
+}
+function connCard(){
+  if(APP.ui.joinErr) return `<div class="card-c"><h3>${esc(t("e_"+APP.ui.joinErr))}</h3><p class="muted">${esc(t("e_"+APP.ui.joinErr+"_d"))}</p><button class="btn-primary" id="backHub">${esc(t("home"))}</button></div>`;
+  return `<div class="card-c"><div class="spinner"></div><p>${esc(t("connecting"))}</p></div>`;
+}
+function bindConn(){ const b=$("#backHub"); if(b) b.onclick=()=>{ location.hash=""; location.reload(); }; }
+function updTimer(){
+  const el=$("#phTime"); if(!el) return; const s=timeLeft(); const st=S();
+  if(s==null||st.status==="lobby"||st.status==="ended"){ el.textContent=""; return; }
+  el.textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); el.classList.toggle("hurry",s<=10);
+  const bar=$("#mbar"); if(bar&&APP._mbarTotal){ bar.style.width=Math.max(0,Math.min(100,100*s/APP._mbarTotal))+"%"; }
+}
+setInterval(updTimer,500);
+
+function layoutPositions(n){
+  // rows staggered like a village square
+  const rows = n<=6?[n]:n<=11?[Math.ceil(n/2),Math.floor(n/2)]:[Math.ceil(n/3),Math.ceil((n-Math.ceil(n/3))/2),n-Math.ceil(n/3)-Math.ceil((n-Math.ceil(n/3))/2)];
+  const pos=[]; const R=rows.length;
+  rows.forEach((cnt,ri)=>{ const y= R===1?64: R===2?(ri===0?56:76):(ri===0?50:ri===1?66:82);
+    for(let i=0;i<cnt;i++){ const x= cnt===1?50: 10+ (80*(i+ (ri%2?0.5:0)))/(cnt-(ri%2?0:1)||1); pos.push({x:Math.min(92,x),y,z:ri}); } });
+  return pos;
+}
+function targetable(id){
+  const st=S(), v=V(), me=APP.me.pid, p=pl(id); if(!p) return false;
+  const pr=v.prompt;
+  if(pr&&(!pr.acted||pr.k==="wolves")&&pr.k!=="cand"&&pr.k!=="dictAsk"&&pr.k!=="witch") return promptValid(pr,id);
+  if(pr&&pr.k==="witch"&&APP.ui.poisonMode) return p.alive&&id!==me;
+  if(st.status!=="running"||!v.alive) return false;
+  if(st.ph.k==="d_vote") return p.alive&&id!==me;
+  if(st.ph.k==="d_elect") return p.alive&&(st.cands||[]).includes(id);
+  return false;
+}
+function promptValid(pr,id){
+  const p=pl(id), me=APP.me.pid, v=V(); if(!p) return false;
+  if(pr.k==="grave") return id!==me;
+  if(!p.alive) return false;
+  if(pr.k==="tie") return pr.opts.includes(id);
+  if(pr.k==="wolves") return !(v.wolves||[]).includes(id);
+  if(pr.k==="guard") return id!==pr.not;
+  if(pr.k==="pyro") return id!==me&&!(pr.barrels||[]).includes(id);
+  if(pr.self) return true;
+  return id!==me;
+}
+function renderChars(){
+  const st=S(), v=V(), me=APP.me.pid;
+  const ps=st.players; const pos=layoutPositions(ps.length);
+  const votes=st.votes||{}, cnt={}; for(const a in votes){ cnt[votes[a]]=(cnt[votes[a]]||[]); cnt[votes[a]].push(a); }
+  const wolves=v.wolves||[], seen={}; (v.seen||[]).forEach(s=>seen[s.t]=s);
+  const sel=APP.ui.sel, myVote=votes[me];
+  const wolfVotes=v.wolfVotes||{}, wcnt={}; for(const a in wolfVotes) wcnt[wolfVotes[a]]=(wcnt[wolfVotes[a]]||0)+1;
+  const sleeping = st.status==="running"&&isNight();
+  $("#chars").innerHTML=ps.map((p,i)=>{
+    const q=pos[i]; const dead=st.status!=="lobby"&&st.status!=="starting"&&!p.alive;
+    const badges=[];
+    if(wolves.includes(p.id)||(st.status==="ended"&&p.role&&ROLES[p.role].camp==="wolf")) badges.push(`<span class="bd wolf" title="${esc(t("wolf"))}">🐾</span>`);
+    if(st.mayor===p.id&&p.alive) badges.push(`<span class="bd mayor" title="${esc(t("mayor"))}">★</span>`);
+    if(v.lover===p.id||(p.id===me&&v.lover)||(v.couple||[]).includes(p.id)||(st.lovers||[]).includes(p.id)) badges.push(`<span class="bd love">♥</span>`);
+    if((v.conta||[]).includes(p.id)) badges.push(`<span class="bd conta">✚</span>`);
+    if((v.barrels||[]).includes(p.id)) badges.push(`<span class="bd fire">🛢️</span>`);
+    let roleTag="";
+    if(p.role) roleTag=`${ROLES[p.role].icon} ${roleName(p.role)}`;
+    else if(p.id===me&&v.role) roleTag=`${ROLES[v.role].icon} ${roleName(v.role)}`;
+    else if(seen[p.id]) roleTag=seen[p.id].r?`🔮 ${roleName(seen[p.id].r)}`:`✨ ${t(seen[p.id].aura==="dark"?"auraDarkS":"auraLightS")}`;
+    else if(v.lover===p.id&&v.loverRole) roleTag=`💘 ${roleName(v.loverRole)}`;
+    const voters=cnt[p.id]||[];
+    const clickable=targetable(p.id);
+    const isSel=sel.includes(p.id)||(myVote===p.id)||(v.prompt&&v.prompt.k==="wolves"&&wolfVotes[me]===p.id);
+    const isCand=(st.cands||[]).includes(p.id)&&(st.ph.k==="d_cand"||st.ph.k==="d_elect");
+    return `<div class="ch ${dead?"dead":""} ${p.inact?"inact":""} ${clickable?"clk":""} ${isSel?"sel":""} ${p.id===me?"me":""}" style="left:${q.x}%;top:${q.y}%;z-index:${10+q.z}" data-id="${esc(p.id)}">
+      <div class="tag"><span class="nm">${esc(p.n)}</span>${badges.join("")}</div>
+      ${roleTag?`<div class="rtag">${esc(roleTag)}</div>`:""}
+      ${isCand?`<div class="cand">🎗️ ${esc(t("candidate"))}</div>`:""}
+      <div class="fig">${dead?tombSVG():charSVG(p.av,{sleep:sleeping&&p.id!==me})}</div>
+      ${voters.length?`<div class="votes"><b>${voters.length}</b>${voters.slice(0,6).map(a=>`<i title="${esc(pname(a))}">${headSVG((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
+      ${wcnt[p.id]?`<div class="votes wolfv"><b>🐺 ${wcnt[p.id]}</b></div>`:""}
+    </div>`;
+  }).join("");
+  document.querySelectorAll(".ch.clk").forEach(el=>el.onclick=()=>clickChar(el.dataset.id));
+  document.querySelectorAll(".ch .nm").forEach(el=>el.onclick=e=>{ e.stopPropagation(); const i=$("#msgIn"); if(i){ i.value=(i.value+" @"+el.textContent+" ").replace(/^ /,""); i.focus(); } });
+}
+function clickChar(id){
+  const st=S(), v=V(), pr=v.prompt;
+  if(pr&&pr.k==="witch"&&APP.ui.poisonMode){ APP.ui.witch={poison:id}; APP.ui.poisonMode=false; renderGame(); return; }
+  if(pr&&(!pr.acted||pr.k==="wolves")&&pr.k!=="cand"&&pr.k!=="dictAsk"&&pr.k!=="witch"){ promptPick(pr,id); return; }
+  if(st.ph.k==="d_vote"){
+    const myVote=(st.votes||{})[APP.me.pid];
+    if(myVote===id){ send({t:"act",seq:st.ph.seq,d:{t:null}}); return; }
+    const others=Object.entries(st.votes||{}).filter(([a,b])=>b===id&&a!==APP.me.pid).length;
+    if(!others){ APP.ui.modal={kind:"why",t:id}; render(); setTimeout(()=>{ const i=$("#whyIn"); if(i) i.focus(); },30); return; }
+    send({t:"act",seq:st.ph.seq,d:{t:id}}); return;
+  }
+  if(st.ph.k==="d_elect"){ const myVote=(st.votes||{})[APP.me.pid]; send({t:"act",seq:st.ph.seq,d:{t:myVote===id?null:id}}); }
+}
+function promptPick(pr,id){
+  const n=pr.n||1; let sel=APP.ui.sel;
+  if(sel.includes(id)) sel=sel.filter(x=>x!==id); else sel=[...sel,id].slice(-n);
+  APP.ui.sel=sel;
+  if(pr.k==="wolves"){ send({t:"act",seq:pr.seq,d:{t:id,infect:!!APP.ui.infect}}); APP.ui.sel=[id]; renderGame(); return; }
+  renderGame();
+}
+function confirmPrompt(){
+  const pr=V().prompt; if(!pr) return; const sel=APP.ui.sel;
+  let d=null;
+  if(pr.k==="cupid"||pr.k==="rat"){ if(!sel.length||(pr.k==="cupid"&&sel.length!==2)) return; d={ts:sel}; }
+  else if(sel.length) d={t:sel[0]};
+  if(!d) return;
+  send({t:"act",seq:pr.seq,d}); APP.ui.sel=[];
+}
+function promptTitle(pr){ return t("pt_"+pr.k); }
+function promptText(pr){
+  const v=V();
+  switch(pr.k){
+    case "seer": return t("pd_seer_"+v.role);
+    case "witch": return pr.victim?t("pd_witchVictim",{n:esc(pname(pr.victim))}):t("pd_witchNone");
+    default: return t("pd_"+pr.k);
+  }
+}
+function renderCenter(){
+  const st=S(), v=V(), el=$("#center"), pr=v.prompt, me=APP.me.pid;
+  let h="";
+  if(st.status==="lobby"||st.status==="starting"){
+    const n=st.players.length;
+    h=`<div class="card-c lobby"><div class="lb-top">${logoSVG()}<div><h3>${esc(st.name||"")}</h3><div class="muted">${esc(t("waitingPlayers",{n,m:st.seats}))} · ${esc(t(st.mode==="serious"?"serious":"fun"))} · ${esc(t(st.speed==="fast"?"fast":"normal"))}</div></div></div>
+      <div class="invite"><input readonly value="${esc(gameLink())}" id="invIn"><button class="btn-primary sm" id="copyInv">${esc(t("copy"))}</button></div>
+      <div class="compline">${Object.entries(st.comp||{}).filter(([r,c])=>c).map(([r,c])=>`<span class="cpill c-${ROLES[r].camp}" title="${esc(roleDesc(r))}">${ROLES[r].icon} ${esc(roleName(r))}${c>1?" ×"+c:""}</span>`).join("")}</div>
+      ${st.status==="starting"?`<div class="launch">${esc(t("launchingSoon"))}</div>`:""}
+      ${APP.host?`<div class="row c"><button class="btn-ghost sm" id="editG">⚙︎ ${esc(t("editGame"))}</button>${n>=3&&n<st.seats?`<button class="btn-ghost sm" id="forceG">▶ ${esc(t("startNow",{n}))}</button>`:""}</div><p class="muted sm">${esc(t("hostNote"))}</p>`:""}
+    </div>`;
+  } else if(pr&&(!pr.acted||pr.k==="wolves")&&pr.k!=="cand"){
+    const total=(SPEEDS[st.speed]||SPEEDS.normal); APP._mbarTotal=Math.max(1,Math.round(((st.ph.end||0)-now())/1000));
+    h=`<div class="card-c act"><div class="act-ic">${pr.dead?"⚰️":ROLES[v.role]?ROLES[v.role].icon:"❔"}</div><h3>${esc(promptTitle(pr))}</h3><p>${promptText(pr)}</p>`;
+    if(pr.k==="dictAsk"){ h+=`<div class="row c"><button class="btn-ghost" data-dict="0">${esc(t("no"))}</button><button class="btn-primary" data-dict="1">🎖️ ${esc(t("dictYes"))}</button></div>`; }
+    else if(pr.k==="witch"){
+      const w=APP.ui.witch||{};
+      h+=`<div class="potions"><div class="pot">💚 ${esc(t("healLeft",{n:pr.heal}))}</div><div class="pot">☠️ ${esc(t("poisonLeft",{n:pr.poison}))}</div></div><div class="row c">`;
+      if(pr.heal>0&&pr.victim) h+=`<button class="btn-ghost ${w.heal?"on":""}" id="wHeal">💚 ${esc(t("healBtn",{n:pname(pr.victim)}))}</button>`;
+      if(pr.poison>0) h+=`<button class="btn-ghost ${w.poison||APP.ui.poisonMode?"on":""}" id="wPoison">☠️ ${esc(w.poison?t("poisonOn",{n:pname(w.poison)}):APP.ui.poisonMode?t("pickTarget"):t("poisonBtn"))}</button>`;
+      h+=`</div><div class="row c"><button class="btn-ghost" id="wSkip">${esc(t("doNothing"))}</button><button class="btn-primary" id="wOk" ${w.heal||w.poison?"":"disabled"}>${esc(t("confirm"))}</button></div>`;
+    } else {
+      const opts=st.players.filter(p=>promptValid(pr,p.id));
+      if(pr.k==="pyro") h+=`<div class="row c"><button class="btn-ghost" id="ignite">🔥 ${esc(t("ignite",{n:(pr.barrels||[]).length}))}</button></div>`;
+      if(pr.k==="wolves"&&pr.infect) h+=`<label class="chk"><input type="checkbox" id="infChk" ${APP.ui.infect?"checked":""}> 🦠 ${esc(t("infectOpt"))}</label>`;
+      h+=`<div class="chips">${opts.map(p=>`<button class="chip ${APP.ui.sel.includes(p.id)||(pr.k==="wolves"&&(v.wolfVotes||{})[me]===p.id)?"on":""}" data-pk="${esc(p.id)}">${headSVG(p.av)}<span>${esc(p.n)}${p.id===me?" ("+esc(t("you"))+")":""}</span>${pr.k==="wolves"&&countW(p.id)?`<em>🐺${countW(p.id)}</em>`:""}</button>`).join("")}</div>`;
+      if(pr.k==="hunter") h+=`<div class="row c"><button class="btn-ghost" id="hNone">${esc(t("noOne"))}</button></div>`;
+      if(pr.k!=="wolves") h+=`<div class="row c"><button class="btn-primary" id="pOk" ${APP.ui.sel.length===(pr.k==="cupid"?2:pr.k==="rat"?APP.ui.sel.length||99:1)&&APP.ui.sel.length?"":"disabled"}>${esc(t("confirm"))}</button></div>`;
+    }
+    h+=`<div class="mbar"><i id="mbar"></i></div></div>`;
+  } else if(pr&&pr.k==="cand"){
+    h=`<div class="card-c slim"><p>${esc(t("candInfo"))}</p><button class="btn-primary" id="candBtn">🎗️ ${esc(t("candBtn"))}</button></div>`;
+  } else if(pr&&pr.acted&&pr.k!=="wolves"){
+    h=`<div class="card-c slim done">✔ ${esc(t("actionDone"))}</div>`;
+  } else if(st.status==="running"){
+    const info=centerInfo(); if(info) h=`<div class="card-c slim">${info}</div>`;
+  }
+  el.innerHTML=h;
+  const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
+  b("#copyInv",()=>{ copyText(gameLink()); toast(t("linkCopied")); });
+  b("#editG",()=>openCreate(true));
+  b("#forceG",()=>send({t:"forceStart"}));
+  el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));
+  b("#pOk",confirmPrompt);
+  b("#hNone",()=>send({t:"act",seq:pr.seq,d:{none:true}}));
+  b("#ignite",()=>send({t:"act",seq:pr.seq,d:{ignite:true}}));
+  el.querySelectorAll("[data-dict]").forEach(x=>x.onclick=()=>send({t:"act",seq:pr.seq,d:{yes:x.dataset.dict==="1"}}));
+  const inf=$("#infChk"); if(inf) inf.onchange=()=>{ APP.ui.infect=inf.checked; const mv=(V().wolfVotes||{})[me]; if(mv) send({t:"act",seq:pr.seq,d:{t:mv,infect:APP.ui.infect}}); };
+  b("#wHeal",()=>{ const w=APP.ui.witch||{}; APP.ui.witch=w.heal?{}:{heal:true}; APP.ui.poisonMode=false; renderGame(); });
+  b("#wPoison",()=>{ const w=APP.ui.witch||{}; if(w.poison){ APP.ui.witch={}; APP.ui.poisonMode=false; } else { APP.ui.witch={}; APP.ui.poisonMode=!APP.ui.poisonMode; } renderGame(); });
+  b("#wSkip",()=>{ send({t:"act",seq:pr.seq,d:{skip:true}}); APP.ui.witch={}; APP.ui.poisonMode=false; });
+  b("#wOk",()=>{ const w=APP.ui.witch||{}; send({t:"act",seq:pr.seq,d:w.heal?{heal:true}:{poison:w.poison}}); APP.ui.witch={}; APP.ui.poisonMode=false; });
+  b("#candBtn",()=>{ APP.ui.modal={kind:"cand"}; render(); setTimeout(()=>{ const i=$("#whyIn"); if(i) i.focus(); },30); });
+}
+function countW(id){ const w=V().wolfVotes||{}; return Object.values(w).filter(x=>x===id).length; }
+function centerInfo(){
+  const st=S(), v=V(), k=st.ph.k;
+  if(!v.alive&&k!=="prompt") return `💀 ${esc(t("youDead"))}`;
+  if(k.startsWith("n_")) return `🌙 ${esc(t("sleeping"))}`;
+  if(k==="d_vote") return `🗳️ ${esc(t("voteHelp"))}`;
+  if(k==="d_elect") return `🗳️ ${esc(t("electHelp"))}`;
+  if(k==="d_cand") return `🎗️ ${esc(t("candWait"))}`;
+  if(k==="prompt") return `⏳ ${esc(t("waitPrompt",{n:pname(st.ph.who)}))}`;
+  if(k==="d_dict") return `🎖️ ${esc(t("dictWait",{n:pname(st.ph.who)}))}`;
+  if(k==="d_tie") return `⚖️ ${esc(t("tieWait"))}`;
+  return "";
+}
+function renderComposer(){
+  const i=$("#msgIn"); if(!i) return; const ch=chatChannel(), v=V(), st=S();
+  const tb=$("#trBtn"); tb.classList.toggle("on",!!APP.set.tr);
+  const lb=$("#loveBtn"); lb.hidden=!(v.chat&&v.chat.l); lb.classList.toggle("on",!!APP.ui.lovers);
+  i.disabled=!ch; $("#sendBtn").disabled=!ch;
+  let ph=t("typeMsg");
+  if(!ch){ ph= st.status==="running"&&!v.alive?t("deadNoTalk"):isNight()?t("nightQuiet"):t("cantTalk"); }
+  else if(ch==="w") ph=t("typeWolf"); else if(ch==="d") ph=v.alive?t("typeNecro"):t("typeDead"); else if(ch==="l") ph=t("typeLove");
+  i.placeholder=ph; $("#composer").className="composer ch-"+(ch||"x");
+}
+let _lastChatLen=0;
+function msgVisible(m){
+  const st=S(), v=V();
+  if(m.ch==="w"&&st.status==="running"&&v.chat&&!v.chat.seeW) return false;
+  return true;
+}
+function renderChat(){
+  const log=$("#chatlog"); if(!log||APP.view!=="game") return;
+  const atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<80;
+  const me=APP.me.pid, myn=norm(APP.me.name);
+  let h=""; let lastA=null;
+  for(const m of APP.msgs){
+    if(!msgVisible(m)) continue;
+    if(m.k&&!m.x&&(m.ch==="s"||m.ch==="ps")){
+      lastA=null;
+      const cls=m.cls||"info";
+      h+=`<div class="sm-${cls} sysm ${m.ch==="ps"?"privm":""}">${fmt(m.k,m.p)}</div>`; continue;
+    }
+    let body=esc(m.x||"").replace(/@([^\s@]{1,18})/g,(a,n)=>`<b class="mn" data-n="${esc(n)}">@${n}</b>`);
+    let trH="";
+    if(m.x&&needTr(m)){ const r=trGet(m); if(!r&&!(S().oa&&Date.now()+APP.clockOff-(m.t||0)<15000)) trRequest(m);
+      if(r&&r.x){ body=`<div class="trx">${esc(r.x)}</div><div class="ogx">${body}</div><button class="showog">${esc(t("original"))}</button>`; }
+      else if(!r){ trH=`<div class="trwait">…</div>`; } }
+    const mention=m.x&&myn&&m.a!==me&&norm(m.x).includes("@"+myn);
+    const cls=["msg","ch-"+m.ch,m.cls?"mc-"+m.cls:"",m.a===me?"mine":"",mention?"mention":""].join(" ");
+    const P=m.a&&!String(m.a).startsWith("anon:")?pl(m.a):null;
+    const name=m.necro?"💀 "+t("r_necromancer"):(m.anon?"🐺 "+m.n:(P?P.n:m.n));
+    const same=lastA===(m.a||m.n)+m.ch&&!m.cls;
+    lastA=(m.a||m.n)+m.ch;
+    const pre = m.cls==="accuse"?`<div class="acc">🗳️ ${fmt("accuse",m.p)}</div>`: m.cls==="pres"?`<div class="acc pres">🎗️ ${esc(t("m_presents"))}</div>`:"";
+    h+=`<div class="${cls} ${same?"cont":""}">${same?"":`<div class="mav">${P?headSVG(P.av):m.anon?"🐺":m.necro?"💀":""}</div>`}<div class="mbody">${same?"":`<div class="mname"><b class="mn" data-n="${esc(P?P.n:m.n)}">${esc(name)}</b>${m.ch==="w"?` <span class="chtag w">${esc(t("wolves"))}</span>`:m.ch==="d"?` <span class="chtag d">${esc(t("graveyard"))}</span>`:m.ch==="l"?` <span class="chtag l">${esc(t("lovers"))}</span>`:""}</div>`}${pre}<div class="mtext">${body}</div>${trH}</div></div>`;
+  }
+  log.innerHTML=h;
+  if(atBottom||APP.msgs.length!==_lastChatLen&&APP.msgs.length&&APP.msgs[APP.msgs.length-1].a===me) log.scrollTop=log.scrollHeight;
+  _lastChatLen=APP.msgs.length;
+}
+function scrollChat(){ const log=$("#chatlog"); if(log) log.scrollTop=log.scrollHeight; }
+function renderRules(){
+  const el=$("#rules"), v=V(), st=S();
+  let h="";
+  if(v.role){
+    const r=v.role;
+    h+=`<div class="myrole c-${v.camp==="wolf"?"wolf":ROLES[r].camp}"><div class="ri">${ROLES[r].icon}</div><div><div class="muted sm">${esc(t("yourRole"))}</div><h3>${esc(roleName(r))}</h3><p>${esc(roleDesc(r))}</p><div class="goal">🎯 ${esc(t("goal_"+(v.camp==="wolf"?"wolf":r==="whiteWolf"?"white":r==="sickRat"?"rat":r==="mercenary"&&v.camp==="solo"?"merc":"village")))}</div></div></div>`;
+    const info=[];
+    if(v.infected) info.push("🦠 "+t("i_infected"));
+    if(v.orig&&v.orig!==r) info.push("📜 "+t("i_orig",{r:roleName(v.orig)}));
+    if(v.wolves&&v.wolves.length>1) info.push("🐾 "+t("i_pack",{n:v.wolves.filter(x=>x!==APP.me.pid).map(pname).join(", ")}));
+    if(v.lover) info.push("💜 "+t("i_lover",{n:pname(v.lover),r:roleName(v.loverRole)}));
+    if(v.couple) info.push("💘 "+t("i_couple",{a:pname(v.couple[0]),b:pname(v.couple[1])}));
+    (v.seen||[]).forEach(s=>info.push(s.r?"🔮 "+t("i_seen",{n:pname(s.t),r:roleName(s.r)}):"✨ "+t("i_aura",{n:pname(s.t),a:t(s.aura==="dark"?"auraDarkS":"auraLightS")})));
+    if(v.pot) info.push("🧪 "+t("i_pot",{h:v.pot.heal,p:v.pot.poison}));
+    if(v.guardLast) info.push("🛡️ "+t("i_guard",{n:pname(v.guardLast)}));
+    if(v.barrels&&v.barrels.length) info.push("🛢️ "+t("i_barrels",{n:v.barrels.map(pname).join(", ")}));
+    if(v.testator) info.push("📜 "+t("i_testator",{n:pname(v.testator)}));
+    if(v.merc) info.push("🗡️ "+t("i_merc",{n:pname(v.merc)}));
+    if(v.word) info.push("🗣️ "+t("i_word",{w:v.word})+(v.saidWord?" ✔":""));
+    if(v.letter) info.push("✒️ "+t("i_letter",{l:v.letter.toUpperCase()})+(v.usedLetter?" ✖":""));
+    if(v.conta) info.push("🐀 "+t("i_conta",{n:v.conta.map(pname).join(", ")}));
+    if(info.length) h+=`<div class="infos">${info.map(x=>`<div>${esc(x)}</div>`).join("")}</div>`;
+  } else h+=`<p class="muted">${esc(t("noRoleYet"))}</p>`;
+  const rem=compRemaining();
+  h+=`<h4>${esc(t(st.status==="running"?"remaining":"composition"))}</h4><div class="remgrid">${Object.entries(rem).filter(([r,c])=>c>0).map(([r,c])=>`<div class="rem c-${ROLES[r].camp}" title="${esc(roleDesc(r))}"><span>${ROLES[r].icon}</span><b>${esc(roleName(r))}</b><em>×${c}</em></div>`).join("")}</div>`;
+  const deadP=st.players.filter(p=>!p.alive&&p.role);
+  if(deadP.length) h+=`<h4>${esc(t("deathJournal"))}</h4><div class="journal">${deadP.map(p=>`<div>💀 <b>${esc(p.n)}</b> — ${ROLES[p.role].icon} ${esc(roleName(p.role))}</div>`).join("")}</div>`;
+  h+=`<h4>${esc(t("howTo"))}</h4><p class="muted sm">${esc(t("howToText"))}</p>`;
+  el.innerHTML=h;
+}
+function renderEnd(){
+  const el=$("#endov"), st=S();
+  if(st.status!=="ended"||APP.ui.endClosed){ el.hidden=true; return; }
+  el.hidden=false;
+  const win=st.winners||[];
+  el.innerHTML=`<div class="endcard w-${esc(st.winner)}"><div class="endico">${{village:"🏡",wolf:"🐺",lovers:"💘",white:"🤍",rat:"🐀",merc:"🗡️",draw:"⚖️"}[st.winner]||"🏁"}</div><h2>${esc(t("win_"+st.winner))}</h2>
+   <div class="winners">${win.map(id=>{ const p=pl(id); return p?`<div class="wch">${charSVG(p.av)}<b>${esc(p.n)}</b></div>`:""; }).join("")}</div>
+   <div class="reveal">${st.players.map(p=>`<div class="${win.includes(p.id)?"w":""}">${p.alive?"":"💀 "}<b>${esc(p.n)}</b> — ${p.role?ROLES[p.role].icon+" "+esc(roleName(p.role)):""}${p.inf?" 🦠":""}</div>`).join("")}</div>
+   <div class="row c">${APP.host?`<button class="btn-primary" id="againBtn">↻ ${esc(t("playAgain"))}</button>`:`<span class="muted">${esc(t("waitAgain"))}</span>`}<button class="btn-ghost" id="closeEnd">${esc(t("seeChat"))}</button></div></div>`;
+  const a=$("#againBtn"); if(a) a.onclick=()=>send({t:"again"});
+  $("#closeEnd").onclick=()=>{ APP.ui.endClosed=true; renderEnd(); };
+}
+
+/* ---------- modals ---------- */
+function renderModal(){
+  let el=$("#modal"); const m=APP.ui.modal;
+  if(!m){ if(el) el.remove(); return; }
+  if(!el){ el=document.createElement("div"); el.id="modal"; el.className="modal"; document.body.appendChild(el); el.onclick=e=>{ if(e.target===el&&APP.ui.modal&&APP.ui.modal.kind!=="create"){ APP.ui.modal=null; render(); } }; }
+  if(m.kind==="create"){ el.innerHTML=createModal(m); bindCreate(m); return; }
+  if(m.kind==="settings"){
+    el.innerHTML=`<div class="mcard"><h2>${esc(t("settings"))}</h2>
+      <div class="frm"><label>${esc(t("language"))}</label><div class="seg"><button data-l="fr" class="${LANG==="fr"?"on":""}">Français</button><button data-l="ru" class="${LANG==="ru"?"on":""}">Русский</button></div></div>
+      <div class="frm"><label class="chk"><input type="checkbox" id="sTr" ${APP.set.tr?"checked":""}> 🌐 ${esc(t("autoTr"))}</label><p class="muted sm">${esc(t("autoTrHelp"))}</p></div>
+      <div class="frm"><label class="chk"><input type="checkbox" id="sSnd" ${APP.set.sound?"checked":""}> 🔊 ${esc(t("sounds"))}</label></div>
+      <div class="frm oa"><label>🤖 ${esc(t("oaKey"))}</label><input id="sKey" type="password" placeholder="sk-..." value="${esc(oaKey())}" autocomplete="off"><label style="margin-top:8px">${esc(t("oaModel"))}</label><input id="sModel" value="${esc(oaModel())}"><p class="muted sm">${esc(t("oaHelp"))}</p>${APP.oaErr?`<p class="sm" style="color:var(--red)">${esc(t("oaErr",{e:APP.oaErr}))}</p>`:""}</div>
+      <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
+    el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
+    $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
+    $("#sSnd").onchange=e=>{ APP.set.sound=e.target.checked; saveSettings(); };
+    $("#sOk").onclick=()=>{ lsSet("oaKey",$("#sKey").value.trim()); lsSet("oaModel",$("#sModel").value.trim()||"gpt-5.6-luna"); if(APP.host){ APP.host.translator=hostTranslator(); APP.host.flush(true); } APP.ui.modal=null; render(); };
+    return;
+  }
+  if(m.kind==="why"||m.kind==="cand"){
+    const isWhy=m.kind==="why";
+    el.innerHTML=`<div class="mcard"><h2>${esc(isWhy?t("whyTitle",{n:pname(m.t)}):t("candTitle"))}</h2><p class="muted">${esc(isWhy?t("whyHelp"):t("candHelp"))}</p>
+     <form id="whyF"><input id="whyIn" maxlength="${isWhy?200:300}" placeholder="${esc(isWhy?t("whyPh"):t("candPh"))}" autocomplete="off"><div class="mfoot"><button type="button" class="btn-ghost" id="whyC">${esc(t("cancel"))}</button><button class="btn-primary">${esc(isWhy?t("accuseBtn"):t("candBtn"))}</button></div></form></div>`;
+    $("#whyC").onclick=()=>{ APP.ui.modal=null; render(); };
+    $("#whyF").onsubmit=e=>{ e.preventDefault(); const x=$("#whyIn").value.trim(); if(x.length<2){ $("#whyIn").focus(); return; }
+      const st=S(); if(isWhy) send({t:"act",seq:st.ph.seq,d:{t:m.t,why:x}}); else send({t:"act",seq:V().prompt.seq,d:{x}});
+      APP.ui.modal=null; render(); };
+  }
+}
+function renderToast(){ let el=$("#toast"); if(!APP.ui.toast){ if(el) el.remove(); return; } if(!el){ el=document.createElement("div"); el.id="toast"; document.body.appendChild(el); } el.textContent=APP.ui.toast; }
+
+/* ---------- boot ---------- */
+(async function boot(){
+  await ensureMe();
+  const g=parseHash();
+  if(g&&APP.me.name){ const saved=lsGet("host."+g.room); APP.view="game"; render(); joinGame(g); }
+  else render();
+  window.addEventListener("hashchange",()=>{ const g2=parseHash(); if(g2&&APP.view==="hub"&&APP.me.name) joinGame(g2); });
+})();
+
+</script>
+</body>
+</html>
