@@ -424,6 +424,10 @@ body{background:radial-gradient(1200px 700px at 30% -10%,#2a2450,transparent 60%
 .vb-q{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11.5px}
 .vb-qi{background:#23243a;border-radius:8px;padding:2px 7px} .vb-qi.me{background:var(--pur);color:#fff}
 .msg .vo{font-size:11px;opacity:.75}
+.msel{max-width:230px;background:#191a26;color:inherit;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 8px;font:inherit;font-size:12.5px}
+.opt.mtest{gap:10px;align-items:center}
+.mlvl{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;min-width:80px} .mlvl i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4cd47a,#c8e04c 70%,#e0565b);transition:width .1s}
+.mhear{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;color:var(--mute)} .mhear input{width:auto}
 
 </style>
 </head>
@@ -1510,7 +1514,7 @@ en:{
  bn_night:"Night {n}",bn_day:"Day {n}",rv_title:"Your card has been dealt",rv_changed:"Your role has changed!",rv_click:"Click the card to turn it over",rv_ok:"Let’s go!",youWon:"You won!",youLost:"You lost…",
  oaKey:"OpenAI API key (optional)",oaModel:"OpenAI model",oaHelp:"When you host, this key translates every message of the game for everyone (your friends need nothing). The key is stored only on this device. Without a key: Google Translate.",oaErr:"OpenAI error ({e}): check the key or the model. Google Translate is used as a fallback.",
  play:"Play",hubTitle:"The village needs you",hubSub:"Online Werewolf with friends — no account, in English, French and Russian.",
- pseudo:"Your nickname",pseudoPh:"Type your nickname…",newLook:"New look",av_skin:"Skin",av_hair:"Hairstyle",av_hairc:"Hair",av_color:"Colour",av_outfit:"Outfit",av_acc:"Accessory",vTranscript:"Transcribed from voice",vYou:"🎙️ You have the floor",vSpeaking:"{n} has the floor",vDone:"I'm done",vIdle:"Nobody is talking. Ask for the floor to speak.",vIdleWolf:"Wolves' voice chat: ask for the floor to speak.",vCancel:"Cancel",vPos:"#{n}",vReq:"Ask to speak",vNoMic:"No microphone found",vMicDenied:"Microphone access denied: allow it to speak.",vQueue:"Queue:",voiceOpt:"Voice chat",yes:"Yes",optVc:"Listen to voice chat",optVcD:"Hear the players who have the floor.",av_face:"Face",av_eyes:"Eyes",av_glasses:"Glasses",av_beard:"Beard",av_hat:"Hat",av_color2:"Shirt",av_pants:"Trousers",av_boots:"Boots",av_belt:"Belt",av_scarf:"Scarf / cape",av_skinc:"Body",av_clothes:"Clothes",th_camp:"Moonlit camp",th_camp_d:"3D · mountains, real sky",gfx:"Graphics quality",gfx_low:"Low",gfx_med:"Medium",gfx_high:"High",gfxHelp:"Lower it if the game is slow on your computer.",
+ pseudo:"Your nickname",pseudoPh:"Type your nickname…",newLook:"New look",av_skin:"Skin",av_hair:"Hairstyle",av_hairc:"Hair",av_color:"Colour",av_outfit:"Outfit",av_acc:"Accessory",micT:"Microphone",micDev:"Microphone",micDefault:"Default (system)",micGain:"Mic volume",micTest:"🎤 Test my mic",micStop:"⏹ Stop test",micHear:"Hear myself",optNs:"Noise and echo reduction",optNsD:"Removes background noise and stops your speakers leaking into the mic.",spkDev:"Audio output (headset / speakers)",micHint:"Speak during the test: the green bar should move. If your mics have no names, start the test first to allow mic access.",vTranscript:"Transcribed from voice",vYou:"🎙️ You have the floor",vSpeaking:"{n} has the floor",vDone:"I'm done",vIdle:"Nobody is talking. Ask for the floor to speak.",vIdleWolf:"Wolves' voice chat: ask for the floor to speak.",vCancel:"Cancel",vPos:"#{n}",vReq:"Ask to speak",vNoMic:"No microphone found",vMicDenied:"Microphone access denied: allow it to speak.",vQueue:"Queue:",voiceOpt:"Voice chat",yes:"Yes",optVc:"Listen to voice chat",optVcD:"Hear the players who have the floor.",av_face:"Face",av_eyes:"Eyes",av_glasses:"Glasses",av_beard:"Beard",av_hat:"Hat",av_color2:"Shirt",av_pants:"Trousers",av_boots:"Boots",av_belt:"Belt",av_scarf:"Scarf / cape",av_skinc:"Body",av_clothes:"Clothes",th_camp:"Moonlit camp",th_camp_d:"3D · mountains, real sky",gfx:"Graphics quality",gfx_low:"Low",gfx_med:"Medium",gfx_high:"High",gfxHelp:"Lower it if the game is slow on your computer.",
  createGame:"Create a game",orJoin:"or join",joinPh:"Paste the game link or code",join:"Join",invited:"You’ve been invited to a game! Pick a nickname, then join.",joinThis:"Join the game",
  recent:"Recent games",rolesTitle:"The village roles",needPseudo:"Pick a nickname first.",badCode:"Invalid game link.",
  camp_wolf:"Werewolf camp",camp_village:"Village camp",camp_solo:"Loner",
@@ -1568,7 +1572,7 @@ fr:{
  bn_night:"Nuit {n}",bn_day:"Jour {n}",rv_title:"Ta carte a été distribuée",rv_changed:"Ton rôle a changé !",rv_click:"Clique sur la carte pour la retourner",rv_ok:"C’est parti !",youWon:"Tu as gagné !",youLost:"Tu as perdu…",
  oaKey:"Clé API OpenAI (optionnel)",oaModel:"Modèle OpenAI",oaHelp:"Si tu es l’hôte, ta clé traduit tous les messages de la partie pour tout le monde (tes amis n’ont besoin de rien). La clé reste enregistrée uniquement sur cet appareil. Sans clé : Google Traduction.",oaErr:"Erreur OpenAI ({e}) : vérifie ta clé ou le modèle. Google Traduction est utilisé en secours.",
  play:"Jouer",hubTitle:"Le village a besoin de toi",hubSub:"Loups-Garous en ligne entre amis — sans compte, en français, russe et anglais.",
- pseudo:"Ton pseudo",pseudoPh:"Écris ton pseudo…",newLook:"Nouveau look",av_skin:"Peau",av_hair:"Coiffure",av_hairc:"Cheveux",av_color:"Couleur",av_outfit:"Tenue",av_acc:"Accessoire",vTranscript:"Retranscrit depuis le vocal",vYou:"🎙️ Tu as la parole",vSpeaking:"{n} a la parole",vDone:"J'ai fini",vIdle:"Personne ne parle. Demande la parole pour parler au micro.",vIdleWolf:"Vocal des loups : demande la parole pour parler.",vCancel:"Annuler",vPos:"n°{n}",vReq:"Demander la parole",vNoMic:"Micro introuvable",vMicDenied:"Accès au micro refusé : autorise-le pour parler.",vQueue:"File :",voiceOpt:"Chat vocal",yes:"Oui",optVc:"Écouter le chat vocal",optVcD:"Entendre les joueurs qui ont la parole au micro.",av_face:"Visage",av_eyes:"Yeux",av_glasses:"Lunettes",av_beard:"Barbe",av_hat:"Chapeau",av_color2:"Chemise",av_pants:"Pantalon",av_boots:"Bottes",av_belt:"Ceinture",av_scarf:"Écharpe / cape",av_skinc:"Corps",av_clothes:"Vêtements",th_camp:"Campement lunaire",th_camp_d:"3D · montagnes, vrai ciel",gfx:"Qualité graphique",gfx_low:"Basse",gfx_med:"Moyenne",gfx_high:"Haute",gfxHelp:"Baisse-la si le jeu rame sur ton ordinateur.",
+ pseudo:"Ton pseudo",pseudoPh:"Écris ton pseudo…",newLook:"Nouveau look",av_skin:"Peau",av_hair:"Coiffure",av_hairc:"Cheveux",av_color:"Couleur",av_outfit:"Tenue",av_acc:"Accessoire",micT:"Micro",micDev:"Micro utilisé",micDefault:"Par défaut (système)",micGain:"Volume du micro",micTest:"🎤 Tester mon micro",micStop:"⏹ Arrêter le test",micHear:"M'entendre",optNs:"Réduction du bruit et de l'écho",optNsD:"Coupe les bruits de fond et évite que tes haut-parleurs repassent dans le micro.",spkDev:"Sortie audio (casque / haut-parleurs)",micHint:"Parle pendant le test : la barre verte doit bouger. Si tes micros n'ont pas de nom, lance d'abord le test pour autoriser le micro.",vTranscript:"Retranscrit depuis le vocal",vYou:"🎙️ Tu as la parole",vSpeaking:"{n} a la parole",vDone:"J'ai fini",vIdle:"Personne ne parle. Demande la parole pour parler au micro.",vIdleWolf:"Vocal des loups : demande la parole pour parler.",vCancel:"Annuler",vPos:"n°{n}",vReq:"Demander la parole",vNoMic:"Micro introuvable",vMicDenied:"Accès au micro refusé : autorise-le pour parler.",vQueue:"File :",voiceOpt:"Chat vocal",yes:"Oui",optVc:"Écouter le chat vocal",optVcD:"Entendre les joueurs qui ont la parole au micro.",av_face:"Visage",av_eyes:"Yeux",av_glasses:"Lunettes",av_beard:"Barbe",av_hat:"Chapeau",av_color2:"Chemise",av_pants:"Pantalon",av_boots:"Bottes",av_belt:"Ceinture",av_scarf:"Écharpe / cape",av_skinc:"Corps",av_clothes:"Vêtements",th_camp:"Campement lunaire",th_camp_d:"3D · montagnes, vrai ciel",gfx:"Qualité graphique",gfx_low:"Basse",gfx_med:"Moyenne",gfx_high:"Haute",gfxHelp:"Baisse-la si le jeu rame sur ton ordinateur.",
  createGame:"Créer une partie",orJoin:"ou rejoindre",joinPh:"Colle le lien ou le code de la partie",join:"Rejoindre",invited:"Tu as été invité·e à une partie ! Choisis ton pseudo puis rejoins-la.",joinThis:"Rejoindre la partie",
  recent:"Parties récentes",rolesTitle:"Les rôles du village",needPseudo:"Choisis d’abord un pseudo.",badCode:"Lien de partie invalide.",
  camp_wolf:"Camp des Loups-Garous",camp_village:"Camp du Village",camp_solo:"Solitaire",
@@ -1626,7 +1630,7 @@ ru:{
  bn_night:"Ночь {n}",bn_day:"День {n}",rv_title:"Тебе раздали карту",rv_changed:"Твоя роль изменилась!",rv_click:"Нажми на карту, чтобы перевернуть её",rv_ok:"Поехали!",youWon:"Ты победил(а)!",youLost:"Ты проиграл(а)…",
  oaKey:"Ключ API OpenAI (необязательно)",oaModel:"Модель OpenAI",oaHelp:"Если ты хост, твой ключ переводит все сообщения игры для всех (друзьям ничего не нужно). Ключ хранится только на этом устройстве. Без ключа используется Google Переводчик.",oaErr:"Ошибка OpenAI ({e}): проверь ключ или модель. Используется Google Переводчик.",
  play:"Играть",hubTitle:"Деревне нужна твоя помощь",hubSub:"Оборотни онлайн с друзьями — без регистрации, на русском, французском и английском.",
- pseudo:"Твой ник",pseudoPh:"Введи свой ник…",newLook:"Новый образ",av_skin:"Кожа",av_hair:"Причёска",av_hairc:"Волосы",av_color:"Цвет",av_outfit:"Одежда",av_acc:"Аксессуар",vTranscript:"Расшифровка голоса",vYou:"🎙️ Тебе слово",vSpeaking:"Слово у {n}",vDone:"Я закончил(а)",vIdle:"Никто не говорит. Попроси слово, чтобы говорить в микрофон.",vIdleWolf:"Голосовой чат волков: попроси слово.",vCancel:"Отменить",vPos:"№{n}",vReq:"Попросить слово",vNoMic:"Микрофон не найден",vMicDenied:"Нет доступа к микрофону: разреши его, чтобы говорить.",vQueue:"Очередь:",voiceOpt:"Голосовой чат",yes:"Да",optVc:"Слушать голосовой чат",optVcD:"Слышать игроков, у которых слово.",av_face:"Лицо",av_eyes:"Глаза",av_glasses:"Очки",av_beard:"Борода",av_hat:"Шляпа",av_color2:"Рубашка",av_pants:"Штаны",av_boots:"Сапоги",av_belt:"Пояс",av_scarf:"Шарф / плащ",av_skinc:"Тело",av_clothes:"Одежда",th_camp:"Лунный лагерь",th_camp_d:"3D · горы, настоящее небо",gfx:"Качество графики",gfx_low:"Низкое",gfx_med:"Среднее",gfx_high:"Высокое",gfxHelp:"Понизь, если игра тормозит на твоём компьютере.",
+ pseudo:"Твой ник",pseudoPh:"Введи свой ник…",newLook:"Новый образ",av_skin:"Кожа",av_hair:"Причёска",av_hairc:"Волосы",av_color:"Цвет",av_outfit:"Одежда",av_acc:"Аксессуар",micT:"Микрофон",micDev:"Микрофон",micDefault:"По умолчанию (система)",micGain:"Громкость микрофона",micTest:"🎤 Проверить микрофон",micStop:"⏹ Остановить проверку",micHear:"Слышать себя",optNs:"Шумо- и эхоподавление",optNsD:"Убирает фоновый шум и не даёт динамикам попадать в микрофон.",spkDev:"Вывод звука (наушники / колонки)",micHint:"Говори во время проверки: зелёная полоска должна двигаться. Если у микрофонов нет названий, сначала запусти проверку, чтобы разрешить доступ.",vTranscript:"Расшифровка голоса",vYou:"🎙️ Тебе слово",vSpeaking:"Слово у {n}",vDone:"Я закончил(а)",vIdle:"Никто не говорит. Попроси слово, чтобы говорить в микрофон.",vIdleWolf:"Голосовой чат волков: попроси слово.",vCancel:"Отменить",vPos:"№{n}",vReq:"Попросить слово",vNoMic:"Микрофон не найден",vMicDenied:"Нет доступа к микрофону: разреши его, чтобы говорить.",vQueue:"Очередь:",voiceOpt:"Голосовой чат",yes:"Да",optVc:"Слушать голосовой чат",optVcD:"Слышать игроков, у которых слово.",av_face:"Лицо",av_eyes:"Глаза",av_glasses:"Очки",av_beard:"Борода",av_hat:"Шляпа",av_color2:"Рубашка",av_pants:"Штаны",av_boots:"Сапоги",av_belt:"Пояс",av_scarf:"Шарф / плащ",av_skinc:"Тело",av_clothes:"Одежда",th_camp:"Лунный лагерь",th_camp_d:"3D · горы, настоящее небо",gfx:"Качество графики",gfx_low:"Низкое",gfx_med:"Среднее",gfx_high:"Высокое",gfxHelp:"Понизь, если игра тормозит на твоём компьютере.",
  createGame:"Создать игру",orJoin:"или войти",joinPh:"Вставь ссылку или код игры",join:"Войти",invited:"Тебя пригласили в игру! Выбери ник и заходи.",joinThis:"Войти в игру",
  recent:"Недавние игры",rolesTitle:"Роли деревни",needPseudo:"Сначала выбери ник.",badCode:"Неверная ссылка на игру.",
  camp_wolf:"Лагерь оборотней",camp_village:"Лагерь деревни",camp_solo:"Одиночка",
@@ -1801,32 +1805,48 @@ const AUD = (function(){
 /* ===================== Chat vocal : micro -> Opus (WebCodecs) -> relais chiffré -> lecture ===================== */
 const VOICE=(function(){
   "use strict";
+  const SET=()=>(typeof APP!=="undefined"&&APP.set)||{};
+  let testing=false, mon=null;
   let ctx=null, out=null, mic=null, src=null, proc=null, sink=null, enc=null, sending=false, pend=[], seq=0, ts=0, txT=0, sendFn=null, lvl=0, micErr=null;
   const decs={};
   const canSpeak=()=>typeof AudioEncoder!=="undefined"&&typeof AudioData!=="undefined"&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   const canHear=()=>typeof AudioDecoder!=="undefined";
   function ac(){
-    if(!ctx){ const C=window.AudioContext||window.webkitAudioContext; try{ ctx=new C({sampleRate:48000,latencyHint:"interactive"}); }catch(e){ ctx=new C(); } out=ctx.createGain(); out.connect(ctx.destination); setVolume(); }
+    if(!ctx){ const C=window.AudioContext||window.webkitAudioContext; try{ ctx=new C({sampleRate:48000,latencyHint:"interactive"}); }catch(e){ ctx=new C(); } out=ctx.createGain(); out.connect(ctx.destination); setVolume(); setSpeaker(SET().spkId); }
     if(ctx.state==="suspended") ctx.resume().catch(()=>{});
     return ctx;
   }
   function setVolume(){ if(!out) return; const s=(typeof APP!=="undefined"&&APP.set)||{}; out.gain.value=s.vmute?0:Math.min(1.6,(s.vol!=null?s.vol:.7)*1.5); }
   async function openMic(){
     if(mic) return true; if(!canSpeak()){ micErr="nomic"; return false; }
-    try{ mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}}); }
-    catch(e){ mic=null; micErr=e&&e.name==="NotAllowedError"?"denied":"nomic"; return false; }
+    const st=SET(), clean=st.nsup!==false;
+    const want={echoCancellation:clean,noiseSuppression:clean,autoGainControl:st.agc!==false,channelCount:1};
+    if(st.micId) want.deviceId={exact:st.micId};
+    try{ mic=await navigator.mediaDevices.getUserMedia({audio:want}); }
+    catch(e){ if(st.micId&&e&&e.name==="OverconstrainedError"){ delete want.deviceId; try{ mic=await navigator.mediaDevices.getUserMedia({audio:want}); }catch(e2){ e=e2; } } if(!mic){
+      mic=null; micErr=e&&e.name==="NotAllowedError"?"denied":"nomic"; return false; } }
     micErr=null; const c=ac();
     src=c.createMediaStreamSource(mic); proc=c.createScriptProcessor(2048,1,1); sink=c.createGain(); sink.gain.value=0;
     proc.onaudioprocess=e=>{
-      const inp=e.inputBuffer.getChannelData(0); let s=0; for(let i=0;i<inp.length;i+=4) s+=inp[i]*inp[i]; lvl=lvl*.6+Math.sqrt(s/(inp.length/4))*.4;
+      const inp=e.inputBuffer.getChannelData(0); const g=SET().micGain!=null?SET().micGain:1; const data=new Float32Array(inp.length); let s=0;
+      for(let i=0;i<inp.length;i++){ const v=Math.max(-1,Math.min(1,inp[i]*g)); data[i]=v; if((i&3)===0) s+=v*v; } lvl=lvl*.6+Math.sqrt(s/(inp.length/4))*.4;
+      if(mon){ const ob=e.outputBuffer.getChannelData(0); ob.set(data); }
       if(!sending||!enc||enc.state!=="configured") return;
-      const data=new Float32Array(inp);
       try{ const ad=new AudioData({format:"f32-planar",sampleRate:c.sampleRate,numberOfFrames:data.length,numberOfChannels:1,timestamp:ts,data}); ts+=Math.round(data.length/c.sampleRate*1e6); enc.encode(ad); ad.close(); }catch(err){ console.warn("enc",err); }
     };
     src.connect(proc); proc.connect(sink); sink.connect(c.destination);
     return true;
   }
-  function closeMic(){ stopTx(); if(mic){ mic.getTracks().forEach(t=>t.stop()); mic=null; } try{ src&&src.disconnect(); proc&&proc.disconnect(); sink&&sink.disconnect(); }catch(e){} src=proc=sink=null; lvl=0; }
+  function setSpeaker(id){ if(ctx&&ctx.setSinkId) ctx.setSinkId(id||"").catch(()=>{}); }
+  async function devices(){ try{ const d=await navigator.mediaDevices.enumerateDevices(); return {mics:d.filter(x=>x.kind==="audioinput"),spks:d.filter(x=>x.kind==="audiooutput"),sinkOk:!!(window.AudioContext&&AudioContext.prototype.setSinkId)}; }catch(e){ return {mics:[],spks:[],sinkOk:false}; } }
+  async function test(on,hear){ // essai du micro depuis les paramètres
+    testing=!!on;
+    if(on){ const ok=await openMic(); if(!ok) return false; if(hear&&!mon){ mon=ctx.createGain(); mon.gain.value=1; proc.disconnect(); proc.connect(mon); mon.connect(out); } if(!hear&&mon){ try{ proc.disconnect(); mon.disconnect(); }catch(e){} mon=null; proc.connect(sink); } return true; }
+    if(mon){ try{ proc.disconnect(); mon.disconnect(); }catch(e){} mon=null; if(proc) proc.connect(sink); }
+    if(!sending&&!(typeof keepMic==="function"&&keepMic())) closeMic(); return true;
+  }
+  async function reopen(){ const was=!!mic; if(!was) return; const tx=sending, fn=sendFn, hear=!!mon; if(tx) stopTx(); closeMic(); await openMic(); if(testing) await test(true,hear); if(tx&&fn) startTx(fn); }
+  function closeMic(){ stopTx(); if(mon){ try{ mon.disconnect(); }catch(e){} mon=null; } if(mic){ mic.getTracks().forEach(t=>t.stop()); mic=null; } try{ src&&src.disconnect(); proc&&proc.disconnect(); sink&&sink.disconnect(); }catch(e){} src=proc=sink=null; lvl=0; }
   function flushPend(){ if(pend.length&&sendFn) sendFn(seq++,pend.splice(0)); }
   function startTx(fn){
     if(sending||!mic) return false; sendFn=fn; seq=0; ts=0; pend=[];
@@ -1877,7 +1897,7 @@ const VOICE=(function(){
     v.setUint32(24,R,true); v.setUint32(28,R*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true); w(36,"data"); v.setUint32(40,pcm.length*2,true);
     new Int16Array(buf,44).set(pcm); return new Blob([buf],{type:"audio/wav"});
   }
-  return { canSpeak, canHear, openMic, closeMic, startTx, stopTx, rx, toWav, setVolume, unlock:()=>{ try{ ac(); }catch(e){} },
+  return { canSpeak, canHear, openMic, closeMic, devices, test, reopen, setSpeaker, get testing(){ return testing; }, startTx, stopTx, rx, toWav, setVolume, unlock:()=>{ try{ ac(); }catch(e){} },
     get sending(){ return sending; }, get micOn(){ return !!mic; }, get micErr(){ return micErr; }, level:()=>lvl };
 })();
 
@@ -3726,7 +3746,7 @@ function voiceSync(){
     else if(!APP._vOpening){ APP._vOpening=true; VOICE.openMic().then(ok=>{ APP._vOpening=false; if(!ok){ send({t:"vend"}); toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); } else voiceSync(); }); }
   }
   if(!mine&&VOICE.sending) VOICE.stopTx();
-  if(!mine&&!queued&&VOICE.micOn&&!APP._vOpening){ clearTimeout(APP._vClose); APP._vClose=setTimeout(()=>{ const v2=vcState(); if(!(v2&&((v2.q||[]).includes(APP.me.pid)||(v2.cur&&v2.cur.pid===APP.me.pid)))) VOICE.closeMic(); },4000); }
+  if(!mine&&!queued&&VOICE.micOn&&!APP._vOpening&&!VOICE.testing){ clearTimeout(APP._vClose); APP._vClose=setTimeout(()=>{ const v2=vcState(); if(!(v2&&((v2.q||[]).includes(APP.me.pid)||(v2.cur&&v2.cur.pid===APP.me.pid)))) VOICE.closeMic(); },4000); }
   if(mine&&APP.has3d) V3.speak(me);
 }
 function renderVoice(){
@@ -3748,7 +3768,11 @@ function renderVoice(){
     const d=$("#vDone"); if(d) d.onclick=()=>{ VOICE.stopTx(); send({t:"vend"}); };
   } else if(mine){ const l=el.querySelector(".vb-lvl i"); if(l) l.style.transform=`scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})`; }
 }
-setInterval(()=>{ if(APP.view==="game"){ voiceSync(); renderVoice(); } },200);
+setInterval(()=>{ if(APP.view==="game"){ voiceSync(); renderVoice(); }
+  const ml=document.querySelector("#modal .mlvl i"); if(ml) ml.style.width=(VOICE.testing?Math.min(100,VOICE.level()*700):0).toFixed(0)+"%";
+  else if(VOICE.testing) VOICE.test(false);
+},120);
+function keepMic(){ const vc=vcState(); return !!(APP.view==="game"&&vc&&((vc.q||[]).includes(APP.me.pid)||(vc.cur&&vc.cur.pid===APP.me.pid))); }
 document.addEventListener("pointerdown",()=>VOICE.unlock(),{once:true});
 
 function layoutPositions(n){
@@ -4100,17 +4124,34 @@ function renderModal(force){
         ${sw("sAmb",APP.set.amb!==false,"🌙",t("optAmb"),t("optAmbD"))}
         ${sw("sVc",!APP.set.vmute,"🎧",t("optVc"),t("optVcD"))}
         <div class="opt vol"><span class="opt-ic">🔊</span><span class="opt-t"><b>${esc(t("volume"))}</b></span><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.7}"></div></div>
+      <div class="frm"><label>${esc(t("micT"))}</label>
+        <div class="opt"><span class="opt-ic">🎙️</span><span class="opt-t"><b>${esc(t("micDev"))}</b></span><select id="sMic" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
+        <div class="opt vol"><span class="opt-ic">🎚️</span><span class="opt-t"><b>${esc(t("micGain"))}</b></span><input type="range" id="sMicG" min="0.2" max="3" step="0.05" value="${APP.set.micGain!=null?APP.set.micGain:1}"></div>
+        <div class="opt mtest"><button type="button" class="btn-ghost sm" id="sMicT">${esc(t(VOICE.testing?"micStop":"micTest"))}</button><span class="mlvl"><i></i></span><label class="mhear"><input type="checkbox" id="sMicHear"> ${esc(t("micHear"))}</label></div>
+        ${sw("sNs",APP.set.nsup!==false,"🧹",t("optNs"),t("optNsD"))}
+        <div class="opt" id="spkRow" hidden><span class="opt-ic">🔈</span><span class="opt-t"><b>${esc(t("spkDev"))}</b></span><select id="sSpk" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
+        <p class="muted sm">${esc(t("micHint"))}</p></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
     el.querySelectorAll("[data-gq]").forEach(b=>b.onclick=()=>{ APP.set.gq=b.dataset.gq; saveSettings(); V3.setQuality(APP.set.gq); if(APP.hero3d) APP.hero3d.setQuality(APP.set.gq==="low"?"low":"med"); renderModal(true); });
     el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(true); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
     $("#sFx").onchange=e=>{ APP.set.sfx=e.target.checked; saveSettings(); if(e.target.checked) AUD.play("ping"); };
+    const fillDev=async()=>{ const d=await VOICE.devices(); const sm=$("#sMic"), ss=$("#sSpk"); if(!sm) return;
+      sm.innerHTML=`<option value="">${esc(t("micDefault"))}</option>`+d.mics.filter(x=>x.deviceId&&x.deviceId!=="default").map((x,i)=>`<option value="${esc(x.deviceId)}" ${APP.set.micId===x.deviceId?"selected":""}>${esc(x.label||t("micDev")+" "+(i+1))}</option>`).join("");
+      if(d.sinkOk&&d.spks.length){ $("#spkRow").hidden=false; ss.innerHTML=`<option value="">${esc(t("micDefault"))}</option>`+d.spks.filter(x=>x.deviceId&&x.deviceId!=="default").map((x,i)=>`<option value="${esc(x.deviceId)}" ${APP.set.spkId===x.deviceId?"selected":""}>${esc(x.label||t("spkDev")+" "+(i+1))}</option>`).join(""); } };
+    fillDev();
+    $("#sMic").onchange=e=>{ APP.set.micId=e.target.value||null; saveSettings(); VOICE.reopen(); };
+    $("#sSpk").onchange=e=>{ APP.set.spkId=e.target.value||null; saveSettings(); VOICE.setSpeaker(APP.set.spkId); };
+    $("#sMicG").oninput=e=>{ APP.set.micGain=+e.target.value; saveSettings(); };
+    $("#sNs").onchange=e=>{ APP.set.nsup=e.target.checked; saveSettings(); VOICE.reopen(); };
+    $("#sMicT").onclick=async()=>{ VOICE.unlock(); if(VOICE.testing){ await VOICE.test(false); } else { const ok=await VOICE.test(true,$("#sMicHear").checked); if(!ok) toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); else fillDev(); } const b=$("#sMicT"); if(b) b.textContent=t(VOICE.testing?"micStop":"micTest"); };
+    $("#sMicHear").onchange=e=>{ if(VOICE.testing) VOICE.test(true,e.target.checked); };
     $("#sVc").onchange=e=>{ APP.set.vmute=!e.target.checked; saveSettings(); VOICE.setVolume(); };
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
     $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); VOICE.setVolume(); };
     $("#sVol").onchange=()=>AUD.play("ping");
-    $("#sOk").onclick=()=>{ APP.ui.modal=null; render(); };
+    $("#sOk").onclick=()=>{ if(VOICE.testing) VOICE.test(false); APP.ui.modal=null; render(); };
     return;
   }
   if(m.kind==="why"||m.kind==="cand"){

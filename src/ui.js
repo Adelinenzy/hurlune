@@ -491,7 +491,7 @@ function voiceSync(){
     else if(!APP._vOpening){ APP._vOpening=true; VOICE.openMic().then(ok=>{ APP._vOpening=false; if(!ok){ send({t:"vend"}); toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); } else voiceSync(); }); }
   }
   if(!mine&&VOICE.sending) VOICE.stopTx();
-  if(!mine&&!queued&&VOICE.micOn&&!APP._vOpening){ clearTimeout(APP._vClose); APP._vClose=setTimeout(()=>{ const v2=vcState(); if(!(v2&&((v2.q||[]).includes(APP.me.pid)||(v2.cur&&v2.cur.pid===APP.me.pid)))) VOICE.closeMic(); },4000); }
+  if(!mine&&!queued&&VOICE.micOn&&!APP._vOpening&&!VOICE.testing){ clearTimeout(APP._vClose); APP._vClose=setTimeout(()=>{ const v2=vcState(); if(!(v2&&((v2.q||[]).includes(APP.me.pid)||(v2.cur&&v2.cur.pid===APP.me.pid)))) VOICE.closeMic(); },4000); }
   if(mine&&APP.has3d) V3.speak(me);
 }
 function renderVoice(){
@@ -513,7 +513,11 @@ function renderVoice(){
     const d=$("#vDone"); if(d) d.onclick=()=>{ VOICE.stopTx(); send({t:"vend"}); };
   } else if(mine){ const l=el.querySelector(".vb-lvl i"); if(l) l.style.transform=`scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})`; }
 }
-setInterval(()=>{ if(APP.view==="game"){ voiceSync(); renderVoice(); } },200);
+setInterval(()=>{ if(APP.view==="game"){ voiceSync(); renderVoice(); }
+  const ml=document.querySelector("#modal .mlvl i"); if(ml) ml.style.width=(VOICE.testing?Math.min(100,VOICE.level()*700):0).toFixed(0)+"%";
+  else if(VOICE.testing) VOICE.test(false);
+},120);
+function keepMic(){ const vc=vcState(); return !!(APP.view==="game"&&vc&&((vc.q||[]).includes(APP.me.pid)||(vc.cur&&vc.cur.pid===APP.me.pid))); }
 document.addEventListener("pointerdown",()=>VOICE.unlock(),{once:true});
 
 function layoutPositions(n){
@@ -865,17 +869,34 @@ function renderModal(force){
         ${sw("sAmb",APP.set.amb!==false,"🌙",t("optAmb"),t("optAmbD"))}
         ${sw("sVc",!APP.set.vmute,"🎧",t("optVc"),t("optVcD"))}
         <div class="opt vol"><span class="opt-ic">🔊</span><span class="opt-t"><b>${esc(t("volume"))}</b></span><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.7}"></div></div>
+      <div class="frm"><label>${esc(t("micT"))}</label>
+        <div class="opt"><span class="opt-ic">🎙️</span><span class="opt-t"><b>${esc(t("micDev"))}</b></span><select id="sMic" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
+        <div class="opt vol"><span class="opt-ic">🎚️</span><span class="opt-t"><b>${esc(t("micGain"))}</b></span><input type="range" id="sMicG" min="0.2" max="3" step="0.05" value="${APP.set.micGain!=null?APP.set.micGain:1}"></div>
+        <div class="opt mtest"><button type="button" class="btn-ghost sm" id="sMicT">${esc(t(VOICE.testing?"micStop":"micTest"))}</button><span class="mlvl"><i></i></span><label class="mhear"><input type="checkbox" id="sMicHear"> ${esc(t("micHear"))}</label></div>
+        ${sw("sNs",APP.set.nsup!==false,"🧹",t("optNs"),t("optNsD"))}
+        <div class="opt" id="spkRow" hidden><span class="opt-ic">🔈</span><span class="opt-t"><b>${esc(t("spkDev"))}</b></span><select id="sSpk" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
+        <p class="muted sm">${esc(t("micHint"))}</p></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
     el.querySelectorAll("[data-gq]").forEach(b=>b.onclick=()=>{ APP.set.gq=b.dataset.gq; saveSettings(); V3.setQuality(APP.set.gq); if(APP.hero3d) APP.hero3d.setQuality(APP.set.gq==="low"?"low":"med"); renderModal(true); });
     el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(true); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
     $("#sFx").onchange=e=>{ APP.set.sfx=e.target.checked; saveSettings(); if(e.target.checked) AUD.play("ping"); };
+    const fillDev=async()=>{ const d=await VOICE.devices(); const sm=$("#sMic"), ss=$("#sSpk"); if(!sm) return;
+      sm.innerHTML=`<option value="">${esc(t("micDefault"))}</option>`+d.mics.filter(x=>x.deviceId&&x.deviceId!=="default").map((x,i)=>`<option value="${esc(x.deviceId)}" ${APP.set.micId===x.deviceId?"selected":""}>${esc(x.label||t("micDev")+" "+(i+1))}</option>`).join("");
+      if(d.sinkOk&&d.spks.length){ $("#spkRow").hidden=false; ss.innerHTML=`<option value="">${esc(t("micDefault"))}</option>`+d.spks.filter(x=>x.deviceId&&x.deviceId!=="default").map((x,i)=>`<option value="${esc(x.deviceId)}" ${APP.set.spkId===x.deviceId?"selected":""}>${esc(x.label||t("spkDev")+" "+(i+1))}</option>`).join(""); } };
+    fillDev();
+    $("#sMic").onchange=e=>{ APP.set.micId=e.target.value||null; saveSettings(); VOICE.reopen(); };
+    $("#sSpk").onchange=e=>{ APP.set.spkId=e.target.value||null; saveSettings(); VOICE.setSpeaker(APP.set.spkId); };
+    $("#sMicG").oninput=e=>{ APP.set.micGain=+e.target.value; saveSettings(); };
+    $("#sNs").onchange=e=>{ APP.set.nsup=e.target.checked; saveSettings(); VOICE.reopen(); };
+    $("#sMicT").onclick=async()=>{ VOICE.unlock(); if(VOICE.testing){ await VOICE.test(false); } else { const ok=await VOICE.test(true,$("#sMicHear").checked); if(!ok) toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); else fillDev(); } const b=$("#sMicT"); if(b) b.textContent=t(VOICE.testing?"micStop":"micTest"); };
+    $("#sMicHear").onchange=e=>{ if(VOICE.testing) VOICE.test(true,e.target.checked); };
     $("#sVc").onchange=e=>{ APP.set.vmute=!e.target.checked; saveSettings(); VOICE.setVolume(); };
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
     $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); VOICE.setVolume(); };
     $("#sVol").onchange=()=>AUD.play("ping");
-    $("#sOk").onclick=()=>{ APP.ui.modal=null; render(); };
+    $("#sOk").onclick=()=>{ if(VOICE.testing) VOICE.test(false); APP.ui.modal=null; render(); };
     return;
   }
   if(m.kind==="why"||m.kind==="cand"){
