@@ -1,7 +1,7 @@
 // Allège un personnage Grab3D (GLB riggé) : maillage simplifié + données compactes pour Hurlune.
 import fs from "fs";
 import { MeshoptSimplifier as MS } from "./meshopt_simplifier.module.js";
-const [,, inp, outDir, slug, TRI="14000"] = process.argv;
+const [,, inp, outDir, slug, TRI="14000", HT=""] = process.argv;
 const buf = fs.readFileSync(inp);
 const jl = buf.readUInt32LE(12); const J = JSON.parse(buf.slice(20, 20 + jl).toString());
 const binOff = 20 + jl + 8; const BIN = buf.slice(binOff);
@@ -48,7 +48,7 @@ const ibm=acc(skin.inverseBindMatrices).d;
 // mise à l'échelle : hauteur 1,72 m, pieds à y=0 (positions de liaison = monde au repos)
 const ibm0=Float64Array.from(acc(skin.inverseBindMatrices).d.slice(0,16)); const meshW=mul(world(joints[0]),ibm0); console.log('meshNodeW scale',world(meshNode)[0].toFixed(4),'bind scale',meshW[0].toFixed(4), meshW[5].toFixed(4)); // positions du maillage dans l'espace du nœud ; on calcule les positions au repos via jointWorld*IBM (≈ meshW)
 let minY=1e9,maxY=-1e9; for(let i=0;i<unique;i++){ const x=pos[i*3],y=pos[i*3+1],z=pos[i*3+2]; const wy=meshW[1]*x+meshW[5]*y+meshW[9]*z+meshW[13]; minY=Math.min(minY,wy); maxY=Math.max(maxY,wy); }
-const hh=maxY-minY; const sc=Math.min(1.84,Math.max(1.5,hh))/hh;
+const hh=maxY-minY; const sc=(HT?+HT:Math.min(1.84,Math.max(1.5,hh)))/hh;
 const rootJ=joints.find(j=>parent[j]==null||jidx[parent[j]]==null);
 let anc=I4(); { let p=parent[rootJ]; const ch=[]; while(p!=null){ ch.unshift(p); p=parent[p]; } for(const a of ch) anc=mul(anc,trs(J.nodes[a])); }
 const fix=I4(); fix[0]=fix[5]=fix[10]=sc; fix[13]=-minY*sc;

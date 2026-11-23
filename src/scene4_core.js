@@ -114,7 +114,7 @@ const R4 = {};
   R4.STD_FS=`#version 300 es
   precision highp float; precision highp sampler2DShadow;
   in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; out vec4 o;
-  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn,uEmisK;
+  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn,uEmisK; uniform vec4 uWash;
   uniform vec3 uCam,uKeyDir,uKeyCol,uSkyCol,uGndCol,uFogCol,uFogSun,uFireP,uFireC,uTint,uHiCol,uLampC; uniform vec3 uLamp[4];
   uniform float uFogD,uFogH,uTime,uWin,uHi,uAlpha,uFireR,uShadowOn,uFireShOn,uSnow,uGround,uClr;
   uniform sampler2DShadow uShadow; uniform mat4 uLightVP; uniform highp samplerCube uFireSh; uniform float uShTexel;
@@ -142,7 +142,7 @@ const R4 = {};
     if(m==9.){ wrap=.3; alb*=.93+.12*vn(vW*60.); }
     if(m==6.){ wrap=.6; alb*=.8+.4*fbm(vW*3.); alb=mix(alb,vec3(.92,.95,1.),smoothstep(.2,.6,n.y)*uSnow); }
     if(m==10.){ rough=.15; spec=.6; }
-    if(m==11.){ alb=texture(uAlb,vUV).rgb*uTint; vec3 tn=texture(uNrm,vUV).xyz*2.-1.;
+    if(m==11.){ alb=texture(uAlb,vUV).rgb*uTint; alb=mix(alb,uWash.rgb*dot(alb,vec3(.3,.5,.2))*2.4,uWash.a); vec3 tn=texture(uNrm,vUV).xyz*2.-1.;
       vec3 dp1=dFdx(vW),dp2=dFdy(vW); vec2 du1=dFdx(vUV),du2=dFdy(vUV); vec3 d2p=cross(dp2,n),d1p=cross(n,dp1);
       vec3 T=d2p*du1.x+d1p*du2.x, B=d2p*du1.y+d1p*du2.y; float iv=inversesqrt(max(max(dot(T,T),dot(B,B)),1e-12));
       n=normalize(mat3(T*iv,B*iv,n)*vec3(tn.xy*.8,tn.z)); wrap=.3; rough=.6; spec=.035; }

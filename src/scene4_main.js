@@ -110,7 +110,7 @@
         if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av)});
           useReal(c,p.av); }
         const s=seat(i,n); if(preview){ s.x=0; s.z=0; } c.tx=s.x; c.tz=s.z; c.sa=s.a; c.R=s.R; if(c.init){ c.x=s.x; c.z=s.z; c.init=false; if(p.alive===false){ c.die=1; } }
-        if(c.alive!==false&&p.alive===false&&!c.init) c.dying=0.0001;
+        if(c.alive!==false&&p.alive===false&&!c.init&&!c.holdDeath) c.dying=0.0001;
         c.alive=p.alive!==false; c.sel=!!p.sel; c.click=!!p.click; c.sleep=!!p.sleep; c.inact=!!p.inact; c.wolf=!!p.wolf; c.point=p.point||null; });
       for(const id of Object.keys(chars)) if(!seen.has(id)){ R4.freeChar(gl,chars[id].m); delete chars[id]; }
       order=list.map(p=>p.id);
@@ -150,12 +150,50 @@
       const k=1-Math.exp(-dt*(c.dying?12:6));
       for(const b in T){ if(Array.isArray(T[b])){ const cur=c.pose[b]||T[b]; c.pose[b]=[lerp(cur[0],T[b][0],k),lerp(cur[1],T[b][1],k),lerp(cur[2],T[b][2],k)]; } else c.pose[b]=lerp(c.pose[b]==null?T[b]:c.pose[b],T[b],k); }
     }
+    /* ---------- attaque du loup-garou ---------- */
+    let wolf=null;
+    function wolfKill(id,variant,onStrike){
+      const c=chars[id]; if(!c) return false;
+      if(c.dying&&c.dying<1.2){ c.dying=0; c.die=0; } c.holdDeath=true;
+      wolf={id,variant:variant||"wolf",t:0,onStrike,struck:false,rig:null,pose:{},alpha:1};
+      if(realOK()) R4.loadChar("werewolf").then(()=>{ if(!wolf) return; const b=R4.charRig("werewolf"); if(!b) return; const g=R4.charGPU(gl,"werewolf"); g.ready.then(()=>{ if(!wolf) return; const inst=Object.create(b); inst.mats=new Float32Array(b.n*16); inst.W=[]; wolf.rig=inst; }); }).catch(()=>{});
+      return true;
+    }
+    function updateWolf(t,dt){
+      if(!wolf) return; const c=chars[wolf.id]; if(!c){ wolf=null; return; }
+      if(!wolf.rig&&wolf.t<.05&&realOK()){ wolf.wait=(wolf.wait||0)+dt; if(wolf.wait<2.5) return; } // attend le modèle (2,5 s max)
+      wolf.t+=dt; const w=wolf, T=w.t;
+      const dir=nrm([c.x,0,c.z]); const side=[-dir[2],0,dir[0]];
+      const S0=add(add(scl(dir,(c.R||4)+12),scl(side,3)),[0,0,0]), P=scl(dir,(c.R||4)+.95);
+      let pos, face, y=0; const E=(a,b,x)=>smooth(a,b,x);
+      const run=(ph)=>{ const s=Math.sin(ph), co=Math.cos(ph); return {hipL:[-.35+s*.95,0,.05],hipR:[-.35-s*.95,0,-.05],knL:[.5+Math.max(0,co)*1.3,0,0],knR:[.5+Math.max(0,-co)*1.3,0,0],
+        shL:[-.3-s*.9,0,-.25],shR:[-.3+s*.9,0,.25],elL:[-1.1,0,0],elR:[-1.1,0,0],spine:[.55,0,0],neck:[-.25,0,0],head:[-.2,0,0],pelvis:[0,0,0]}; };
+      let pose;
+      if(T<1.5){ const k=E(0,1.5,T); pos=lerp3(S0,P,k*.92); face=Math.atan2(P[0]-S0[0],P[2]-S0[2]); pose=run(T*13); y=Math.abs(Math.sin(T*13))*.08; }
+      else if(T<1.95){ const k=(T-1.5)/.45; pos=lerp3(lerp3(S0,P,.92),P,k); face=Math.atan2(c.x-pos[0],c.z-pos[2]); y=Math.sin(k*Math.PI)*.7;
+        pose={hipL:[-.9,0,.1],hipR:[-.6,0,-.1],knL:[1.3,0,0],knR:[1.1,0,0],shL:[-2.9,0,-.35],shR:[-2.9,0,.35],elL:[-.5,0,0],elR:[-.5,0,0],spine:[-.25,0,0],neck:[-.2,0,0],head:[-.1,0,0],pelvis:[0,0,0]}; }
+      else if(T<2.35){ const k=E(1.95,2.15,T); pos=P; face=Math.atan2(c.x-P[0],c.z-P[2]);
+        if(!w.struck){ w.struck=true; c.holdDeath=false; c.dying=.0001; blood(c); if(w.onStrike) try{ w.onStrike(); }catch(e){} }
+        pose={hipL:[-.6,0,.15],hipR:[-.6,0,-.15],knL:[.9,0,0],knR:[.9,0,0],shL:[-2.9+k*2.6,0,-.35+k*.2],shR:[-2.9+k*2.4,0,.35-k*.2],elL:[-.5-k*.6,0,0],elR:[-.5-k*.6,0,0],spine:[-.25+k*.9,0,0],neck:[.2,0,0],head:[.25,0,0],pelvis:[0,0,0]}; }
+      else if(T<3.6){ const k=E(2.35,2.8,T); pos=P; face=Math.atan2(c.x-P[0],c.z-P[2]);
+        pose={hipL:[-.15,0,.12],hipR:[-.15,0,-.12],knL:[.25,0,0],knR:[.25,0,0],shL:[-.6,0,-1.1*k],shR:[-.6,0,1.1*k],elL:[-.9,0,0],elR:[-.9,0,0],spine:[.35-k*.75,0,0],neck:[-.5*k,0,0],head:[-.7*k,0,0],pelvis:[0,0,0]}; }
+      else { const k=E(3.6,5.2,T); pos=lerp3(P,S0,k); face=Math.atan2(S0[0]-P[0],S0[2]-P[2]); pose=run(T*13); y=Math.abs(Math.sin(T*13))*.08; w.alpha=1-E(4.6,5.2,T); }
+      if(T>5.3){ wolf=null; return; }
+      const kk=1-Math.exp(-dt*14); for(const b in pose){ const cur=w.pose[b]||pose[b]; w.pose[b]=[lerp(cur[0],pose[b][0],kk),lerp(cur[1],pose[b][1],kk),lerp(cur[2],pose[b][2],kk)]; }
+      w.pos=pos; w.face=face; w.y=y;
+      if(w.rig){ R4.charPose(w.rig,w.pose); const root=M.trs([pos[0],y,pos[2]],[0,face,0],1); w.rootR=M.mul(root,M.trs([0,(1.05-w.rig.hipsY)*0+0,0],[0,0,0],1)); }
+    }
+    function blood(c){
+      const hp=c.hipsW||[c.x,.9,c.z]; const at=[hp[0],hp[1]+.45,hp[2]];
+      for(let i=0;i<140;i++){ const a=Math.random()*Math.PI*2, sp=1+Math.random()*3.2; emit(5,at.slice(),[Math.cos(a)*sp*.7,1.2+Math.random()*3,Math.sin(a)*sp*.7],7+Math.random()*5,.03+Math.random()*.05,[.55,.02,.02,1]); }
+      for(let i=0;i<10;i++) emit(2,[at[0]+(Math.random()-.5)*.4,at[1],at[2]+(Math.random()-.5)*.4],[(Math.random()-.5)*.4,.25,(Math.random()-.5)*.4],2.2,.7+Math.random()*.5,[.25,.01,.01,.55]);
+    }
     function updateChars(t,dt){
       const ids=order.filter(id=>chars[id]);
       for(const id of ids){ const c=chars[id];
         c.x=lerp(c.x,c.tx,1-Math.exp(-dt*4)); c.z=lerp(c.z,c.tz,1-Math.exp(-dt*4)); c.face=preview?0:Math.atan2(-c.x,-c.z);
         if(c.talk>0) c.talk-=dt;
-        if(c.dying){ c.dying+=dt; c.die=clamp(c.dying/2.4,0,1); if(c.die>=1) c.dying=0; } else if(c.alive) c.die=0; else c.die=1;
+        if(c.holdDeath){ c.die=0; } else if(c.dying){ c.dying+=dt; c.die=clamp(c.dying/2.4,0,1); if(c.die>=1) c.dying=0; } else if(c.alive) c.die=0; else c.die=1;
         c.blink-=dt; if(c.blink<-.13) c.blink=2+Math.random()*4;
         c.lookT-=dt; if(c.lookT<=0){ c.lookT=2+Math.random()*4; const others=ids.filter(x=>x!==id&&chars[x].alive); const r=Math.random();
           c.lookTarget = r<.35||!others.length ? "fire" : pick(others); }
@@ -187,6 +225,7 @@
         p.p[0]+=p.v[0]*dt; p.p[1]+=p.v[1]*dt; p.p[2]+=p.v[2]*dt;
         if(p.k===1){ p.v[0]+=Math.sin(t*3+i)*dt*.8; p.v[1]-=dt*.2; }
         if(p.k===3){ p.v[0]=Math.sin(t*.8+p.seed*20)*.3; if(p.p[1]<0){ parts.splice(i,1); continue; } }
+        if(p.k===5){ if(p.p[1]>.015){ p.v[1]-=dt*9.8; } else { p.p[1]=.015; p.v=[0,0,0]; p.s=Math.min(p.s*1.004+.0004,.16); } }
         if(p.k===4){ p.v[0]+=Math.sin(t*1.3+p.seed*9)*dt*.3; p.v[2]+=Math.cos(t*1.1+p.seed*9)*dt*.3; } }
       if(fxK&&!preview){ const P={cupid:[[3,.6,1.4],1],seer:[[.9,1.2,3.4],1],witch:[[.6,3,.7],1],guard:[[.8,1.6,3.6],1],white:[[2.6,2.8,3.2],1],pyro:[[3.6,1.4,.3],1],rat:[[.9,2.4,.6],2],heir:[[3.2,2.6,.9],1],hunter:[[3.4,.5,.3],1],grave:[[.9,.7,.5],2],mayor:[[3.4,2.8,1],1]}[fxK];
         if(P){ const [col,kd]=P; const rate=kd===2?6:28;
@@ -210,6 +249,7 @@
           if(p.k===2&&p.s<2){ const lit=S.fire; put(p.p[0],p.p[1],p.p[2],p.s*(.6+f*1.6),p.c[0]+lit[0]*.015*(1-f),p.c[1]+lit[1]*.012*(1-f),p.c[2]+lit[2]*.01*(1-f),p.c[3]*(1-f)*Math.min(1,f*4),2,p.seed,p.seed*6); }
           else if(p.k===2) put(p.p[0],p.p[1],p.p[2],p.s,p.c[0],p.c[1],p.c[2],Math.sin(f*Math.PI)*p.c[3],2,p.seed,p.seed*6);
           else if(p.k===3) put(p.p[0],p.p[1],p.p[2],p.s,p.c[0]*S.snowL,p.c[1]*S.snowL,p.c[2]*S.snowL,p.c[3],3,p.seed,0);
+          else if(p.k===5){ const lt=.25+S.fire[0]*.012+S.sky[1]*2; put(p.p[0],p.p[1],p.p[2],p.s,p.c[0]*lt,p.c[1]*lt,p.c[2]*lt,Math.min(1,(p.max-p.life)/3)*.95,3,p.seed,0); }
         } }
       if(add) for(const [v,tg] of Object.entries(votes)){ const A=chars[v],B=chars[tg]; if(!A||!B||!A.W||!B.W) continue; const a=M.xf(A.W.elR||A.W.head,[0,-.25,0]), b=headPos(B); const col=A.wolf?[3,.5,.4]:[1.6,1.1,3];
         for(let k=0;k<9;k++){ const u=((t*.5+k/9+(v.length%7)*.13)%1); const h=Math.sin(u*Math.PI)*.8; put(lerp(a[0],b[0],u),lerp(a[1],b[1],u)+h,lerp(a[2],b[2],u),.07+.05*Math.sin(u*Math.PI),col[0],col[1],col[2],.9*Math.sin(u*Math.PI)+.1,1,k,0); } }
@@ -234,7 +274,16 @@
       if(u.uAlpha) gl.uniform1f(u.uAlpha,opts&&opts.alpha!=null?opts.alpha:1); if(u.uWin!=null) gl.uniform1f(u.uWin,S.win);
       gl.bindVertexArray(m.vao); gl.drawArrays(gl.TRIANGLES,0,m.n); }
     const I=M.id();
+    function drawWolf(p,sp){
+      if(!wolf||!wolf.rig||!wolf.rootR||!sp) return; const g=R4.charGPU(gl,"werewolf"); if(!g) return;
+      gl.useProgram(sp.p); const u=sp.u; gl.uniformMatrix4fv(u.uM,false,wolf.rootR); gl.uniformMatrix4fv(u.uB,false,wolf.rig.mats);
+      if(u.uTint){ gl.uniform3fv(u.uTint,[1,1,1]); gl.uniform1f(u.uHi,0); gl.uniform3fv(u.uHiCol,[0,0,0]); gl.uniform1f(u.uAlpha,wolf.alpha); gl.uniform1f(u.uWin,0);
+        const W={white:[1.15,1.15,1.2,.85],black:[.16,.14,.15,.75],wolf:[0,0,0,0]}[wolf.variant]||[0,0,0,0]; gl.uniform4fv(u.uWash,W);
+        gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); }
+      gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,g.type,0); if(u.uWash) gl.uniform4fv(u.uWash,[0,0,0,0]); gl.useProgram(p.p);
+    }
     function drawChars(p,isMain,t,sp){
+      drawWolf(p,sp);
       for(const id of order){ const c=chars[id]; if(!c||!c.W) continue;
         gl.uniformMatrix4fv(p.u.uM,false,c.root);
         if(!preview){ drawM(p,logM,M.mul(c.root,M.trs([0,0,-.03],[0,0,0],c.rig?1.08:1)),null); }
@@ -266,7 +315,7 @@
       // heure du jour : avance toujours vers l'avant (vrai crépuscule / vraie aube)
       let d=(todT-tod)%1; if(d<0) d+=1; if(d>1e-4){ const sp=Math.max(.012,Math.min(.11,d*.9)); const st=Math.min(d,sp*dt); tod=(tod+st)%1; cine=lerp(cine,d>.03?1:0,1-Math.exp(-dt*1.5)); } else cine=lerp(cine,0,1-Math.exp(-dt*1.5));
       const e=Math.sin(2*Math.PI*(tod-.25));
-      updateChars(t,dt);
+      updateChars(t,dt); updateWolf(t,dt);
       // caméra
       const meC=me&&chars[me]; let base=meC?Math.atan2(meC.x,meC.z):camYaw; if(preview) base=0;
       const R=meC?meC.R:(order.length?chars[order[0]]&&chars[order[0]].R||3:3);
@@ -381,7 +430,7 @@
       setPlayers, setVotes(v){ votes=v||{}; }, speak(id){ if(chars[id]) chars[id].talk=2.4; },
       setMood(m){ if(MOOD_TOD[m]==null) return; mood=m; todT=MOOD_TOD[m]; },
       setTheme(th){ if(th===theme||preview) return; parts.length=0; loadWorld(th); },
-      onCharReady(f){ onReady=f; }, fx(k){ fxK=k||null; }, charReady(){ const c=chars.me; return !c||!c.slug||!!c.rig; },
+      onCharReady(f){ onReady=f; }, fx(k){ fxK=k||null; }, wolfKill, preloadWolf(){ if(realOK()) R4.loadChar("werewolf").then(()=>R4.charGPU(gl,"werewolf")).catch(()=>{}); }, charReady(){ const c=chars.me; return !c||!c.slug||!!c.rig; },
       setQuality(k){ if(!QUAL[k]) return; qk=k; q=Object.assign({},QUAL[k]); for(const id in chars){ chars[id].key=null; } if(!hasFloat) q.msaa=0; applyQuality(); RT=null; },
       setAvatar(av){ if(preview) setPlayers([{id:"me",av,alive:true}],"me"); },
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
@@ -410,7 +459,8 @@ const V3=(function(){
     setPlayers:(l,m)=>E()&&E().setPlayers(l,m), setVotes:v=>E()&&E().setVotes(v), setMood:m=>E()&&E().setMood(m),
     setTheme:th=>E()&&E().setTheme(legacy&&th==="camp"?"forest":th), pause:b=>E()&&E().pause(b), speak:id=>E()&&E().speak(id),
     setPick:(f,c)=>E()&&E().setPick(f,c), anchor:id=>E()?E().anchor(id):null,
-    setQuality:k=>{ if(eng) eng.setQuality(k); }, fx:k=>{ if(eng) eng.fx(k); }, get ok(){ return ok; }, get r4(){ return !!eng; }
+    setQuality:k=>{ if(eng) eng.setQuality(k); }, fx:k=>{ if(eng) eng.fx(k); },
+    wolfKill:(id,v,f)=>eng?eng.wolfKill(id,v,f):false, preloadWolf:()=>{ if(eng) eng.preloadWolf(); }, get ok(){ return ok; }, get r4(){ return !!eng; }
   };
 })();
 

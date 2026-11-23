@@ -211,6 +211,7 @@ function onState(st){
       else if(wasN&&st.status==="running"){ sfx("day"); setTimeout(()=>showBanner("☀️",t("bn_day",{n:st.day}),"day"),60); }
       else if(st.ph.k==="d_cand"||st.ph.k==="d_vote"&&prev.ph.k!=="d_vote"||st.ph.k==="d_elect"||st.ph.k==="prompt") sfx("step");
       if(prev.status!=="running"&&st.status==="running") sfx("start");
+      if(st.status==="running"&&APP.has3d&&V3.preloadWolf&&!APP._wolfPre){ APP._wolfPre=true; V3.preloadWolf(); }
       roleFx(st);
       if(prev.status!=="ended"&&st.status==="ended") setTimeout(()=>sfx((st.winners||[]).includes(APP.me.pid)?"win":"lose"),900);
     }
@@ -223,7 +224,11 @@ function onPriv(o){
   if(o.t==="v"){ APP.v=o.v||{}; render(); return; }
   if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift();
     if(m.a&&m.x&&(m.ch==="v")&&!m.cls){ APP.ui.bubbles=APP.ui.bubbles||{}; APP.ui.bubbles[m.a]={m,until:Date.now()+5500}; if(APP.has3d) V3.speak(m.a); if(APP.view==="game") renderChars(); setTimeout(()=>{ if(APP.view==="game") renderChars(); },5700); }
-    if(m.cls==="death"){ sfx("thunder"); flash(); }
+    if(m.cls==="death"){
+      const vic=m.p&&m.p.t&&m.p.t.pid, cause=m.p&&m.p.c, fresh=APP.st&&APP.st.ph&&APP.st.ph.k==="dawn"&&!APP._killed?.has(m.id);
+      if((cause==="c_wolf"||cause==="c_white")&&vic&&fresh&&APP.has3d&&V3.r4){ (APP._killed=APP._killed||new Set()).add(m.id); sfx("howl");
+        V3.wolfKill(vic,cause==="c_white"?"white":"wolf",()=>{ sfx("thunder"); flash("blood"); }); }
+      else { sfx("thunder"); flash(); } }
     else if(m.k==="voted"||m.k==="votedMayor"||m.cls==="accuse") sfx("vote");
     else if(m.x&&APP.me.name&&m.a!==APP.me.pid&&norm(m.x).includes("@"+norm(APP.me.name))) sfx("mention");
     else if(m.cls==="seer"||m.cls==="role"||m.cls==="love") sfx("ping");
@@ -263,7 +268,7 @@ function roleFx(st){
   if(APP.has3d&&V3.fx) V3.fx(kind);
 }
 function showBanner(ic,txt,cls){ const b=$("#pbanner"); if(!b) return; b.className="pbanner "+(cls||""); b.innerHTML=`<div class="pb-ic">${ic}</div><div class="pb-t">${esc(txt)}</div>`; void b.offsetWidth; b.classList.add("show"); clearTimeout(APP._bnT); APP._bnT=setTimeout(()=>b.classList.remove("show"),2600); }
-function flash(){ const f=$("#flash"); if(!f) return; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); }
+function flash(kind){ const f=$("#flash"); if(!f) return; f.classList.remove("on","blood"); void f.offsetWidth; if(kind) f.classList.add(kind); f.classList.add("on"); }
 
 function applyTheme(){
   const th=APP.set.theme||"village", want3d=th!=="classic"&&!QS.get("no3d");

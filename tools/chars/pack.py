@@ -1,6 +1,7 @@
 import json,base64,io,sys,os
 from PIL import Image
-src='/tmp/chars'; out=sys.argv[1]; os.makedirs(out,exist_ok=True)
+import sys as _s
+src=_s.argv[2] if len(_s.argv)>2 else '/tmp/chars'; out=sys.argv[1]; os.makedirs(out,exist_ok=True)
 tot=0
 for f in sorted(os.listdir(src)):
     if not f.endswith('.json'): continue

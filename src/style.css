@@ -454,3 +454,4 @@ img.pface{width:100%;height:100%;object-fit:cover;display:block;border-radius:50
 @keyframes rfShield{0%{transform:translate(-50%,-58%) scale(.7);opacity:.6}100%{transform:translate(-50%,-58%) scale(1.25);opacity:0}}
 .fx-hunter .rf-em{animation:rfAim 1.4s ease-in-out infinite} @keyframes rfAim{0%,100%{transform:translateX(-6px)}50%{transform:translateX(6px) scale(1.05)}}
 .fx-seer .rf-em{animation:rfSpin 6s linear infinite} @keyframes rfSpin{to{transform:rotate(360deg)}}
+.flash.blood{background:radial-gradient(circle at 50% 55%,rgba(170,0,0,.55),rgba(60,0,0,.85))}
