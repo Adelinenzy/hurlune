@@ -1,5 +1,5 @@
 /* ===================== 3D VILLAGE (custom WebGL renderer, no dependency) ===================== */
-const V3 = (function(){
+const V3L = (function(){
   "use strict";
   /* ---------- small math ---------- */
   const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], scl=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];

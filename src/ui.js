@@ -7,7 +7,7 @@ const roleName=r=>t("r_"+r), roleDesc=r=>t("d_"+r);
 
 const APP = {
   me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), clockOff:0, view:"hub",
-  set:Object.assign({sfx:true,amb:true,vol:.7,tr:false,theme:"village"},lsGet("settings")||{}),
+  set:Object.assign({sfx:true,amb:true,vol:.7,tr:false,theme:"forest",gq:"med"},lsGet("settings")||{}),
   ui:{panel:"chat",lovers:false,sel:[],modal:null,toast:null,joinErr:null,connecting:false,netStatus:"online",lastPhaseSeq:-1},
   game:null // {room,key,b}
 };
@@ -280,6 +280,7 @@ function compRemaining(){
 let _chatT=null; function scheduleChat(){ if(_chatT) return; _chatT=requestAnimationFrame(()=>{ _chatT=null; renderChat(); }); }
 function render(){
   document.documentElement.lang=LANG;
+  if(APP.hero3d) APP.hero3d.pause(APP.view!=="hub");
   const app=$("#app");
   const key=APP.view;
   if(app.dataset.view!==key){ app.dataset.view=key; app.innerHTML=key==="hub"?hubSkeleton():gameSkeleton(); bindStatic(); }
@@ -335,7 +336,7 @@ function bindStatic(){
   if(APP.view==="hub"){
     const ps=$("#pseudo"); ps.value=APP.me.name||"";
     ps.oninput=()=>{ APP.me.name=ps.value.trim().slice(0,18); saveMe(); renderHubButtons(); };
-    $("#rndAv").onclick=()=>{ APP.me.av=randomAvatar(); saveMe(); renderHub(); };
+    $("#rndAv").onclick=()=>{ APP.me.av=syncLegacyAv(R4.randomAvatar()); saveMe(); renderHub(); };
     $("#createBtn").onclick=()=>{ if(!APP.me.name){ ps.focus(); toast(t("needPseudo")); return; } openCreate(); };
     $("#navPlay").onclick=$("#createBtn").onclick;
     $("#gearHub").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
@@ -363,15 +364,25 @@ function copyText(s){ try{ navigator.clipboard.writeText(s); }catch(e){ const ta
 function setLang(l){ LANG=l; lsSet("lang",l); const app=$("#app"); app.dataset.view=""; render(); renderModal(true); if(APP.room&&APP._synced) send({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG}); }
 
 /* ---------- HUB ---------- */
+function syncLegacyAv(av){ av.h=av.h2%6; av.o=[2,0,1,3,0][av.o2]; av.a=0; return av; }
+function fullAv(av){ const o=Object.assign(R4.avNorm(av),{}); for(const k of ["h","o","a"]) if(av&&av[k]!=null) o[k]=av[k]; return syncLegacyAv(o); }
+function hero3d(el,av){
+  if(!QS.get("no3d")&&APP.hero3d!==false){
+    if(!APP.hero3d){ APP.heroCv=document.createElement("canvas"); APP.heroCv.className="hero3d"; try{ APP.hero3d=R4.create(APP.heroCv,{preview:true,quality:APP.set.gq==="low"?"low":"med",av,mood:"dusk"}); }catch(e){ APP.hero3d=null; } if(!APP.hero3d) APP.hero3d=false; }
+    if(APP.hero3d){ if(APP.heroCv.parentNode!==el){ el.innerHTML=""; el.appendChild(APP.heroCv); } el.closest(".island").classList.add("has3d"); APP.hero3d.pause(false); APP.hero3d.setAvatar(av); return; }
+  }
+  el.innerHTML=charSVG(av);
+}
 function renderHub(){
   AUD.setMood("dusk");
   document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
-  $("#heroChar").innerHTML=charSVG(APP.me.av);
-  const ae=$("#avEdit"); const av=APP.me.av;
-  const opt=(k,n,lab)=>`<div class="ae"><span>${esc(t(lab))}</span><button data-ae="${k}" data-d="-1">‹</button><button data-ae="${k}" data-d="1">›</button></div>`;
-  ae.innerHTML=opt("s",SKIN.length,"av_skin")+opt("h",6,"av_hair")+opt("hc",HAIRC.length,"av_hairc")+opt("t",TOPC.length,"av_color")+opt("o",4,"av_outfit")+opt("a",5,"av_acc");
-  const lens={s:SKIN.length,h:6,hc:HAIRC.length,t:TOPC.length,o:4,a:5};
-  ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ae; av[k]=(av[k]+(+b.dataset.d)+lens[k])%lens[k]; saveMe(); $("#heroChar").innerHTML=charSVG(av); });
+  const av=APP.me.av=fullAv(APP.me.av);
+  const hero=$("#heroChar"); hero3d(hero,av);
+  const ae=$("#avEdit"); const F=R4.AV_FIELDS;
+  const grp=(lab,ks)=>`<div class="ae-g"><div class="ae-gt">${esc(t(lab))}</div>${ks.map(([k,l])=>`<div class="ae"><span>${esc(t(l))}</span><button data-ae="${k}" data-d="-1">‹</button><i class="ae-v">${av[k]+1}/${F[k]}</i><button data-ae="${k}" data-d="1">›</button></div>`).join("")}</div>`;
+  ae.innerHTML=grp("av_skinc",[["s","av_skin"],["fs","av_face"],["ey","av_eyes"],["gl","av_glasses"],["h2","av_hair"],["hc","av_hairc"],["bd","av_beard"]])
+    +grp("av_clothes",[["o2","av_outfit"],["t","av_color"],["t2","av_color2"],["p","av_pants"],["bt","av_boots"],["bl","av_belt"],["a2","av_hat"],["sc","av_scarf"]]);
+  ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ae; av[k]=(av[k]+(+b.dataset.d)+F[k])%F[k]; syncLegacyAv(av); saveMe(); b.parentNode.querySelector(".ae-v").textContent=(av[k]+1)+"/"+F[k]; hero3d(hero,av); });
   const jb=$("#joinBox"); const g=parseHash();
   jb.innerHTML=g?`<div class="joinhint">${esc(t("invited"))}</div>`:"";
   if(g){ $("#createBtn").innerHTML="▶ "+esc(t("joinThis")); $("#createBtn").onclick=()=>{ if(!APP.me.name){ $("#pseudo").focus(); toast(t("needPseudo")); return; } joinGame(g); }; }
@@ -791,10 +802,11 @@ function renderModal(force){
   if(m.kind==="settings"){
     const sw=(id,on,ic,title,desc)=>`<label class="opt"><span class="opt-ic">${ic}</span><span class="opt-t"><b>${esc(title)}</b><small>${esc(desc)}</small></span><span class="switch"><input type="checkbox" id="${id}" ${on?"checked":""}><i></i></span></label>`;
     const th=APP.set.theme||"village";
-    const themes=[["village","🔥",t("th_village"),t("th_village_d")],["forest","🌲",t("th_forest"),t("th_forest_d")],["winter","❄️",t("th_winter"),t("th_winter_d")],["classic","🖼️",t("th_classic"),t("th_classic_d")]];
+    const themes=[["forest","🌲",t("th_forest"),t("th_forest_d")],["camp","⛺",t("th_camp"),t("th_camp_d")],["village","🔥",t("th_village"),t("th_village_d")],["winter","❄️",t("th_winter"),t("th_winter_d")],["classic","🖼️",t("th_classic"),t("th_classic_d")]];
     el.innerHTML=`<div class="mcard settings"><h2>⚙︎ ${esc(t("settings"))}</h2>
       <div class="frm"><label>${esc(t("language"))}</label><div class="seg"><button data-l="fr" class="${LANG==="fr"?"on":""}">Français</button><button data-l="ru" class="${LANG==="ru"?"on":""}">Русский</button><button data-l="en" class="${LANG==="en"?"on":""}">English</button></div></div>
       <div class="frm"><label>${esc(t("decor"))}</label><div class="themes">${themes.map(([k,ic,n,d])=>`<button class="theme ${th===k?"on":""}" data-th="${k}"><span class="th-ic">${ic}</span><b>${esc(n)}</b><small>${esc(d)}</small></button>`).join("")}</div><p class="muted sm">${esc(t("decorHelp"))}</p></div>
+      <div class="frm"><label>${esc(t("gfx"))}</label><div class="seg">${["low","med","high"].map(k=>`<button data-gq="${k}" class="${(APP.set.gq||"med")===k?"on":""}">${esc(t("gfx_"+k))}</button>`).join("")}</div><p class="muted sm">${esc(t("gfxHelp"))}</p></div>
       <div class="frm"><label>${esc(t("chatOpts"))}</label>${sw("sTr",APP.set.tr,"🌐",t("optTr"),t("optTrD"))}</div>
       <div class="frm"><label>${esc(t("soundOpts"))}</label>
         ${sw("sFx",APP.set.sfx!==false,"🔔",t("optFx"),t("optFxD"))}
@@ -802,6 +814,7 @@ function renderModal(force){
         <div class="opt vol"><span class="opt-ic">🔊</span><span class="opt-t"><b>${esc(t("volume"))}</b></span><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.7}"></div></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
+    el.querySelectorAll("[data-gq]").forEach(b=>b.onclick=()=>{ APP.set.gq=b.dataset.gq; saveSettings(); V3.setQuality(APP.set.gq); if(APP.hero3d) APP.hero3d.setQuality(APP.set.gq==="low"?"low":"med"); renderModal(true); });
     el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(true); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
     $("#sFx").onchange=e=>{ APP.set.sfx=e.target.checked; saveSettings(); if(e.target.checked) AUD.play("ping"); };
