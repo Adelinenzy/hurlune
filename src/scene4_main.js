@@ -323,7 +323,7 @@
       if(preview&&headMode){ const c=chars.me, hy=c&&c.headTop?c.headTop[1]-.16:1.5; eye=[.12,hy+.02,.78]; at=[0,hy-.01,0]; }
       else if(preview&&cheer){ eye=[.7,1.45,2.3]; at=[0,1.12,0]; }
       else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.9,1.45,Math.cos(a)*3.9]; at=[0,.95,0]; }
-      else { const a=base+drag; const dist=(R+3.4)*zoom+cine*2.2; const hgt=(2.9+R*.12)*zoom+cine*1.2+Math.sin(t*.3)*.05; eye=[Math.sin(a+Math.sin(t*.13)*.03)*dist,hgt,Math.cos(a+Math.sin(t*.13)*.03)*dist]; at=[0,.45+cine*1.6,0]; }
+      else { const a=base+drag; const asp=W/H, pf=asp<1.15?1+(1.15-asp)*.5:1; const dist=((R+3.4)*zoom+cine*2.2)*pf; const hgt=(2.9+R*.12)*zoom+cine*1.2+Math.sin(t*.3)*.05; eye=[Math.sin(a+Math.sin(t*.13)*.03)*dist,hgt,Math.cos(a+Math.sin(t*.13)*.03)*dist]; at=[0,.45+cine*1.6,0]; }
       camE=eye; const fov=preview?32:52;
       const proj=M.persp(fov*Math.PI/180,W/H,.08,600), view=M.lookAt(eye,at,[0,1,0]); VPm=M.mul(proj,view);
       // soleil & lune placés par rapport à la caméra (coucher de soleil visible)
@@ -410,7 +410,7 @@
       gl.uniform3fv(cp.u.uLift,wolves?[.035,0,0]:lerp3([0,0,0],[0,.006,.02],S.night)); gl.uniform3fv(cp.u.uGain,wolves?[1.12,.86,.84]:lerp3([1.03,1,.97],[.94,.97,1.08],S.night)); gl.uniform3fv(cp.u.uVigCol,wolves?[.06,0,0]:[0,0,0]);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4); gl.bindVertexArray(null); gl.activeTexture(gl.TEXTURE0);
       // étiquettes
-      if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,.6,1.15);
+      if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,W<600?.78:.6,1.15);
         el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
     }
     let fxK=null, prevGround=null, raf=0, labels=opts.labels||null, cheer=false, headMode=false, onReady=null;

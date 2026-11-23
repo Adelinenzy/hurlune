@@ -465,3 +465,36 @@ img.pface{width:100%;height:100%;object-fit:cover;display:block;border-radius:50
 ::-webkit-scrollbar-corner{background:transparent}
 ::-webkit-scrollbar-button{display:none;width:0;height:0}
 html{background:var(--bg)}
+/* ================= téléphones ================= */
+@media (max-width:900px){
+  html,body{overflow:hidden;height:100%}
+  .game{flex-direction:column;height:100vh;height:100dvh;min-height:0}
+  .stage{height:46vh;height:46dvh;flex:none}
+  .side{width:100%;flex:1;min-height:0;height:auto;padding:8px 8px calc(8px + env(safe-area-inset-bottom));gap:6px}
+  .side-head{gap:6px}
+  .phase{padding:4px 10px 4px 4px;gap:8px}
+  .phase .clock{width:30px;height:30px}
+  .btn-rules{padding:7px 10px;font-size:12px}
+  .panel{flex:1;min-height:0}
+  .chatlog{font-size:13px}
+  .composer{padding:4px} .composer input{font-size:16px;min-width:0}
+  .vbar{padding:6px 8px;font-size:12px}
+  .stage-top{left:8px;top:8px;gap:6px} .stage-top .pillbtn,.roomname{font-size:12px;padding:6px 10px}
+  .center,.stage.has3d .center{top:48px;width:94%}
+  .card-c{padding:12px;border-radius:14px;max-height:calc(46dvh - 60px);overflow:auto}
+  .card-c h3,.act h3{font-size:16px;margin:4px 0}
+  .act-ic{width:44px;height:44px}
+  .chips{gap:5px} .chip{padding:4px 9px 4px 4px;font-size:12px}
+  .rf-card{top:30%} .rf-em{width:60px;height:60px} .rf-t{font-size:14px} .rf-glow{width:120px;height:120px}
+  .lb .tag{font-size:10px}
+  .mcard{width:96vw!important;max-height:88dvh;overflow:auto;padding:16px}
+  .topnav{flex-wrap:wrap;gap:6px;padding:8px 10px}
+  .endov .endcard{max-height:90dvh;overflow:auto}
+}
+/* téléphone à l'horizontale : scène et chat côte à côte */
+@media (max-width:900px) and (orientation:landscape) and (max-height:520px){
+  .game{flex-direction:row}
+  .stage{height:100%;flex:1}
+  .side{width:42%;flex:none;height:100%}
+  .card-c{max-height:calc(100dvh - 70px)}
+}
