@@ -164,7 +164,7 @@
       if(!wolf.rig&&wolf.t<.05&&realOK()){ wolf.wait=(wolf.wait||0)+dt; if(wolf.wait<2.5) return; } // attend le modèle (2,5 s max)
       wolf.t+=dt; const w=wolf, T=w.t;
       const dir=nrm([c.x,0,c.z]); const side=[-dir[2],0,dir[0]];
-      const S0=add(add(scl(dir,(c.R||4)+12),scl(side,3)),[0,0,0]), P=scl(dir,(c.R||4)+.95);
+      const S0=add(scl(dir,(c.R||4)+11),scl(side,8)), P=scl(dir,Math.max(1.6,(c.R||4)-1.05)); // il surgit de la forêt et frappe face à la victime
       let pos, face, y=0; const E=(a,b,x)=>smooth(a,b,x);
       const run=(ph)=>{ const s=Math.sin(ph), co=Math.cos(ph); return {hipL:[-.35+s*.95,0,.05],hipR:[-.35-s*.95,0,-.05],knL:[.5+Math.max(0,co)*1.3,0,0],knR:[.5+Math.max(0,-co)*1.3,0,0],
         shL:[-.3-s*.9,0,-.25],shR:[-.3+s*.9,0,.25],elL:[-1.1,0,0],elR:[-1.1,0,0],spine:[.55,0,0],neck:[-.25,0,0],head:[-.2,0,0],pelvis:[0,0,0]}; };
