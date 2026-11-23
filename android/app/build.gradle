@@ -1,0 +1,27 @@
+plugins { id "com.android.application" }
+android {
+    namespace "net.hurlune.app"
+    compileSdk 34
+    defaultConfig {
+        applicationId "net.hurlune.app"
+        minSdk 26
+        targetSdk 34
+        versionCode (System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1)
+        versionName "1.2.3"
+    }
+    signingConfigs {
+        release {
+            def ks = System.getenv("KEYSTORE_FILE")
+            if (ks) { storeFile file(ks); storePassword System.getenv("KEYSTORE_PASS"); keyAlias "hurlune"; keyPassword System.getenv("KEYSTORE_PASS") }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig System.getenv("KEYSTORE_FILE") ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    aaptOptions { noCompress "js", "html" }
+}
+dependencies { implementation "androidx.webkit:webkit:1.11.0" }
