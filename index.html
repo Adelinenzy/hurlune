@@ -3873,7 +3873,7 @@ function onPriv(o){
   if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift();
     if(m.a&&m.x&&(m.ch==="v")&&!m.cls){ APP.ui.bubbles=APP.ui.bubbles||{}; APP.ui.bubbles[m.a]={m,until:Date.now()+5500}; if(APP.has3d) V3.speak(m.a); if(APP.view==="game") renderChars(); setTimeout(()=>{ if(APP.view==="game") renderChars(); },5700); }
     if(m.cls==="death"){
-      const vic=m.p&&m.p.t&&m.p.t.pid, cause=m.p&&m.p.c, fresh=APP.st&&APP.st.ph&&APP.st.ph.k==="dawn"&&!APP._killed?.has(m.id);
+      const vic=m.p&&m.p.t&&m.p.t.pid, cause=m.p&&m.p.c, fresh=!(APP._killed&&APP._killed.has(m.id))&&APP.st&&APP.st.status==="running"; // le message de mort arrive avant l’état « aube »
       if((cause==="c_wolf"||cause==="c_white")&&vic&&fresh&&APP.has3d&&V3.r4){ (APP._killed=APP._killed||new Set()).add(m.id); sfx("howl");
         V3.wolfKill(vic,cause==="c_white"?"white":"wolf",()=>{ sfx("thunder"); flash("blood"); }); }
       else { sfx("thunder"); flash(); } }
