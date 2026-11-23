@@ -1,5 +1,5 @@
 // Hurlune — application de bureau (Electron)
-const { app, BrowserWindow, shell, Menu } = require("electron");
+const { app, BrowserWindow, shell, Menu, session, systemPreferences } = require("electron");
 const path = require("path");
 
 function createWindow() {
@@ -23,6 +23,16 @@ function createWindow() {
 
 Menu.setApplicationMenu(null);
 app.whenReady().then(() => {
+  // Micro autorisé pour le chat vocal (uniquement l'audio)
+  session.defaultSession.setPermissionRequestHandler((wc, perm, cb, details) => {
+    if (perm === "media") {
+      const audioOnly = !(details.mediaTypes || []).includes("video");
+      if (audioOnly && process.platform === "darwin") { systemPreferences.askForMediaAccess("microphone").then(cb).catch(() => cb(false)); return; }
+      cb(audioOnly); return;
+    }
+    cb(false);
+  });
+  session.defaultSession.setPermissionCheckHandler((wc, perm) => perm === "media");
   createWindow();
   app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });

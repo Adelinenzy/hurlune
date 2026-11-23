@@ -139,6 +139,16 @@ async function openaiTranslate(x,langs){
   return res;
 }
 function hostTranslator(){ return oaKey()?openaiTranslate:null; }
+async function openaiTranscribe(pk){
+  const key=oaKey(); if(!key) return null;
+  const wav=await VOICE.toWav(pk); if(!wav) return null;
+  const call=async m=>{ const fd=new FormData(); fd.append("file",wav,"voice.wav"); fd.append("model",m);
+    fd.append("prompt","Conversation in a Werewolf party game (Loup-Garou / Оборотни) between French and Russian friends.");
+    const r=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{"Authorization":"Bearer "+key},body:fd});
+    if(!r.ok){ const e=new Error("stt "+r.status); e.status=r.status; throw e; } const j=await r.json(); return j.text||""; };
+  for(const m of ["gpt-transcribe","gpt-4o-mini-transcribe","whisper-1"]){ try{ return await call(m); }catch(e){ if(e.status!==400&&e.status!==404) throw e; } }
+  return null;
+}
 
 /* ---------- networking glue ---------- */
 function parseHash(){
@@ -164,7 +174,7 @@ async function startHostSession(host){
   APP.game={room:host.roomId,key:host.key,b:host.broker,name:host.S.name};
   history.replaceState(null,"",location.pathname+location.search+"#"+gameHash());
   APP.host=host; APP.room=room; window.HOST=host;
-  host.localSink={state:onState,priv:onPriv}; host.translator=hostTranslator();
+  host.localSink={state:onState,priv:onPriv}; host.translator=hostTranslator(); host.transcriber=oaKey()?openaiTranscribe:null;
   host.attach(room);
   host.local({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG});
   APP.ui.connecting=false; addRecent(); render();
@@ -216,6 +226,7 @@ function onPriv(o){
     else if(m.x&&APP.me.name&&m.a!==APP.me.pid&&norm(m.x).includes("@"+norm(APP.me.name))) sfx("mention");
     else if(m.cls==="seer"||m.cls==="role"||m.cls==="love") sfx("ping");
     scheduleChat(); return; }
+  if(o.t==="va"){ if(o.a!==APP.me.pid){ if(!APP.set.vmute) VOICE.rx(o.a,o.s,o.d); APP.ui.vSpk={id:o.a,until:Date.now()+700}; if(APP.has3d) V3.speak(o.a); } return; }
   if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
   if(o.t==="err"){ if(o.k==="started"||o.k==="full"||o.k==="kicked"||o.k==="notInGame"){ APP.ui.joinErr=o.k; } else toast(t("e_"+o.k)); render(); }
 }
@@ -325,7 +336,7 @@ function gameSkeleton(){
        <div class="chatlog" id="chatlog"></div>
        <div class="rules" id="rules" hidden></div>
      </div>
-     <form class="composer" id="composer"><button type="button" class="cbtn" id="trBtn" title="${esc(t("translate"))}">🌐</button><input id="msgIn" maxlength="400" autocomplete="off"><button type="button" class="cbtn" id="loveBtn" hidden title="${esc(t("loversChat"))}">💜</button><button class="cbtn send" id="sendBtn">➤</button></form>
+     <div class="vbar" id="vbar" hidden></div><form class="composer" id="composer"><button type="button" class="cbtn" id="trBtn" title="${esc(t("translate"))}">🌐</button><input id="msgIn" maxlength="400" autocomplete="off"><button type="button" class="cbtn" id="loveBtn" hidden title="${esc(t("loversChat"))}">💜</button><button class="cbtn send" id="sendBtn">➤</button></form>
    </aside>
    <div class="endov" id="endov" hidden></div>
    <div class="reveal-ov" id="revealOv" hidden></div>
@@ -397,7 +408,7 @@ function renderHubButtons(){}
 function openCreate(edit){
   const st=S();
   const base= edit ? {name:st.name,seats:st.seats,comp:clone(st.comp),mode:st.mode,speed:st.speed}
-                   : {name:t("defaultGameName",{n:APP.me.name}),seats:8,comp:suggestComp(8),mode:"fun",speed:"normal"};
+                   : {name:t("defaultGameName",{n:APP.me.name}),seats:8,comp:suggestComp(8),mode:"fun",speed:"normal",voice:true};
   APP.ui.modal={kind:"create",edit:!!edit,cfg:base}; render();
 }
 function createModal(m){
@@ -407,7 +418,8 @@ function createModal(m){
    <div class="frm"><label>${esc(t("gameName"))}</label><input id="cName" maxlength="40" value="${esc(c.name)}"></div>
    <div class="frm row2"><div><label>${esc(t("seats"))}</label><div class="stepper"><button data-seat="-1">−</button><b>${c.seats}</b><button data-seat="1">+</button></div></div>
      <div><label>${esc(t("type"))}</label><div class="seg"><button data-mode="fun" class="${c.mode==="fun"?"on":""}">${esc(t("fun"))}</button><button data-mode="serious" class="${c.mode==="serious"?"on":""}">${esc(t("serious"))}</button></div></div>
-     <div><label>${esc(t("speed"))}</label><div class="seg"><button data-speed="normal" class="${c.speed==="normal"?"on":""}">${esc(t("normal"))}</button><button data-speed="fast" class="${c.speed==="fast"?"on":""}">${esc(t("fast"))}</button></div></div></div>
+     <div><label>${esc(t("speed"))}</label><div class="seg"><button data-speed="normal" class="${c.speed==="normal"?"on":""}">${esc(t("normal"))}</button><button data-speed="fast" class="${c.speed==="fast"?"on":""}">${esc(t("fast"))}</button></div></div>
+     <div><label>${esc(t("voiceOpt"))}</label><div class="seg"><button data-voice="1" class="${c.voice!==false?"on":""}">🎙️ ${esc(t("yes"))}</button><button data-voice="0" class="${c.voice===false?"on":""}">${esc(t("no"))}</button></div></div></div>
    <div class="comp-h"><b>${esc(t("composition"))}</b><span class="${tot===c.seats?"ok":"bad"}">${tot}/${c.seats} ${esc(t("rolesWord"))}</span><button class="btn-ghost sm" id="sugg">✨ ${esc(t("suggested"))}</button></div>
    <div class="comp">${grp}</div>
    <div class="mfoot"><button class="btn-ghost" id="mCancel">${esc(t("cancel"))}</button><button class="btn-primary" id="mOk" ${tot!==c.seats||!(c.comp.werewolf||c.comp.blackWolf||c.comp.talkativeWolf||c.comp.literateWolf||c.comp.wolfRidingHood||c.comp.whiteWolf)?"disabled":""}>${esc(t(m.edit?"save":"create"))}</button></div></div>`;
@@ -419,6 +431,7 @@ function bindCreate(m){
   document.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{ const r=b.dataset.cr; const n=Math.max(0,Math.min(ROLES[r].max,(c.comp[r]||0)+(+b.dataset.d))); if(n) c.comp[r]=n; else delete c.comp[r]; re(); });
   document.querySelectorAll("[data-seat]").forEach(b=>b.onclick=()=>{ c.seats=Math.max(min,Math.min(16,c.seats+(+b.dataset.seat))); re(); });
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{ c.mode=b.dataset.mode; re(); });
+  document.querySelectorAll("[data-voice]").forEach(b=>b.onclick=()=>{ c.voice=b.dataset.voice==="1"; re(); });
   document.querySelectorAll("[data-speed]").forEach(b=>b.onclick=()=>{ c.speed=b.dataset.speed; re(); });
   $("#sugg").onclick=()=>{ c.comp=suggestComp(c.seats); re(); };
   $("#mCancel").onclick=()=>{ APP.ui.modal=null; render(); };
@@ -467,6 +480,41 @@ function updTimer(){
   const bar=$("#mbar"); if(bar&&APP._mbarTotal){ bar.style.width=Math.max(0,Math.min(100,100*s/APP._mbarTotal))+"%"; }
 }
 setInterval(updTimer,500);
+
+/* ---------- chat vocal ---------- */
+function vcState(){ const v=V(); return v&&v.vc||null; }
+function voiceSync(){
+  const vc=vcState(), me=APP.me.pid; if(!vc||APP.view!=="game"){ if(VOICE.sending) VOICE.stopTx(); return; }
+  const mine=vc.cur&&vc.cur.pid===me, queued=(vc.q||[]).includes(me);
+  if(mine&&!VOICE.sending){
+    if(VOICE.micOn&&VOICE.startTx((s,d)=>send({t:"vc",s,d}))){ sfx("ping"); }
+    else if(!APP._vOpening){ APP._vOpening=true; VOICE.openMic().then(ok=>{ APP._vOpening=false; if(!ok){ send({t:"vend"}); toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); } else voiceSync(); }); }
+  }
+  if(!mine&&VOICE.sending) VOICE.stopTx();
+  if(!mine&&!queued&&VOICE.micOn&&!APP._vOpening){ clearTimeout(APP._vClose); APP._vClose=setTimeout(()=>{ const v2=vcState(); if(!(v2&&((v2.q||[]).includes(APP.me.pid)||(v2.cur&&v2.cur.pid===APP.me.pid)))) VOICE.closeMic(); },4000); }
+  if(mine&&APP.has3d) V3.speak(me);
+}
+function renderVoice(){
+  const el=$("#vbar"); if(!el) return; const vc=vcState(), me=APP.me.pid;
+  if(!vc||vc.off||!VOICE.canHear()){ el.hidden=true; el._h=""; return; }
+  const c=vc.cur, q=vc.q||[], pos=q.indexOf(me), mine=c&&c.pid===me;
+  if(!c&&!vc.ch&&!q.length){ el.hidden=true; el._h=""; return; }
+  el.hidden=false;
+  const left=c?Math.max(0,Math.ceil((c.until-now())/1000)):0, tot=c?Math.max(1,(c.until-c.start)/1000):1;
+  const wolf=(c&&c.ch==="w")||vc.ch==="w";
+  let h=`<div class="vb-top ${wolf?"wolf":""}">`;
+  if(c){ const P=pl(c.pid); h+=`<div class="vb-spk ${mine?"me":""}"><span class="vb-av">${P?headSVG(P.av):""}</span><span class="vb-t"><b>${esc(mine?t("vYou"):t("vSpeaking",{n:P?P.n:"?"}))}</b><span class="vb-bar"><i style="width:${(100*left/tot).toFixed(1)}%"></i></span></span><span class="vb-s">${left}s</span>${mine?`<span class="vb-lvl"><i style="transform:scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})"></i></span><button class="vb-btn done" id="vDone">${esc(t("vDone"))}</button>`:""}</div>`; }
+  else h+=`<div class="vb-idle">🎙️ ${esc(t(wolf?"vIdleWolf":"vIdle"))}</div>`;
+  if(vc.ch&&!mine){ h+= pos>=0?`<button class="vb-btn on" id="vReq">✋ ${esc(t("vCancel"))} · ${esc(t("vPos",{n:pos+1}))}</button>`:`<button class="vb-btn" id="vReq" ${VOICE.canSpeak()?"":"disabled"} title="${VOICE.canSpeak()?"":esc(t("vNoMic"))}">✋ ${esc(t("vReq"))}</button>`; }
+  h+=`</div>`;
+  if(q.length) h+=`<div class="vb-q"><span class="muted">${esc(t("vQueue"))}</span>${q.map((id,i)=>`<span class="vb-qi ${id===me?"me":""}">${i+1}. ${esc(pname(id))}</span>`).join("")}</div>`;
+  if(el._h!==h){ el._h=h; el.innerHTML=h;
+    const r=$("#vReq"); if(r) r.onclick=async()=>{ VOICE.unlock(); const on=pos<0; if(on){ const ok=await VOICE.openMic(); if(!ok){ toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); return; } } send({t:"vreq",on}); };
+    const d=$("#vDone"); if(d) d.onclick=()=>{ VOICE.stopTx(); send({t:"vend"}); };
+  } else if(mine){ const l=el.querySelector(".vb-lvl i"); if(l) l.style.transform=`scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})`; }
+}
+setInterval(()=>{ if(APP.view==="game"){ voiceSync(); renderVoice(); } },200);
+document.addEventListener("pointerdown",()=>VOICE.unlock(),{once:true});
 
 function layoutPositions(n){
   // rows staggered like a village square
@@ -721,7 +769,7 @@ function renderChat(){
     const same=lastA===(m.a||m.n)+m.ch&&!m.cls;
     lastA=(m.a||m.n)+m.ch;
     const pre = m.cls==="accuse"?`<div class="acc">🗳️ ${fmt("accuse",m.p)}</div>`: m.cls==="pres"?`<div class="acc pres">🎗️ ${esc(t("m_presents"))}</div>`:"";
-    h+=`<div class="${cls} ${same?"cont":""}">${same?"":`<div class="mav">${P?headSVG(P.av):m.anon?"🐺":m.necro?"💀":""}</div>`}<div class="mbody">${same?"":`<div class="mname"><b class="mn" data-n="${esc(P?P.n:m.n)}">${esc(name)}</b>${m.ch==="w"?` <span class="chtag w">${esc(t("wolves"))}</span>`:m.ch==="d"?` <span class="chtag d">${esc(t("graveyard"))}</span>`:m.ch==="l"?` <span class="chtag l">${esc(t("lovers"))}</span>`:""}</div>`}${pre}<div class="mtext">${body}</div>${trH}</div></div>`;
+    h+=`<div class="${cls} ${same?"cont":""}">${same?"":`<div class="mav">${P?headSVG(P.av):m.anon?"🐺":m.necro?"💀":""}</div>`}<div class="mbody">${same?"":`<div class="mname"><b class="mn" data-n="${esc(P?P.n:m.n)}">${esc(name)}</b>${m.vo?` <span class="vo" title="${esc(t("vTranscript"))}">🎤</span>`:""}${m.ch==="w"?` <span class="chtag w">${esc(t("wolves"))}</span>`:m.ch==="d"?` <span class="chtag d">${esc(t("graveyard"))}</span>`:m.ch==="l"?` <span class="chtag l">${esc(t("lovers"))}</span>`:""}</div>`}${pre}<div class="mtext">${body}</div>${trH}</div></div>`;
   }
   log.innerHTML=h;
   if(atBottom||APP.msgs.length!==_lastChatLen&&APP.msgs.length&&APP.msgs[APP.msgs.length-1].a===me) log.scrollTop=log.scrollHeight;
@@ -815,6 +863,7 @@ function renderModal(force){
       <div class="frm"><label>${esc(t("soundOpts"))}</label>
         ${sw("sFx",APP.set.sfx!==false,"🔔",t("optFx"),t("optFxD"))}
         ${sw("sAmb",APP.set.amb!==false,"🌙",t("optAmb"),t("optAmbD"))}
+        ${sw("sVc",!APP.set.vmute,"🎧",t("optVc"),t("optVcD"))}
         <div class="opt vol"><span class="opt-ic">🔊</span><span class="opt-t"><b>${esc(t("volume"))}</b></span><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.7}"></div></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
@@ -822,8 +871,9 @@ function renderModal(force){
     el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(true); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
     $("#sFx").onchange=e=>{ APP.set.sfx=e.target.checked; saveSettings(); if(e.target.checked) AUD.play("ping"); };
+    $("#sVc").onchange=e=>{ APP.set.vmute=!e.target.checked; saveSettings(); VOICE.setVolume(); };
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
-    $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); };
+    $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); VOICE.setVolume(); };
     $("#sVol").onchange=()=>AUD.play("ping");
     $("#sOk").onclick=()=>{ APP.ui.modal=null; render(); };
     return;

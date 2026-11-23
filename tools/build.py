@@ -3,7 +3,7 @@ import os
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src=os.path.join(ROOT,'src')+'/'
 css=open(src+'style.css').read()
-js='\n'.join(open(src+f).read() for f in ['roles.js','net.js','engine.js','art.js','emblems.js','i18n.js','audio.js','village3d.js','scene4_core.js','scene4_chars.js','scene4_world.js','scene4_main.js','ui.js'])
+js='\n'.join(open(src+f).read() for f in ['roles.js','net.js','engine.js','art.js','emblems.js','i18n.js','audio.js','voice.js','village3d.js','scene4_core.js','scene4_chars.js','scene4_world.js','scene4_main.js','ui.js'])
 html=f'''<!DOCTYPE html>
 <html lang="fr">
 <head>

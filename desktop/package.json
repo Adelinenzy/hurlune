@@ -1,7 +1,7 @@
 {
   "name": "hurlune",
   "productName": "Hurlune",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Loups-Garous entre amis — chat traduisible FR/RU",
   "main": "main.js",
   "author": "Adelinenzy",
@@ -17,12 +17,48 @@
   "build": {
     "appId": "net.hurlune.app",
     "productName": "Hurlune",
-    "files": ["main.js", "app/**/*"],
-    "directories": { "output": "dist" },
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }] },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
-    "mac": { "target": ["dmg"], "category": "public.app-category.games" },
-    "linux": { "target": ["AppImage"], "category": "Game" },
+    "files": [
+      "main.js",
+      "app/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.games",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Hurlune utilise le micro pour le chat vocal entre joueurs."
+      }
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game"
+    },
     "artifactName": "Hurlune-${version}-${os}-${arch}.${ext}"
   }
 }

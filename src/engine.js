@@ -100,7 +100,7 @@ class Host {
   }
   // ---------- private view ----------
   view(pid){
-    const R=this.R(pid); const v={me:pid,host:pid===this.hostId};
+    const R=this.R(pid); const v={me:pid,host:pid===this.hostId,vc:this.vcView(pid)};
     if(!R) return v;
     const sec=this.sec, k=this.ph.k;
     Object.assign(v,{role:R.role,orig:R.orig,camp:R.camp,infected:!!R.infected,alive:R.alive});
@@ -192,6 +192,9 @@ class Host {
     switch(msg.t){
       case "ping": break;
       case "chat": this.chat(pid,msg); break;
+      case "vc": this.vcAudio(pid,msg); break;
+      case "vreq": this.vcReq(pid,!!msg.on); break;
+      case "vend": if(this.vc&&this.vc.cur&&this.vc.cur.pid===pid){ this.vcEnd(); this.vcTick(Date.now()); this.flush(); } break;
       case "act": this.act(pid,msg); break;
       case "leave":
         if(this.status==="lobby"||this.status==="starting"){
@@ -214,8 +217,64 @@ class Host {
     if(c.comp) S.comp=c.comp;
     if(c.mode) S.mode=c.mode==="serious"?"serious":"fun";
     if(c.speed) S.speed=c.speed==="fast"?"fast":"normal";
+    if(c.voice!=null) S.voice=!!c.voice;
     if(this.status==="starting"&&(this.order.length<S.seats||compTotal(S.comp)!==S.seats)){ this.status="lobby"; this.ph={k:"lobby",seq:this.ph.seq+1}; }
     this.checkFull();
+  }
+  // ---------- chat vocal (un seul orateur à la fois, file d'attente, temps partagé) ----------
+  voiceCh(pid){
+    if(this.S.voice===false) return null;
+    if(this.status==="lobby"||this.status==="starting"||this.status==="ended") return this.P(pid)?"v":null;
+    if(this.status!=="running") return null;
+    const R=this.R(pid); if(!R||!R.alive) return null;
+    if(this.ph.k==="n_wolves"&&this.wolfSees(pid)) return "w";
+    return this.isNight()?null:"v";
+  }
+  vcAud(ch){ return ch==="w"?"wolf":"all"; }
+  vcCtx(){ if(this.status!=="running") return this.status==="ended"?"end":"lobby"; return this.isNight()?"n:"+this.ph.seq:"d:"+(this.sec?this.sec.day:0); }
+  vcTick(now){
+    const vc=this.vc||(this.vc={q:[],cur:null,key:null});
+    const key=this.vcCtx();
+    if(vc.key!==key){ this.vcEnd(); vc.q=[]; vc.key=key; }
+    vc.q=vc.q.filter(p=>this.voiceCh(p));
+    if(vc.cur&&(now>=vc.cur.until||this.voiceCh(vc.cur.pid)!==vc.cur.ch)) this.vcEnd();
+    if(!vc.cur&&vc.q.length){
+      const pid=vc.q.shift(), ch=this.voiceCh(pid);
+      let slot=30000;
+      if(this.status==="running"&&this.ph.end) slot=Math.max(8000,Math.min(90000,(this.ph.end-now-1000)/(vc.q.length+1)));
+      vc.cur={pid,ch,start:now,until:now+slot,pk:[]};
+    }
+  }
+  vcFair(){ // le temps restant est partagé entre l'orateur et tous ceux qui attendent
+    const vc=this.vc, c=vc&&vc.cur; if(!c||this.status!=="running"||!this.ph.end) return; const now=Date.now();
+    const share=(this.ph.end-c.start)/(1+vc.q.length); const u=Math.max(c.start+Math.max(8000,share),now+4000); if(u<c.until) c.until=u;
+  }
+  vcReq(pid,on){
+    const now=Date.now(); this.vcTick(now); const vc=this.vc;
+    vc.q=vc.q.filter(x=>x!==pid);
+    if(on&&this.voiceCh(pid)&&!(vc.cur&&vc.cur.pid===pid)) vc.q.push(pid);
+    this.vcFair(); this.vcTick(now); this.flush();
+  }
+  vcEnd(){ const vc=this.vc; if(!vc||!vc.cur) return; const c=vc.cur; vc.cur=null; this.vcTranscribe(c); }
+  vcTranscribe(c){
+    if(!c.pk.length) return; const pk=c.pk; c.pk=[];
+    if(!this.transcriber) return; const P=this.P(c.pid); if(!P) return; const aud=this.vcAud(c.ch);
+    this.transcriber(pk).then(x=>{ x=String(x||"").replace(/\s+/g," ").trim(); if(x.length<2) return; this.msg({ch:c.ch,a:c.pid,n:P.name,x:x.slice(0,600),vo:1},aud); }).catch(e=>console.warn("stt",e));
+  }
+  vcAudio(pid,msg){
+    const c=this.vc&&this.vc.cur; if(!c||c.pid!==pid||!Array.isArray(msg.d)||this.voiceCh(pid)!==c.ch) return;
+    const d=msg.d.slice(0,60).filter(x=>typeof x==="string"&&x.length<1200); if(!d.length) return;
+    const o={t:"va",a:pid,s:msg.s|0,d}; const aud=this.vcAud(c.ch);
+    if(aud==="all"){ if(this.room) this.room.broadcast(o).catch(()=>{}); if(this.localSink&&pid!==this.hostId) this.localSink.priv(o); }
+    else for(const p of this.order) if(p!==pid&&this.visible(p,aud)) this.sendPriv(p,o);
+    c.pk.push(...d); if(c.pk.length>=1300) this.vcTranscribe(c); // ~26 s : on retranscrit par morceaux
+  }
+  vcView(pid){
+    if(this.S.voice===false) return {off:1};
+    const vc=this.vc||{q:[],cur:null}, ch=this.voiceCh(pid), c=vc.cur;
+    const hear=c&&(c.pid===pid||this.visible(pid,this.vcAud(c.ch)));
+    const dch=ch||(hear?c.ch:"v");
+    return {ch, q:vc.q.filter(x=>this.voiceCh(x)===dch&&(dch!=="w"||this.wolfSees(pid))), cur:hear?{pid:c.pid,until:c.until,start:c.start,ch:c.ch}:null};
   }
   // ---------- chat ----------
   chat(pid,msg){
@@ -333,6 +392,7 @@ class Host {
   tick(){
     try{
       const now=Date.now();
+      this.vcTick(now);
       if(this.status==="starting"&&now>=this.ph.end){ this.startGame(); return; }
       if(this.status!=="running"){ this.flush(); return; }
       if(this.ph.k==="d_vote"&&!this.sec.mentalistDone&&this.ph.end-now<=30000){ this.sec.mentalistDone=true; this.mentalist(); }
