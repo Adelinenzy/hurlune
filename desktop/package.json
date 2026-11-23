@@ -1,7 +1,7 @@
 {
   "name": "hurlune",
   "productName": "Hurlune",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Loups-Garous entre amis — chat traduisible FR/RU",
   "main": "main.js",
   "author": "Adelinenzy",
