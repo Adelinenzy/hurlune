@@ -359,7 +359,7 @@ function bindStatic(){
   }
 }
 function copyText(s){ try{ navigator.clipboard.writeText(s); }catch(e){ const ta=document.createElement("textarea"); ta.value=s; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(_){} ta.remove(); } }
-function setLang(l){ LANG=l; lsSet("lang",l); const app=$("#app"); app.dataset.view=""; render(); if(APP.room&&APP._synced) send({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG}); }
+function setLang(l){ LANG=l; lsSet("lang",l); const app=$("#app"); app.dataset.view=""; render(); renderModal(true); if(APP.room&&APP._synced) send({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG}); }
 
 /* ---------- HUB ---------- */
 function renderHub(){
@@ -403,7 +403,7 @@ function createModal(m){
 }
 function bindCreate(m){
   const c=m.cfg; const min=m.edit&&APP.st?Math.max(3,APP.st.players.length):3;
-  const re=()=>{ c.name=$("#cName").value; renderModal(); };
+  const re=()=>{ c.name=$("#cName").value; renderModal(true); };
   document.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{ const r=b.dataset.cr; const n=Math.max(0,Math.min(ROLES[r].max,(c.comp[r]||0)+(+b.dataset.d))); if(n) c.comp[r]=n; else delete c.comp[r]; re(); });
   document.querySelectorAll("[data-seat]").forEach(b=>b.onclick=()=>{ c.seats=Math.max(min,Math.min(16,c.seats+(+b.dataset.seat))); re(); });
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{ c.mode=b.dataset.mode; re(); });
@@ -780,10 +780,12 @@ function renderEnd(){
 }
 
 /* ---------- modals ---------- */
-function renderModal(){
+function renderModal(force){
   let el=$("#modal"); const m=APP.ui.modal;
   if(!m){ if(el) el.remove(); return; }
-  if(!el){ el=document.createElement("div"); el.id="modal"; el.className="modal"; document.body.appendChild(el); el.onclick=e=>{ if(e.target===el&&APP.ui.modal&&APP.ui.modal.kind!=="create"){ APP.ui.modal=null; render(); } }; }
+  if(el&&!force&&el._m===m) return; // already shown: keep what the player is typing
+  if(el) el._m=m;
+  if(!el){ el=document.createElement("div"); el.id="modal"; el.className="modal"; el._m=m; document.body.appendChild(el); el.onclick=e=>{ if(e.target===el&&APP.ui.modal&&APP.ui.modal.kind!=="create"){ APP.ui.modal=null; render(); } }; }
   if(m.kind==="create"){ el.innerHTML=createModal(m); bindCreate(m); return; }
   if(m.kind==="settings"){
     const sw=(id,on,ic,title,desc)=>`<label class="opt"><span class="opt-ic">${ic}</span><span class="opt-t"><b>${esc(title)}</b><small>${esc(desc)}</small></span><span class="switch"><input type="checkbox" id="${id}" ${on?"checked":""}><i></i></span></label>`;
@@ -799,7 +801,7 @@ function renderModal(){
         <div class="opt vol"><span class="opt-ic">🔊</span><span class="opt-t"><b>${esc(t("volume"))}</b></span><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.7}"></div></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
-    el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(); });
+    el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(true); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
     $("#sFx").onchange=e=>{ APP.set.sfx=e.target.checked; saveSettings(); if(e.target.checked) AUD.play("ping"); };
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
