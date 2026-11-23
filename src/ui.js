@@ -211,6 +211,7 @@ function onState(st){
       else if(wasN&&st.status==="running"){ sfx("day"); setTimeout(()=>showBanner("☀️",t("bn_day",{n:st.day}),"day"),60); }
       else if(st.ph.k==="d_cand"||st.ph.k==="d_vote"&&prev.ph.k!=="d_vote"||st.ph.k==="d_elect"||st.ph.k==="prompt") sfx("step");
       if(prev.status!=="running"&&st.status==="running") sfx("start");
+      roleFx(st);
       if(prev.status!=="ended"&&st.status==="ended") setTimeout(()=>sfx((st.winners||[]).includes(APP.me.pid)?"win":"lose"),900);
     }
   }
@@ -247,6 +248,20 @@ function leaveToHub(){
 }
 
 function fireflies(){ let h=""; for(let i=0;i<16;i++){ h+=`<i style="left:${(Math.random()*96+2).toFixed(1)}%;top:${(Math.random()*45+45).toFixed(1)}%;animation-delay:${(Math.random()*-12).toFixed(1)}s;animation-duration:${(8+Math.random()*8).toFixed(1)}s"></i>`; } return h; }
+/* animation pendant qu'un rôle agit (sans dire qui) */
+const FXMAP={n_cupid:["cupid","cupid"],n_seer:["seer","seer"],n_witch:["witch","witch"],n_guard:["guard","guard"],n_white:["white","whiteWolf"],n_pyro:["pyro","pyromancer"],n_rat:["rat","sickRat"],n_heir:["heir","heir"]};
+function roleFx(st){
+  const k=st.ph.k; let fx=FXMAP[k];
+  if(k==="prompt"){ fx=st.ph.kind==="hunter"?["hunter","hunter"]:st.ph.kind==="grave"?["grave","gravedigger"]:st.ph.kind==="succ"?["mayor","dictator"]:null; }
+  const el=$("#rolefx"); if(!el) return;
+  if(!fx||st.status!=="running"){ el.className="rolefx"; el.innerHTML=""; if(APP.has3d&&V3.fx) V3.fx(null); return; }
+  const [kind,role]=fx; let parts="";
+  const sym={cupid:"❤",seer:"✦",witch:"●",guard:"◆",white:"❄",pyro:"✹",rat:"☣",heir:"✧",hunter:"✛",grave:"✝",mayor:"★"}[kind];
+  for(let i=0;i<18;i++) parts+=`<span style="left:${(8+Math.random()*84).toFixed(1)}%;animation-delay:${(-Math.random()*6).toFixed(2)}s;animation-duration:${(4+Math.random()*4).toFixed(1)}s;font-size:${(12+Math.random()*18).toFixed(0)}px">${sym}</span>`;
+  el.innerHTML=`<div class="rf-parts">${parts}</div><div class="rf-card"><div class="rf-glow"></div><div class="rf-em">${emb(role)}</div><div class="rf-t">${esc(roleName(role))}</div></div>`;
+  el.className="rolefx show fx-"+kind;
+  if(APP.has3d&&V3.fx) V3.fx(kind);
+}
 function showBanner(ic,txt,cls){ const b=$("#pbanner"); if(!b) return; b.className="pbanner "+(cls||""); b.innerHTML=`<div class="pb-ic">${ic}</div><div class="pb-t">${esc(txt)}</div>`; void b.offsetWidth; b.classList.add("show"); clearTimeout(APP._bnT); APP._bnT=setTimeout(()=>b.classList.remove("show"),2600); }
 function flash(){ const f=$("#flash"); if(!f) return; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); }
 
@@ -333,7 +348,7 @@ function hubSkeleton(){
 }
 function gameSkeleton(){
   return `<div class="game">
-   <div class="stage" id="stage"><div class="scene" id="scene">${sceneSVG()}</div><div id="v3slot"></div><div class="vignette"></div><div class="fog"></div><div class="fireflies">${fireflies()}</div><div class="flash" id="flash"></div><div class="pbanner" id="pbanner"></div>
+   <div class="stage" id="stage"><div class="scene" id="scene">${sceneSVG()}</div><div id="v3slot"></div><div class="vignette"></div><div class="fog"></div><div class="fireflies">${fireflies()}</div><div class="flash" id="flash"></div><div class="rolefx" id="rolefx"></div><div class="pbanner" id="pbanner"></div>
      <div class="stage-top"><button class="iconbtn" id="homeBtn" title="${esc(t("home"))}">⌂</button><span class="roomname" id="roomName"></span><button class="pillbtn" id="inviteBtn">🔗 ${esc(t("invite"))}</button><span class="net" id="net"></span></div>
      <div class="chars" id="chars"></div>
      <div class="center" id="center"></div>
@@ -703,7 +718,7 @@ function renderCenter(){
   } else if(pr&&(!pr.acted||pr.k==="wolves")&&pr.k!=="cand"){
     const total=(SPEEDS[st.speed]||SPEEDS.normal); APP._mbarTotal=Math.max(1,Math.round(((st.ph.end||0)-now())/1000));
     const er=pr.k==="succ"||pr.k==="tie"?"dictator":pr.k==="grave"?"gravedigger":pr.k==="hunter"?"hunter":pr.k==="wolves"?(v.role==="whiteWolf"||v.camp!=="wolf"?"werewolf":v.role):v.role;
-    h=`<div class="card-c act"><div class="act-ic">${emb(er)}</div><h3>${esc(promptTitle(pr))}</h3><p>${promptText(pr)}</p>`;
+    h=`<div class="card-c act" data-seq="${pr.seq}"><div class="act-ic">${emb(er)}</div><h3>${esc(promptTitle(pr))}</h3><p>${promptText(pr)}</p>`;
     if(pr.k==="dictAsk"){ h+=`<div class="row c"><button class="btn-ghost" data-dict="0">${esc(t("no"))}</button><button class="btn-primary" data-dict="1">🎖️ ${esc(t("dictYes"))}</button></div>`; }
     else if(pr.k==="witch"){
       const w=APP.ui.witch||{};
@@ -727,6 +742,7 @@ function renderCenter(){
   } else if(st.status==="running"){
     const info=centerInfo(); if(info) h=`<div class="card-c slim">${info}</div>`;
   }
+  if(el._h===h) return; el._h=h;
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
   b("#copyInv",()=>{ copyText(gameLink()); toast(t("codeCopied")); });

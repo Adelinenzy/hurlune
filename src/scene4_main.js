@@ -188,6 +188,13 @@
         if(p.k===1){ p.v[0]+=Math.sin(t*3+i)*dt*.8; p.v[1]-=dt*.2; }
         if(p.k===3){ p.v[0]=Math.sin(t*.8+p.seed*20)*.3; if(p.p[1]<0){ parts.splice(i,1); continue; } }
         if(p.k===4){ p.v[0]+=Math.sin(t*1.3+p.seed*9)*dt*.3; p.v[2]+=Math.cos(t*1.1+p.seed*9)*dt*.3; } }
+      if(fxK&&!preview){ const P={cupid:[[3,.6,1.4],1],seer:[[.9,1.2,3.4],1],witch:[[.6,3,.7],1],guard:[[.8,1.6,3.6],1],white:[[2.6,2.8,3.2],1],pyro:[[3.6,1.4,.3],1],rat:[[.9,2.4,.6],2],heir:[[3.2,2.6,.9],1],hunter:[[3.4,.5,.3],1],grave:[[.9,.7,.5],2],mayor:[[3.4,2.8,1],1]}[fxK];
+        if(P){ const [col,kd]=P; const rate=kd===2?6:28;
+          for(let i=0;i<Math.round(dt*rate+Math.random()*.6);i++){ const a=Math.random()*Math.PI*2, r=kd===2?2+Math.random()*4:.6+Math.random()*1.4;
+            if(fxK==="guard"){ const rr=2.4; emit(1,[Math.sin(a)*rr,.2+Math.random()*2.4,Math.cos(a)*rr],[0,.15,0],2.2,.06,[col[0]/4,col[1]/4,col[2]/4,1]); }
+            else if(fxK==="witch"&&Math.random()<.5) emit(1,[Math.sin(a)*r,1.4,Math.cos(a)*r],[(Math.random()-.5)*.3,.9+Math.random()*.6,(Math.random()-.5)*.3],2.4,.07,[.9/4,.3/4,1/4,1]);
+            else if(kd===2) emit(2,[Math.sin(a)*r,.3,Math.cos(a)*r],[(Math.random()-.5)*.1,.12,(Math.random()-.5)*.1],6,1.4,[col[0]*.08,col[1]*.08,col[2]*.08,.25]);
+            else { const sp=fxK==="seer"?1.6:.8; emit(1,[Math.sin(a)*r,1.6+Math.random()*1.2,Math.cos(a)*r],[Math.cos(a)*sp*(fxK==="seer"?1:.2),.5+Math.random()*.8,-Math.sin(a)*sp*(fxK==="seer"?1:.2)],2.6+Math.random(),.06+Math.random()*.04,[col[0]/4,col[1]/4,col[2]/4,1]); } } } }
       if(parts.length>3500) parts.splice(0,parts.length-3500);
     }
     function fillParts(add,S,t){
@@ -357,7 +364,7 @@
       if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,.6,1.15);
         el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
     }
-    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false, headMode=false, onReady=null;
+    let fxK=null, prevGround=null, raf=0, labels=opts.labels||null, cheer=false, headMode=false, onReady=null;
     const length3=a=>Math.hypot(a[0],a[1],a[2]);
     function project(p){ const m=VPm; if(!m) return {x:0,y:0,w:-1}; const x=m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12], y=m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13], w=m[3]*p[0]+m[7]*p[1]+m[11]*p[2]+m[15]; return {x:(x/w*.5+.5)*W,y:(1-(y/w*.5+.5))*H,w}; }
     function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,c.rig?.22:.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
@@ -374,7 +381,7 @@
       setPlayers, setVotes(v){ votes=v||{}; }, speak(id){ if(chars[id]) chars[id].talk=2.4; },
       setMood(m){ if(MOOD_TOD[m]==null) return; mood=m; todT=MOOD_TOD[m]; },
       setTheme(th){ if(th===theme||preview) return; parts.length=0; loadWorld(th); },
-      onCharReady(f){ onReady=f; }, charReady(){ const c=chars.me; return !c||!c.slug||!!c.rig; },
+      onCharReady(f){ onReady=f; }, fx(k){ fxK=k||null; }, charReady(){ const c=chars.me; return !c||!c.slug||!!c.rig; },
       setQuality(k){ if(!QUAL[k]) return; qk=k; q=Object.assign({},QUAL[k]); for(const id in chars){ chars[id].key=null; } if(!hasFloat) q.msaa=0; applyQuality(); RT=null; },
       setAvatar(av){ if(preview) setPlayers([{id:"me",av,alive:true}],"me"); },
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
@@ -403,7 +410,7 @@ const V3=(function(){
     setPlayers:(l,m)=>E()&&E().setPlayers(l,m), setVotes:v=>E()&&E().setVotes(v), setMood:m=>E()&&E().setMood(m),
     setTheme:th=>E()&&E().setTheme(legacy&&th==="camp"?"forest":th), pause:b=>E()&&E().pause(b), speak:id=>E()&&E().speak(id),
     setPick:(f,c)=>E()&&E().setPick(f,c), anchor:id=>E()?E().anchor(id):null,
-    setQuality:k=>{ if(eng) eng.setQuality(k); }, get ok(){ return ok; }, get r4(){ return !!eng; }
+    setQuality:k=>{ if(eng) eng.setQuality(k); }, fx:k=>{ if(eng) eng.fx(k); }, get ok(){ return ok; }, get r4(){ return !!eng; }
   };
 })();
 

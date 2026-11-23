@@ -435,3 +435,22 @@ img.pface{width:100%;height:100%;object-fit:cover;display:block;border-radius:50
 .votes3 b{font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .votes,.votes3{z-index:5}
 .votes3 i img.pface,.votes i img.pface,.votes3 i .face-w,.votes i .face-w{width:20px!important;height:20px!important;max-width:none}
+/* ---- animation des rôles qui agissent ---- */
+.rolefx{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity 1s}
+.rolefx.show{opacity:1}
+.rf-card{position:absolute;left:50%;top:22%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;animation:rfFloat 4s ease-in-out infinite}
+.rf-em{width:92px;height:92px;filter:drop-shadow(0 0 18px var(--fxc,#a58bff));opacity:.92;animation:rfPulse 2.4s ease-in-out infinite}
+.rf-em svg{width:100%;height:100%}
+.rf-t{font-family:Philosopher,serif;font-weight:700;font-size:17px;color:#fff;text-shadow:0 0 12px var(--fxc,#a58bff),0 2px 4px #000;letter-spacing:.04em}
+.rf-glow{position:absolute;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,var(--fxc,#a58bff) 0%,transparent 65%);opacity:.35;top:50%;left:50%;transform:translate(-50%,-58%);animation:rfPulse 2.4s ease-in-out infinite}
+.rf-parts span{position:absolute;bottom:-30px;color:var(--fxc,#a58bff);text-shadow:0 0 10px var(--fxc,#a58bff);animation:rfRise linear infinite;opacity:0}
+@keyframes rfRise{0%{transform:translateY(0) rotate(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-110vh) rotate(160deg);opacity:0}}
+@keyframes rfFloat{50%{transform:translate(-50%,-56%)}}
+@keyframes rfPulse{50%{transform:scale(1.08);opacity:1}}
+.fx-cupid{--fxc:#ff6fae} .fx-seer{--fxc:#6fb8ff} .fx-witch{--fxc:#7dff8a} .fx-guard{--fxc:#7fa8ff} .fx-white{--fxc:#e8f2ff} .fx-pyro{--fxc:#ff8a2a}
+.fx-rat{--fxc:#9bdc4a} .fx-heir{--fxc:#ffd36a} .fx-hunter{--fxc:#ff4a3a} .fx-grave{--fxc:#c9a77a} .fx-mayor{--fxc:#ffd84a}
+.fx-witch .rf-parts span:nth-child(2n){color:#c47dff;text-shadow:0 0 10px #c47dff}
+.fx-guard .rf-glow{border:2px solid var(--fxc);background:radial-gradient(circle,transparent 55%,var(--fxc) 100%);animation:rfShield 2.2s ease-in-out infinite}
+@keyframes rfShield{0%{transform:translate(-50%,-58%) scale(.7);opacity:.6}100%{transform:translate(-50%,-58%) scale(1.25);opacity:0}}
+.fx-hunter .rf-em{animation:rfAim 1.4s ease-in-out infinite} @keyframes rfAim{0%,100%{transform:translateX(-6px)}50%{transform:translateX(6px) scale(1.05)}}
+.fx-seer .rf-em{animation:rfSpin 6s linear infinite} @keyframes rfSpin{to{transform:rotate(360deg)}}
