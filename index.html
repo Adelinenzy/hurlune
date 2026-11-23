@@ -1409,13 +1409,14 @@ function cardBackHTML(){
 /* ===================== I18N ===================== */
 const I18N = {
 en:{
+ codeCopied:"Code copied! Send it to your friends: they paste it into “Join”.",
  decor:"Game scenery",decorHelp:"This only changes your own screen: each player can pick their own.",th_village:"Village square",th_village_d:"3D · campfire",th_forest:"Haunted glade",th_forest_d:"3D · standing stones, forest",th_winter:"Winter hamlet",th_winter_d:"3D · snow",th_classic:"Classic",th_classic_d:"2D · lightweight",chatOpts:"Chat",optTr:"Automatic translation",optTrD:"Other players’ messages are shown translated into your language (same as the 🌐 button).",soundOpts:"Sound",optFx:"Sound effects",optFxD:"Deaths, votes, timer, turn changes.",optAmb:"Ambience",optAmbD:"Quiet background: wind, fire, night.",volume:"Volume",
  oaBuiltin:"Built-in translation key active: nothing to do.",oaOverride:"(optional) your own key",
  bn_night:"Night {n}",bn_day:"Day {n}",rv_title:"Your card has been dealt",rv_changed:"Your role has changed!",rv_click:"Click the card to turn it over",rv_ok:"Let’s go!",youWon:"You won!",youLost:"You lost…",
  oaKey:"OpenAI API key (optional)",oaModel:"OpenAI model",oaHelp:"When you host, this key translates every message of the game for everyone (your friends need nothing). The key is stored only on this device. Without a key: Google Translate.",oaErr:"OpenAI error ({e}): check the key or the model. Google Translate is used as a fallback.",
  play:"Play",hubTitle:"The village needs you",hubSub:"Online Werewolf with friends — no account, in English, French and Russian.",
  pseudo:"Your nickname",pseudoPh:"Type your nickname…",newLook:"New look",av_skin:"Skin",av_hair:"Hairstyle",av_hairc:"Hair",av_color:"Colour",av_outfit:"Outfit",av_acc:"Accessory",
- createGame:"Create a game",orJoin:"or join",joinPh:"Paste the game link",join:"Join",invited:"You’ve been invited to a game! Pick a nickname, then join.",joinThis:"Join the game",
+ createGame:"Create a game",orJoin:"or join",joinPh:"Paste the game link or code",join:"Join",invited:"You’ve been invited to a game! Pick a nickname, then join.",joinThis:"Join the game",
  recent:"Recent games",rolesTitle:"The village roles",needPseudo:"Pick a nickname first.",badCode:"Invalid game link.",
  camp_wolf:"Werewolf camp",camp_village:"Village camp",camp_solo:"Loner",
  defaultGameName:"{n}’s game",editGame:"Edit game",gameName:"Game name",seats:"Players",type:"Type",fun:"Fun",serious:"Serious",speed:"Pace",normal:"Normal",fast:"Fast",
@@ -1466,13 +1467,14 @@ en:{
  d_heir:"On the first night, picks a player whose role he’ll inherit when they die.",d_plunderer:"Takes the role of the first player to die.",d_pyromancer:"Each night, douses a player in Greek fire or blows up every barrel."
 },
 fr:{
+ codeCopied:"Code copié ! Envoie-le à tes amis : ils le collent dans « Rejoindre ».",
  decor:"Décor du jeu",decorHelp:"Ce choix ne concerne que ton écran : chaque joueur peut choisir le sien.",th_village:"Place du village",th_village_d:"3D · feu de camp",th_forest:"Clairière hantée",th_forest_d:"3D · menhirs, forêt",th_winter:"Hameau d’hiver",th_winter_d:"3D · neige",th_classic:"Classique",th_classic_d:"2D · léger",chatOpts:"Chat",optTr:"Traduction automatique",optTrD:"Les messages des autres joueurs s’affichent traduits dans ta langue (même effet que le bouton 🌐).",soundOpts:"Sons",optFx:"Effets sonores",optFxD:"Morts, votes, minuteur, changements de tour.",optAmb:"Ambiance",optAmbD:"Fond sonore discret : vent, feu, nuit.",volume:"Volume",
  oaBuiltin:"Clé de traduction intégrée active : rien à faire.",oaOverride:"(optionnel) ta propre clé",
  bn_night:"Nuit {n}",bn_day:"Jour {n}",rv_title:"Ta carte a été distribuée",rv_changed:"Ton rôle a changé !",rv_click:"Clique sur la carte pour la retourner",rv_ok:"C’est parti !",youWon:"Tu as gagné !",youLost:"Tu as perdu…",
  oaKey:"Clé API OpenAI (optionnel)",oaModel:"Modèle OpenAI",oaHelp:"Si tu es l’hôte, ta clé traduit tous les messages de la partie pour tout le monde (tes amis n’ont besoin de rien). La clé reste enregistrée uniquement sur cet appareil. Sans clé : Google Traduction.",oaErr:"Erreur OpenAI ({e}) : vérifie ta clé ou le modèle. Google Traduction est utilisé en secours.",
  play:"Jouer",hubTitle:"Le village a besoin de toi",hubSub:"Loups-Garous en ligne entre amis — sans compte, en français, russe et anglais.",
  pseudo:"Ton pseudo",pseudoPh:"Écris ton pseudo…",newLook:"Nouveau look",av_skin:"Peau",av_hair:"Coiffure",av_hairc:"Cheveux",av_color:"Couleur",av_outfit:"Tenue",av_acc:"Accessoire",
- createGame:"Créer une partie",orJoin:"ou rejoindre",joinPh:"Colle le lien de la partie",join:"Rejoindre",invited:"Tu as été invité·e à une partie ! Choisis ton pseudo puis rejoins-la.",joinThis:"Rejoindre la partie",
+ createGame:"Créer une partie",orJoin:"ou rejoindre",joinPh:"Colle le lien ou le code de la partie",join:"Rejoindre",invited:"Tu as été invité·e à une partie ! Choisis ton pseudo puis rejoins-la.",joinThis:"Rejoindre la partie",
  recent:"Parties récentes",rolesTitle:"Les rôles du village",needPseudo:"Choisis d’abord un pseudo.",badCode:"Lien de partie invalide.",
  camp_wolf:"Camp des Loups-Garous",camp_village:"Camp du Village",camp_solo:"Solitaire",
  defaultGameName:"Partie de {n}",editGame:"Modifier la partie",gameName:"Nom de la partie",seats:"Joueurs",type:"Type",fun:"Fun",serious:"Sérieuse",speed:"Rythme",normal:"Normal",fast:"Rapide",
@@ -1523,13 +1525,14 @@ fr:{
  d_heir:"La première nuit, choisit un joueur dont il héritera du rôle à sa mort.",d_plunderer:"Récupère le rôle du premier joueur mort de la partie.",d_pyromancer:"Chaque nuit, arrose un joueur de feu grégeois ou déclenche l’explosion de tous les tonneaux."
 },
 ru:{
+ codeCopied:"Код скопирован! Отправь его друзьям: пусть вставят его в поле «Войти».",
  decor:"Оформление",decorHelp:"Выбор влияет только на твой экран: каждый игрок выбирает своё.",th_village:"Деревенская площадь",th_village_d:"3D · костёр",th_forest:"Проклятая поляна",th_forest_d:"3D · менгиры, лес",th_winter:"Зимняя деревня",th_winter_d:"3D · снег",th_classic:"Классика",th_classic_d:"2D · лёгкое",chatOpts:"Чат",optTr:"Автоперевод",optTrD:"Сообщения других игроков показываются переведёнными на твой язык (как кнопка 🌐).",soundOpts:"Звук",optFx:"Звуковые эффекты",optFxD:"Смерти, голоса, таймер, смена хода.",optAmb:"Атмосфера",optAmbD:"Тихий фон: ветер, костёр, ночь.",volume:"Громкость",
  oaBuiltin:"Встроенный ключ перевода активен: ничего делать не нужно.",oaOverride:"(необязательно) свой ключ",
  bn_night:"Ночь {n}",bn_day:"День {n}",rv_title:"Тебе раздали карту",rv_changed:"Твоя роль изменилась!",rv_click:"Нажми на карту, чтобы перевернуть её",rv_ok:"Поехали!",youWon:"Ты победил(а)!",youLost:"Ты проиграл(а)…",
  oaKey:"Ключ API OpenAI (необязательно)",oaModel:"Модель OpenAI",oaHelp:"Если ты хост, твой ключ переводит все сообщения игры для всех (друзьям ничего не нужно). Ключ хранится только на этом устройстве. Без ключа используется Google Переводчик.",oaErr:"Ошибка OpenAI ({e}): проверь ключ или модель. Используется Google Переводчик.",
  play:"Играть",hubTitle:"Деревне нужна твоя помощь",hubSub:"Оборотни онлайн с друзьями — без регистрации, на русском, французском и английском.",
  pseudo:"Твой ник",pseudoPh:"Введи свой ник…",newLook:"Новый образ",av_skin:"Кожа",av_hair:"Причёска",av_hairc:"Волосы",av_color:"Цвет",av_outfit:"Одежда",av_acc:"Аксессуар",
- createGame:"Создать игру",orJoin:"или войти",joinPh:"Вставь ссылку на игру",join:"Войти",invited:"Тебя пригласили в игру! Выбери ник и заходи.",joinThis:"Войти в игру",
+ createGame:"Создать игру",orJoin:"или войти",joinPh:"Вставь ссылку или код игры",join:"Войти",invited:"Тебя пригласили в игру! Выбери ник и заходи.",joinThis:"Войти в игру",
  recent:"Недавние игры",rolesTitle:"Роли деревни",needPseudo:"Сначала выбери ник.",badCode:"Неверная ссылка на игру.",
  camp_wolf:"Лагерь оборотней",camp_village:"Лагерь деревни",camp_solo:"Одиночка",
  defaultGameName:"Игра {n}",editGame:"Изменить игру",gameName:"Название игры",seats:"Игроки",type:"Тип",fun:"Весёлая",serious:"Серьёзная",speed:"Темп",normal:"Обычный",fast:"Быстрый",
@@ -2317,8 +2320,9 @@ function parseHash(){
   const h=location.hash.slice(1); const m=h.match(/^g=([a-z0-9]+)\.([A-Za-z0-9_-]+)(?:\.(\d))?/);
   return m?{room:m[1],key:m[2],b:m[3]!=null?+m[3]:null}:null;
 }
-const PUBLIC_URL="https://adelinenzy.github.io/hurlune/";
-function gameLink(){ const g=APP.game; const base=location.protocol==="file:"?PUBLIC_URL:location.href.split("#")[0].split("?")[0]+(USE_LOCAL?location.search:""); return base+"#g="+g.room+"."+g.key+(g.b!=null?"."+g.b:""); }
+const IS_APP=location.protocol==="file:";
+function gameHash(){ const g=APP.game; return "g="+g.room+"."+g.key+(g.b!=null?"."+g.b:""); }
+function gameLink(){ if(IS_APP) return "Hurlune "+gameHash(); return location.href.split("#")[0].split("?")[0]+(USE_LOCAL?location.search:"")+"#"+gameHash(); }
 function addRecent(){ const g=APP.game; let r=lsGet("recent")||[]; r=r.filter(x=>x.room!==g.room); r.unshift({room:g.room,key:g.key,b:g.b,name:(APP.st&&APP.st.name)||g.name||"",t:Date.now()}); lsSet("recent",r.slice(0,6)); }
 
 async function createGame(cfg){
@@ -2333,7 +2337,7 @@ async function startHostSession(host){
   try{ host.broker=await room.connect(); }catch(e){ APP.ui.connecting=false; APP.ui.joinErr="relayErr"; render(); return; }
   room.on("status",s=>{ APP.ui.netStatus=s; render(); });
   APP.game={room:host.roomId,key:host.key,b:host.broker,name:host.S.name};
-  history.replaceState(null,"",gameLink());
+  history.replaceState(null,"",location.pathname+location.search+"#"+gameHash());
   APP.host=host; APP.room=room; window.HOST=host;
   host.localSink={state:onState,priv:onPriv}; host.translator=hostTranslator();
   host.attach(room);
@@ -2521,7 +2525,7 @@ function bindStatic(){
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
     applyTheme();
-    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("linkCopied")); };
+    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t(IS_APP?"codeCopied":"linkCopied")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
     $("#trBtn").onclick=()=>{ APP.set.tr=!APP.set.tr; saveSettings(); renderComposer(); renderChat(); };
@@ -2813,7 +2817,7 @@ function renderCenter(){
   }
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
-  b("#copyInv",()=>{ copyText(gameLink()); toast(t("linkCopied")); });
+  b("#copyInv",()=>{ copyText(gameLink()); toast(t(IS_APP?"codeCopied":"linkCopied")); });
   b("#editG",()=>openCreate(true));
   b("#forceG",()=>send({t:"forceStart"}));
   el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));

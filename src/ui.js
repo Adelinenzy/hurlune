@@ -145,8 +145,9 @@ function parseHash(){
   const h=location.hash.slice(1); const m=h.match(/^g=([a-z0-9]+)\.([A-Za-z0-9_-]+)(?:\.(\d))?/);
   return m?{room:m[1],key:m[2],b:m[3]!=null?+m[3]:null}:null;
 }
-const PUBLIC_URL="https://adelinenzy.github.io/hurlune/";
-function gameLink(){ const g=APP.game; const base=location.protocol==="file:"?PUBLIC_URL:location.href.split("#")[0].split("?")[0]+(USE_LOCAL?location.search:""); return base+"#g="+g.room+"."+g.key+(g.b!=null?"."+g.b:""); }
+const IS_APP=location.protocol==="file:";
+function gameHash(){ const g=APP.game; return "g="+g.room+"."+g.key+(g.b!=null?"."+g.b:""); }
+function gameLink(){ if(IS_APP) return "Hurlune "+gameHash(); return location.href.split("#")[0].split("?")[0]+(USE_LOCAL?location.search:"")+"#"+gameHash(); }
 function addRecent(){ const g=APP.game; let r=lsGet("recent")||[]; r=r.filter(x=>x.room!==g.room); r.unshift({room:g.room,key:g.key,b:g.b,name:(APP.st&&APP.st.name)||g.name||"",t:Date.now()}); lsSet("recent",r.slice(0,6)); }
 
 async function createGame(cfg){
@@ -161,7 +162,7 @@ async function startHostSession(host){
   try{ host.broker=await room.connect(); }catch(e){ APP.ui.connecting=false; APP.ui.joinErr="relayErr"; render(); return; }
   room.on("status",s=>{ APP.ui.netStatus=s; render(); });
   APP.game={room:host.roomId,key:host.key,b:host.broker,name:host.S.name};
-  history.replaceState(null,"",gameLink());
+  history.replaceState(null,"",location.pathname+location.search+"#"+gameHash());
   APP.host=host; APP.room=room; window.HOST=host;
   host.localSink={state:onState,priv:onPriv}; host.translator=hostTranslator();
   host.attach(room);
@@ -349,7 +350,7 @@ function bindStatic(){
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
     applyTheme();
-    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("linkCopied")); };
+    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t(IS_APP?"codeCopied":"linkCopied")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
     $("#trBtn").onclick=()=>{ APP.set.tr=!APP.set.tr; saveSettings(); renderComposer(); renderChat(); };
@@ -641,7 +642,7 @@ function renderCenter(){
   }
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
-  b("#copyInv",()=>{ copyText(gameLink()); toast(t("linkCopied")); });
+  b("#copyInv",()=>{ copyText(gameLink()); toast(t(IS_APP?"codeCopied":"linkCopied")); });
   b("#editG",()=>openCreate(true));
   b("#forceG",()=>send({t:"forceStart"}));
   el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));

@@ -19,10 +19,9 @@ Jeu de Loups-Garous en ligne inspiré du fonctionnement de Wolfy, pensé pour jo
 
 ## Jouer
 
-- **Dans le navigateur** : https://adelinenzy.github.io/hurlune/
 - **Appli PC/Mac/Linux** : onglet [Releases](../../releases) → télécharge le fichier pour ton système.
 
-Crée une partie, puis clique sur **Inviter** et envoie le lien à tes amis. La partie démarre dès que toutes les places sont prises, ou quand l'hôte clique sur « Lancer à N ».
+Crée une partie, clique sur **Inviter** et envoie le code à tes amis : ils le collent dans « Rejoindre ». La partie démarre dès que toutes les places sont prises, ou quand l'hôte clique sur « Lancer à N ».
 
 > L'hôte (celui qui crée la partie) fait tourner le jeu : il doit garder la page ou l'appli ouverte pendant la partie.
 
@@ -57,4 +56,4 @@ Les sources sont dans `src/`. Lance `python3 tools/build.py` pour régénérer `
 - **Интерфейс на русском и французском.**
 - **29 ролей.**
 
-Играть в браузере: https://adelinenzy.github.io/hurlune/. Приложение для компьютера можно скачать во вкладке *Releases*.
+Приложение для компьютера можно скачать во вкладке *Releases*.
