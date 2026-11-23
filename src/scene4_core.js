@@ -114,7 +114,7 @@ const R4 = {};
   R4.STD_FS=`#version 300 es
   precision highp float; precision highp sampler2DShadow;
   in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; out vec4 o;
-  uniform sampler2D uAlb,uNrm;
+  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn;
   uniform vec3 uCam,uKeyDir,uKeyCol,uSkyCol,uGndCol,uFogCol,uFogSun,uFireP,uFireC,uTint,uHiCol,uLampC; uniform vec3 uLamp[4];
   uniform float uFogD,uFogH,uTime,uWin,uHi,uAlpha,uFireR,uShadowOn,uFireShOn,uSnow,uGround,uClr;
   uniform sampler2DShadow uShadow; uniform mat4 uLightVP; uniform highp samplerCube uFireSh; uniform float uShTexel;
@@ -146,6 +146,13 @@ const R4 = {};
       vec3 dp1=dFdx(vW),dp2=dFdy(vW); vec2 du1=dFdx(vUV),du2=dFdy(vUV); vec3 d2p=cross(dp2,n),d1p=cross(n,dp1);
       vec3 T=d2p*du1.x+d1p*du2.x, B=d2p*du1.y+d1p*du2.y; float iv=inversesqrt(max(max(dot(T,T),dot(B,B)),1e-12));
       n=normalize(mat3(T*iv,B*iv,n)*vec3(tn.xy*.8,tn.z)); wrap=.3; rough=.6; spec=.035; }
+    if(m>11.5){ vec4 tx=texture(uAlb,vUV); if(m>12.5&&tx.a<.42) discard;
+      alb=tx.rgb*mix(vec3(1.),vC.rgb,uVcol)*uTint;
+      if(uNrmOn>.5){ vec3 tn=texture(uNrm,vUV).xyz*2.-1.; vec3 dp1=dFdx(vW),dp2=dFdy(vW); vec2 du1=dFdx(vUV),du2=dFdy(vUV); vec3 d2p=cross(dp2,n),d1p=cross(n,dp1);
+        vec3 T=d2p*du1.x+d1p*du2.x, B=d2p*du1.y+d1p*du2.y; float iv=inversesqrt(max(max(dot(T,T),dot(B,B)),1e-12)); n=normalize(mat3(T*iv,B*iv,n)*vec3(tn.xy,tn.z)); }
+      rough=.85; spec=.02; if(m>12.5){ wrap=.6; }
+      if(uRock>.5){ float moss=smoothstep(.55,.85,n.y+(fbm(vW*1.3)-.5)*.5); alb=mix(alb,vec3(.1,.16,.05)*(.8+.4*fbm(vW*3.)),moss*.7*(1.-uSnow)*uGround); }
+      alb=mix(alb,vec3(.88,.92,.98),smoothstep(.3,.7,n.y)*uSnow*(m>12.5?.9:.85)); }
     vec3 V=normalize(uCam-vW); float a=rough*rough;
     float ndl=dot(n,uKeyDir); float dif=max((ndl+wrap)/(1.+wrap),0.);
     float sh=uShadowOn>.5?sunShadow(vW,n):1.;
@@ -167,12 +174,13 @@ const R4 = {};
     float fa=1.-exp(-dist*uFogD*exp(-max(vW.y,0.)*uFogH));
     vec3 vd=normalize(vW-uCam); vec3 fc=uFogCol+uFogSun*pow(max(dot(vd,uKeyDir),0.),8.);
     if(m==1.||m==2.) fa*=.55;
+    if(m>12.5) col+=alb*uFireC*att*.12*max(-dot(n,l),0.); // un peu de lumière traversant les feuilles
     col=mix(col,fc,clamp(fa,0.,1.));
     if(uAlpha<.999){ float th=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); if(th>uAlpha) discard; }
     o=vec4(col,1.); }`;
   R4.DEPTH_FS=`#version 300 es
-  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; uniform vec3 uFireP; uniform float uCube; out vec4 o;
-  void main(){ o=vec4(uCube>.5?length(vW-uFireP):0.); }`;
+  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; uniform vec3 uFireP; uniform float uCube,uCut; uniform sampler2D uAlb; out vec4 o;
+  void main(){ if(uCut>.5&&texture(uAlb,vUV).a<.42) discard; o=vec4(uCube>.5?length(vW-uFireP):0.); }`;
   // herbe instanciée
   R4.GRASS_VS=`#version 300 es
   layout(location=0) in vec3 aP; layout(location=3) in vec4 aI; layout(location=4) in vec3 aIC;

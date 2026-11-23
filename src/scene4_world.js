@@ -57,7 +57,7 @@
     g.box({t:loc(w*.28,hh+1.3,-.4),r:[0,ry,0],s:[.45,1.4,.45]},lin([.45,.32,.26]),ROCK);
   }
 
-  R4.buildWorld=function(gl,th){
+  R4.buildWorld=function(gl,th,kit){
     const far=new Geo(), near=new Geo(); const snow=th==="winter";
     const hgt=ground(far,th);
     // feu : pierres, bûches, braises
@@ -69,14 +69,14 @@
       for(let r=2.3;r<12.6;r+=.58){ const n=Math.floor(2*Math.PI*r/.62); for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+r; const sh=.85+hash(r*7+k)*.25; far.box({t:[Math.sin(a)*r,.01,Math.cos(a)*r],r:[0,a,0],s:[.54,.04,.48]},lin([.44*sh,.41*sh,.37*sh]),ROCK); } }
       [0,1,2,3,4,6,7,8,9,10].forEach(k=>house(far,k,k/11*Math.PI*2+.1,17+hash(k)*2));
       { const a=5/11*Math.PI*2+.1,r=21,x=Math.sin(a)*r,z=Math.cos(a)*r; far.box({t:[x,3,z],r:[0,a,0],s:[4,6,5]},lin([.7,.68,.64]),ROCK); far.box({t:[x,5.5,z],r:[0,a,0],s:[2.2,11,2.2]},lin([.72,.7,.66]),ROCK); far.cyl({t:[x,11,z]},0,1.7,4.5,4,lin([.28,.28,.34]),CLOTH); far.box({t:[x+Math.sin(a+Math.PI)*1.12,8.4,z+Math.cos(a+Math.PI)*1.12],r:[0,a,0],s:[.8,1.1,.1]},lin([1,.72,.32]),WIN); }
-      for(let i=0;i<70;i++){ const a=hash(i*3.7)*Math.PI*2,r=28+hash(i*5.1)*22; (i%3?conifer:leafy)(far,Math.sin(a)*r,hgt(Math.sin(a)*r,Math.cos(a)*r),Math.cos(a)*r,.9+hash(i*7.3)*.7,i,false); }
+      if(!kit) for(let i=0;i<70;i++){ const a=hash(i*3.7)*Math.PI*2,r=28+hash(i*5.1)*22; (i%3?conifer:leafy)(far,Math.sin(a)*r,hgt(Math.sin(a)*r,Math.cos(a)*r),Math.cos(a)*r,.9+hash(i*7.3)*.7,i,false); }
     } else {
       const ring=th==="camp"?16:11.5;
-      for(let i=0;i<14;i++){ const a=hash(i*9.1)*Math.PI*2, r=6.5+hash(i*2.3)*5; rock(far,Math.sin(a)*r,.05,Math.cos(a)*r,.35+hash(i)*.55,i*7.1,null,.65); }
+      if(!kit) for(let i=0;i<14;i++){ const a=hash(i*9.1)*Math.PI*2, r=6.5+hash(i*2.3)*5; rock(far,Math.sin(a)*r,.05,Math.cos(a)*r,.35+hash(i)*.55,i*7.1,null,.65); }
       const NT=th==="camp"?90:150;
-      for(let i=0;i<NT;i++){ const a=hash(i*3.7)*Math.PI*2,r=ring+hash(i*5.1)*(th==="camp"?30:28); const x=Math.sin(a)*r,z=Math.cos(a)*r; const s=.85+hash(i*7.3)*.75;
+      if(!kit) for(let i=0;i<NT;i++){ const a=hash(i*3.7)*Math.PI*2,r=ring+hash(i*5.1)*(th==="camp"?30:28); const x=Math.sin(a)*r,z=Math.cos(a)*r; const s=.85+hash(i*7.3)*.75;
         ((th==="forest"&&i%3===0)?leafy:conifer)(far,x,hgt(x,z),z,s,i+1,snow); }
-      for(let i=0;i<40;i++){ const a=hash(i*5.9)*Math.PI*2,r=8+hash(i*1.9)*10; far.blob({t:[Math.sin(a)*r,.15,Math.cos(a)*r],s:[1,.6,1]},.45+hash(i)*.4,1,.3,2,i,snow?lin([.85,.88,.95]):lin([.16,.28,.1]),LEAF); }
+      if(!kit) for(let i=0;i<40;i++){ const a=hash(i*5.9)*Math.PI*2,r=8+hash(i*1.9)*10; far.blob({t:[Math.sin(a)*r,.15,Math.cos(a)*r],s:[1,.6,1]},.45+hash(i)*.4,1,.3,2,i,snow?lin([.85,.88,.95]):lin([.16,.28,.1]),LEAF); }
       if(th==="camp"){ for(let i=0;i<9;i++){ const a=-.9+i*.22, r=19+hash(i)*3; rock(far,Math.sin(a)*r,0,Math.cos(a)*r,4.5+hash(i*3)*3.5,40+i*2.3,lin([.33,.31,.3]),1.25); } }
     }
     // montagnes

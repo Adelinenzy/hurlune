@@ -31,7 +31,7 @@
     if(!gl) return null;
     const hasFloat=!!gl.getExtension("EXT_color_buffer_float"); gl.getExtension("OES_texture_float_linear");
     const P={}; try{
-      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.skin=R4.compile(gl,R4.SKIN_VS,R4.STD_FS); P.skinD=R4.compile(gl,R4.SKIN_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
+      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.skin=R4.compile(gl,R4.SKIN_VS,R4.STD_FS); P.kit=R4.compile(gl,R4.KIT_VS,R4.STD_FS); P.kitD=R4.compile(gl,R4.KIT_VS,R4.DEPTH_FS); P.skinD=R4.compile(gl,R4.SKIN_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
       P.sky=R4.compile(gl,R4.SKY_VS,R4.SKY_FS); P.part=R4.compile(gl,R4.PART_VS,R4.PART_FS);
       P.bright=R4.compile(gl,R4.QUAD_VS,R4.BRIGHT_FS); P.down=R4.compile(gl,R4.QUAD_VS,R4.DOWN_FS); P.up=R4.compile(gl,R4.QUAD_VS,R4.UP_FS); P.comp=R4.compile(gl,R4.QUAD_VS,R4.COMP_FS);
     }catch(e){ console.warn("R4 shaders",e); return null; }
@@ -86,7 +86,19 @@
     let chars={}, order=[], me=null, votes={}, mood=opts.mood||"dusk", tod=MOOD_TOD[mood], todT=tod, paused=false, onPick=null, canPick=()=>false, hover=null;
     let camYaw=0, drag=0, dragging=false, dragX=0, moved=0, downId=null, zoom=1, T0=performance.now(), last=0, cine=0;
     const parts=[]; let pdata=new Float32Array(4096*12);
-    function loadWorld(th){ theme=th; if(world){ R4.free(gl,world.far); R4.free(gl,world.near); } world=R4.buildWorld(gl,th); applyQuality(); }
+    function kitOK(){ return opts.real!==false&&qk!=="low"; }
+    function loadWorld(th){ theme=th; if(world){ R4.free(gl,world.far); R4.free(gl,world.near); R4.freeKit(gl,world.kit); }
+      const useKit=kitOK()&&!!R4.KITS.nature; world=R4.buildWorld(gl,th,useKit);
+      if(useKit) world.kit=R4.buildKit(gl,R4.kitPlacements(th,world.hgt),th==="winter");
+      else if(kitOK()) R4.loadKit("nature").then(()=>{ if(theme===th&&world&&!world.kit) loadWorld(th); }).catch(e=>console.warn(e));
+      applyQuality(); }
+    function drawKit(p,shadow){ if(!world||!world.kit) return; const u=p.u;
+      for(const g of world.kit){ gl.uniform1f(u.uMat,g.cut?13:12);
+        gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE0);
+        if(shadow){ gl.uniform1f(u.uCut,g.cut); }
+        else { if(g.nrm){ gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); } gl.uniform1f(u.uNrmOn,g.nrm?1:0);
+          gl.uniform3fv(u.uTint,g.tint); gl.uniform1f(u.uVcol,g.vc); gl.uniform1f(u.uRock,g.rock); gl.uniform1f(u.uHi,0); gl.uniform3fv(u.uHiCol,[0,0,0]); gl.uniform1f(u.uAlpha,1); gl.uniform1f(u.uWin,0); }
+        gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,gl.UNSIGNED_INT,0); } }
     if(!preview) loadWorld(theme); else { world=null; makeShadow(q.shadow||1024); makeFireSh(8); }
 
     /* ---------- personnages ---------- */
@@ -278,7 +290,9 @@
         gl.uniformMatrix4fv(dp.u.uVP,false,S.lightVP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1); gl.uniform1f(dp.u.uCube,0);
         gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2,4);
         { const k=P.skinD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,S.lightVP); gl.uniform1f(k.u.uCube,0); gl.useProgram(dp.p); }
-        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t,P.skinD); gl.disable(gl.POLYGON_OFFSET_FILL); }
+        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t,P.skinD);
+        if(world&&world.kit){ const k=P.kitD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,S.lightVP); gl.uniform1f(k.u.uCube,0); gl.uniform1f(k.u.uTime,t); gl.uniform1f(k.u.uWind,1); gl.uniform1i(k.u.uAlb,3); gl.disable(gl.CULL_FACE); drawKit(k,true); gl.uniform1f(k.u.uCut,0); gl.useProgram(dp.p); }
+        gl.disable(gl.POLYGON_OFFSET_FILL); }
       // --- passe ombre du feu (6 faces)
       if(S.fireShOn){ gl.useProgram(dp.p); gl.uniform1f(dp.u.uCube,1); gl.uniform3fv(dp.u.uFireP,S.fireP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1);
         const dirs=[[[1,0,0],[0,-1,0]],[[-1,0,0],[0,-1,0]],[[0,1,0],[0,0,1]],[[0,-1,0],[0,0,-1]],[[0,0,1],[0,-1,0]],[[0,0,-1],[0,-1,0]]]; const pr=M.persp(Math.PI/2,1,.05,30);
@@ -300,6 +314,7 @@
       // monde
       const p=P.std; gl.useProgram(p.p); gl.uniformMatrix4fv(p.u.uVP,false,VPm); gl.uniform1f(p.u.uTime,t); gl.uniform1f(p.u.uWind,theme==="winter"?1.4:1); setLights(p,S,eye);
       if(world){ gl.disable(gl.CULL_FACE); drawM(p,world.far,I); drawM(p,world.near,I); gl.enable(gl.CULL_FACE); }
+      if(world&&world.kit){ const k=P.kit; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,VPm); gl.uniform1f(k.u.uTime,t); gl.uniform1f(k.u.uWind,theme==="winter"?1.4:1); setLights(k,S,eye); gl.disable(gl.CULL_FACE); drawKit(k,false); gl.useProgram(p.p); }
       else { /* aperçu : petit sol */ if(!prevGround){ const g=new R4.Geo(); g.cyl({t:[0,-.05,0]},1.4,1.5,.05,40,R4.lin([.22,.3,.14]),4); for(let i=0;i<9;i++){ const a=i/9*Math.PI*2; g.blob({t:[Math.sin(a)*1.45,.05,Math.cos(a)*1.45],s:[1,.6,1]},.14,1,.3,2,i,R4.lin([.4,.4,.4]),5); } prevGround=R4.mesh(gl,g); } drawM(p,prevGround,I); }
       { const k=P.skin; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,VPm); gl.uniform1f(k.u.uTime,t); setLights(k,S,eye); gl.useProgram(p.p); }
       gl.disable(gl.CULL_FACE); drawChars(p,true,t,P.skin);

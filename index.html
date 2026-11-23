@@ -2489,7 +2489,7 @@ const R4 = {};
   R4.STD_FS=`#version 300 es
   precision highp float; precision highp sampler2DShadow;
   in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; out vec4 o;
-  uniform sampler2D uAlb,uNrm;
+  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn;
   uniform vec3 uCam,uKeyDir,uKeyCol,uSkyCol,uGndCol,uFogCol,uFogSun,uFireP,uFireC,uTint,uHiCol,uLampC; uniform vec3 uLamp[4];
   uniform float uFogD,uFogH,uTime,uWin,uHi,uAlpha,uFireR,uShadowOn,uFireShOn,uSnow,uGround,uClr;
   uniform sampler2DShadow uShadow; uniform mat4 uLightVP; uniform highp samplerCube uFireSh; uniform float uShTexel;
@@ -2521,6 +2521,13 @@ const R4 = {};
       vec3 dp1=dFdx(vW),dp2=dFdy(vW); vec2 du1=dFdx(vUV),du2=dFdy(vUV); vec3 d2p=cross(dp2,n),d1p=cross(n,dp1);
       vec3 T=d2p*du1.x+d1p*du2.x, B=d2p*du1.y+d1p*du2.y; float iv=inversesqrt(max(max(dot(T,T),dot(B,B)),1e-12));
       n=normalize(mat3(T*iv,B*iv,n)*vec3(tn.xy*.8,tn.z)); wrap=.3; rough=.6; spec=.035; }
+    if(m>11.5){ vec4 tx=texture(uAlb,vUV); if(m>12.5&&tx.a<.42) discard;
+      alb=tx.rgb*mix(vec3(1.),vC.rgb,uVcol)*uTint;
+      if(uNrmOn>.5){ vec3 tn=texture(uNrm,vUV).xyz*2.-1.; vec3 dp1=dFdx(vW),dp2=dFdy(vW); vec2 du1=dFdx(vUV),du2=dFdy(vUV); vec3 d2p=cross(dp2,n),d1p=cross(n,dp1);
+        vec3 T=d2p*du1.x+d1p*du2.x, B=d2p*du1.y+d1p*du2.y; float iv=inversesqrt(max(max(dot(T,T),dot(B,B)),1e-12)); n=normalize(mat3(T*iv,B*iv,n)*vec3(tn.xy,tn.z)); }
+      rough=.85; spec=.02; if(m>12.5){ wrap=.6; }
+      if(uRock>.5){ float moss=smoothstep(.55,.85,n.y+(fbm(vW*1.3)-.5)*.5); alb=mix(alb,vec3(.1,.16,.05)*(.8+.4*fbm(vW*3.)),moss*.7*(1.-uSnow)*uGround); }
+      alb=mix(alb,vec3(.88,.92,.98),smoothstep(.3,.7,n.y)*uSnow*(m>12.5?.9:.85)); }
     vec3 V=normalize(uCam-vW); float a=rough*rough;
     float ndl=dot(n,uKeyDir); float dif=max((ndl+wrap)/(1.+wrap),0.);
     float sh=uShadowOn>.5?sunShadow(vW,n):1.;
@@ -2542,12 +2549,13 @@ const R4 = {};
     float fa=1.-exp(-dist*uFogD*exp(-max(vW.y,0.)*uFogH));
     vec3 vd=normalize(vW-uCam); vec3 fc=uFogCol+uFogSun*pow(max(dot(vd,uKeyDir),0.),8.);
     if(m==1.||m==2.) fa*=.55;
+    if(m>12.5) col+=alb*uFireC*att*.12*max(-dot(n,l),0.); // un peu de lumière traversant les feuilles
     col=mix(col,fc,clamp(fa,0.,1.));
     if(uAlpha<.999){ float th=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); if(th>uAlpha) discard; }
     o=vec4(col,1.); }`;
   R4.DEPTH_FS=`#version 300 es
-  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; uniform vec3 uFireP; uniform float uCube; out vec4 o;
-  void main(){ o=vec4(uCube>.5?length(vW-uFireP):0.); }`;
+  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; uniform vec3 uFireP; uniform float uCube,uCut; uniform sampler2D uAlb; out vec4 o;
+  void main(){ if(uCut>.5&&texture(uAlb,vUV).a<.42) discard; o=vec4(uCube>.5?length(vW-uFireP):0.); }`;
   // herbe instanciée
   R4.GRASS_VS=`#version 300 es
   layout(location=0) in vec3 aP; layout(location=3) in vec4 aI; layout(location=4) in vec3 aIC;
@@ -2827,7 +2835,7 @@ const R4 = {};
     g.box({t:loc(w*.28,hh+1.3,-.4),r:[0,ry,0],s:[.45,1.4,.45]},lin([.45,.32,.26]),ROCK);
   }
 
-  R4.buildWorld=function(gl,th){
+  R4.buildWorld=function(gl,th,kit){
     const far=new Geo(), near=new Geo(); const snow=th==="winter";
     const hgt=ground(far,th);
     // feu : pierres, bûches, braises
@@ -2839,14 +2847,14 @@ const R4 = {};
       for(let r=2.3;r<12.6;r+=.58){ const n=Math.floor(2*Math.PI*r/.62); for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+r; const sh=.85+hash(r*7+k)*.25; far.box({t:[Math.sin(a)*r,.01,Math.cos(a)*r],r:[0,a,0],s:[.54,.04,.48]},lin([.44*sh,.41*sh,.37*sh]),ROCK); } }
       [0,1,2,3,4,6,7,8,9,10].forEach(k=>house(far,k,k/11*Math.PI*2+.1,17+hash(k)*2));
       { const a=5/11*Math.PI*2+.1,r=21,x=Math.sin(a)*r,z=Math.cos(a)*r; far.box({t:[x,3,z],r:[0,a,0],s:[4,6,5]},lin([.7,.68,.64]),ROCK); far.box({t:[x,5.5,z],r:[0,a,0],s:[2.2,11,2.2]},lin([.72,.7,.66]),ROCK); far.cyl({t:[x,11,z]},0,1.7,4.5,4,lin([.28,.28,.34]),CLOTH); far.box({t:[x+Math.sin(a+Math.PI)*1.12,8.4,z+Math.cos(a+Math.PI)*1.12],r:[0,a,0],s:[.8,1.1,.1]},lin([1,.72,.32]),WIN); }
-      for(let i=0;i<70;i++){ const a=hash(i*3.7)*Math.PI*2,r=28+hash(i*5.1)*22; (i%3?conifer:leafy)(far,Math.sin(a)*r,hgt(Math.sin(a)*r,Math.cos(a)*r),Math.cos(a)*r,.9+hash(i*7.3)*.7,i,false); }
+      if(!kit) for(let i=0;i<70;i++){ const a=hash(i*3.7)*Math.PI*2,r=28+hash(i*5.1)*22; (i%3?conifer:leafy)(far,Math.sin(a)*r,hgt(Math.sin(a)*r,Math.cos(a)*r),Math.cos(a)*r,.9+hash(i*7.3)*.7,i,false); }
     } else {
       const ring=th==="camp"?16:11.5;
-      for(let i=0;i<14;i++){ const a=hash(i*9.1)*Math.PI*2, r=6.5+hash(i*2.3)*5; rock(far,Math.sin(a)*r,.05,Math.cos(a)*r,.35+hash(i)*.55,i*7.1,null,.65); }
+      if(!kit) for(let i=0;i<14;i++){ const a=hash(i*9.1)*Math.PI*2, r=6.5+hash(i*2.3)*5; rock(far,Math.sin(a)*r,.05,Math.cos(a)*r,.35+hash(i)*.55,i*7.1,null,.65); }
       const NT=th==="camp"?90:150;
-      for(let i=0;i<NT;i++){ const a=hash(i*3.7)*Math.PI*2,r=ring+hash(i*5.1)*(th==="camp"?30:28); const x=Math.sin(a)*r,z=Math.cos(a)*r; const s=.85+hash(i*7.3)*.75;
+      if(!kit) for(let i=0;i<NT;i++){ const a=hash(i*3.7)*Math.PI*2,r=ring+hash(i*5.1)*(th==="camp"?30:28); const x=Math.sin(a)*r,z=Math.cos(a)*r; const s=.85+hash(i*7.3)*.75;
         ((th==="forest"&&i%3===0)?leafy:conifer)(far,x,hgt(x,z),z,s,i+1,snow); }
-      for(let i=0;i<40;i++){ const a=hash(i*5.9)*Math.PI*2,r=8+hash(i*1.9)*10; far.blob({t:[Math.sin(a)*r,.15,Math.cos(a)*r],s:[1,.6,1]},.45+hash(i)*.4,1,.3,2,i,snow?lin([.85,.88,.95]):lin([.16,.28,.1]),LEAF); }
+      if(!kit) for(let i=0;i<40;i++){ const a=hash(i*5.9)*Math.PI*2,r=8+hash(i*1.9)*10; far.blob({t:[Math.sin(a)*r,.15,Math.cos(a)*r],s:[1,.6,1]},.45+hash(i)*.4,1,.3,2,i,snow?lin([.85,.88,.95]):lin([.16,.28,.1]),LEAF); }
       if(th==="camp"){ for(let i=0;i<9;i++){ const a=-.9+i*.22, r=19+hash(i)*3; rock(far,Math.sin(a)*r,0,Math.cos(a)*r,4.5+hash(i*3)*3.5,40+i*2.3,lin([.33,.31,.3]),1.25); } }
     }
     // montagnes
@@ -2999,6 +3007,105 @@ const R4 = {};
     vec4 w=uM*S*vec4(aP,1.); vW=w.xyz; vN=mat3(uM)*mat3(S)*aN; vC=vec4(1.,1.,1.,11.); vUV=aUV; gl_Position=uVP*w; }`;
 })();
 
+/* ===================== R4 : décors texturés (Quaternius « Stylized Nature MegaKit », CC0) ===================== */
+(function(){
+  "use strict";
+  const {M,hash}=R4;
+  R4.KITS={}; const kw={}, kl={};
+  window.HURLUNE_KIT=function(name,d){ R4.KITS[name]=d; (kw[name]||[]).forEach(f=>f[0](d)); delete kw[name]; };
+  R4.loadKit=function(name){
+    if(R4.KITS[name]) return Promise.resolve(R4.KITS[name]);
+    return new Promise((res,rej)=>{ (kw[name]=kw[name]||[]).push([res,rej]); if(kl[name]) return; kl[name]=true;
+      const s=document.createElement("script"); s.src="chars/"+name+".js"; s.async=true;
+      s.onerror=()=>{ kl[name]=false; (kw[name]||[]).forEach(f=>f[1](new Error("kit "+name))); delete kw[name]; }; document.head.appendChild(s); });
+  };
+  const dec=new Map();
+  function model(name){
+    if(dec.has(name)) return dec.get(name); const K=R4.KITS.nature; const src=K&&K.models[name]; if(!src) return null;
+    const out=src.map(p=>{ const b=Uint8Array.from(atob(p.b),c=>c.charCodeAt(0)); const nv=p.nv; let o=0;
+      const u16=(n)=>{ const a=new Uint16Array(b.slice(o,o+n*2).buffer); o+=n*2; return a; };
+      const qp=u16(nv*3), nr=new Int8Array(b.slice(o,o+nv*4).buffer); o+=nv*4; const qu=u16(nv*2); const cl=b.slice(o,o+nv*4); o+=nv*4;
+      const idx=p.i32?new Uint32Array(b.slice(o,o+p.ni*4).buffer):new Uint16Array(b.slice(o,o+p.ni*2).buffer);
+      const pos=new Float32Array(nv*3), uv=new Float32Array(nv*2);
+      for(let i=0;i<nv;i++){ for(let c=0;c<3;c++) pos[i*3+c]=p.pl[c]+qp[i*3+c]/65535*(p.ph[c]-p.pl[c]); for(let c=0;c<2;c++) uv[i*2+c]=p.ul[c]+qu[i*2+c]/65535*(p.uh[c]-p.ul[c]); }
+      return {m:p.m,nv,pos,nr,uv,cl,idx}; });
+    dec.set(name,out); return out;
+  }
+  // matériaux : réglages artistiques
+  const MAT={ Leaves_Pine:{tint:[.78,.86,.78]}, Leaves_NormalTree:{tint:[.85,.9,.8]}, Leaves_TwistedTree:{tint:[.2,.34,.12]}, Leaves:{tint:[.8,.88,.75]},
+    Grass:{tint:[.42,.62,.24],vc:1}, Flowers:{tint:[1,1,1]}, Bark_NormalTree:{vc:.5}, Bark_DeadTree:{vc:.5,tint:[.85,.82,.8]}, Bark_TwistedTree:{vc:.5}, Rocks:{tint:[.9,.9,.92]}, PathRocks:{}, Mushrooms:{} };
+  // fusion de toutes les instances par matériau -> peu d'appels de dessin
+  R4.buildKit=function(gl,list,snow){
+    const K=R4.KITS.nature; if(!K||!list||!list.length) return null;
+    const groups={};
+    for(const it of list){ const mdl=model(it.n); if(!mdl) continue; const c=Math.cos(it.ry||0), s=Math.sin(it.ry||0), sc=it.s||1;
+      for(const p of mdl){ const g=groups[p.m]=groups[p.m]||{v:[],i:[],nv:0};
+        const base=g.nv; const V=new Float32Array(p.nv*11);
+        for(let k=0;k<p.nv;k++){ const x=p.pos[k*3]*sc, y=p.pos[k*3+1]*sc, z=p.pos[k*3+2]*sc; const o=k*11;
+          V[o]=it.t[0]+x*c+z*s; V[o+1]=it.t[1]+y; V[o+2]=it.t[2]-x*s+z*c;
+          const nx=p.nr[k*4]/127, ny=p.nr[k*4+1]/127, nz=p.nr[k*4+2]/127; V[o+3]=nx*c+nz*s; V[o+4]=ny; V[o+5]=-nx*s+nz*c;
+          V[o+6]=p.uv[k*2]; V[o+7]=p.uv[k*2+1]; V[o+8]=p.cl[k*4]/255; V[o+9]=p.cl[k*4+1]/255; V[o+10]=p.cl[k*4+2]/255; }
+        g.v.push(V); const I=new Uint32Array(p.idx.length); for(let k=0;k<p.idx.length;k++) I[k]=p.idx[k]+base; g.i.push(I); g.nv+=p.nv; } }
+    const out=[];
+    for(const m in groups){ const g=groups[m]; const meta=K.mats[m]||{}; const set=MAT[m]||{};
+      let n=0; for(const a of g.v) n+=a.length; const V=new Float32Array(n); let o=0; for(const a of g.v){ V.set(a,o); o+=a.length; }
+      n=0; for(const a of g.i) n+=a.length; const I=new Uint32Array(n); o=0; for(const a of g.i){ I.set(a,o); o+=a.length; }
+      const vao=gl.createVertexArray(); gl.bindVertexArray(vao); const vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb); gl.bufferData(gl.ARRAY_BUFFER,V,gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,44,0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,44,12);
+      gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.FLOAT,false,44,24); gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3,3,gl.FLOAT,false,44,32);
+      const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,I,gl.STATIC_DRAW); gl.bindVertexArray(null);
+      out.push({m,vao,vb,ib,n:I.length,alb:tex(gl,meta.c,true),nrm:meta.n?tex(gl,meta.n,false):null,cut:meta.a?1:0,leaf:meta.leaf?1:0,rock:meta.rock?1:0,tint:set.tint||[1,1,1],vc:set.vc!=null?set.vc:0}); }
+    return out;
+  };
+  R4.freeKit=function(gl,k){ if(!k) return; for(const g of k){ gl.deleteVertexArray(g.vao); gl.deleteBuffer(g.vb); gl.deleteBuffer(g.ib); } };
+  const texCache=new WeakMap();
+  function tex(gl,name,srgb){
+    let C=texCache.get(gl); if(!C){ C={}; texCache.set(gl,C); } const key=name+(srgb?"s":"l"); if(C[key]) return C[key];
+    const T=R4.KITS.nature.tex[name]; const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(srgb?[90,110,70,0]:[128,128,255,255]));
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+    if(T){ const bin=Uint8Array.from(atob(T.d),c=>c.charCodeAt(0)); createImageBitmap(new Blob([bin],{type:T.t}),{premultiplyAlpha:"none"}).then(img=>{
+      gl.bindTexture(gl.TEXTURE_2D,t); gl.texImage2D(gl.TEXTURE_2D,0,srgb?gl.SRGB8_ALPHA8:gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,img); gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR); const af=gl.getExtension("EXT_texture_filter_anisotropic"); if(af) gl.texParameterf(gl.TEXTURE_2D,af.TEXTURE_MAX_ANISOTROPY_EXT,4); }).catch(()=>{}); }
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    return C[key]=t; }
+
+  // placement des éléments selon le décor (mêmes ambiances, objets plus beaux)
+  R4.kitPlacements=function(th,hgt){
+    const L=[]; let seed=1; const rnd=()=>hash(seed++*1.618+.37);
+    const put=(n,r0,r1,s0,s1,cnt,filter)=>{ for(let i=0;i<cnt;i++){ const a=rnd()*Math.PI*2, r=r0+rnd()*(r1-r0); const x=Math.sin(a)*r, z=Math.cos(a)*r;
+      if(filter&&!filter(x,z,a,r)) continue; const nm=Array.isArray(n)?n[Math.floor(rnd()*n.length)]:n; L.push({n:nm,t:[x,hgt?hgt(x,z)-.05:0,z],ry:rnd()*Math.PI*2,s:s0+rnd()*(s1-s0)}); } };
+    const PINES=["Pine_1","Pine_2","Pine_3","Pine_4","Pine_5"], COMMON=["CommonTree_1","CommonTree_2","CommonTree_3","CommonTree_4","CommonTree_5"], DEAD=["DeadTree_1","DeadTree_2","DeadTree_3"];
+    if(th==="forest"){
+      put(PINES,12,44,.9,1.35,55); put(COMMON,12,40,.8,1.15,45); put(DEAD,14,40,.45,.65,8); put(["TwistedTree_1","TwistedTree_3"],26,45,.45,.6,6);
+      put(["Bush_Common","Bush_Common_Flowers"],9,15,.45,.75,30); put("Fern_1",7.5,15,.2,.3,26); put(["Plant_1_Big","Plant_1"],8,14,.3,.45,14);
+      put(["Flower_3_Group","Flower_4_Group"],6.8,12,.22,.32,22); put(["Mushroom_Common","Mushroom_Laetiporus"],8.5,15,.45,.8,14);
+      put(["Grass_Common_Short","Grass_Common_Tall","Grass_Wispy_Short"],6.8,15,.28,.42,90); put("Clover_1",6.8,11,.3,.45,16);
+      put(["Rock_Medium_1","Rock_Medium_2","Rock_Medium_3"],7.5,13,.35,.8,10); put(["Pebble_Round_1","Pebble_Round_2"],2,6.5,.5,.9,12);
+    } else if(th==="camp"){
+      put(PINES,16,48,.95,1.45,70); put(DEAD,16,40,.5,.7,14); put(COMMON,20,44,.8,1.1,10);
+      put(["Bush_Common"],10,17,.45,.7,14); put("Fern_1",9,16,.2,.28,12); put(["Grass_Wispy_Short","Grass_Common_Short"],6.8,16,.28,.4,60);
+      put(["Rock_Medium_1","Rock_Medium_2","Rock_Medium_3"],7.5,15,.4,1,14); put(["Pebble_Round_1","Pebble_Round_2"],2,6.5,.5,.9,10);
+      put(["Mushroom_Common"],9,15,.4,.7,8);
+    } else if(th==="winter"){
+      put(PINES,11.5,42,.9,1.35,95); put(DEAD,13,40,.45,.65,16);
+      put(["Rock_Medium_1","Rock_Medium_2","Rock_Medium_3"],7,13,.35,.8,12); put(["Bush_Common"],9,14,.4,.6,10);
+    } else if(th==="village"){
+      put(COMMON,28,50,.8,1.15,40); put(PINES,30,52,.9,1.3,40);
+      put(["Bush_Common","Bush_Common_Flowers"],13,16.5,.4,.6,22,(x,z,a)=>true); put(["Flower_3_Group","Flower_4_Group"],13,16,.2,.3,20);
+      put(["Grass_Common_Short","Grass_Wispy_Short"],13,24,.25,.38,40);
+    }
+    return L;
+  };
+  R4.KIT_VS=`#version 300 es
+  layout(location=0) in vec3 aP; layout(location=1) in vec3 aN; layout(location=2) in vec2 aUV; layout(location=3) in vec3 aC;
+  uniform mat4 uVP; uniform float uTime,uWind,uMat;
+  out vec3 vW; out vec3 vN; out vec4 vC; out vec2 vUV;
+  void main(){ vec3 w=aP; if(uMat>12.5){ float h=max(aP.y-.3,0.); float s=sin(uTime*1.3+aP.x*.21+aP.z*.17)+.4*sin(uTime*2.9+aP.z*.5);
+      w.x+=s*.012*h*uWind; w.z+=cos(uTime*1.05+aP.x*.27)*.009*h*uWind; }
+    vW=w; vN=aN; vC=vec4(aC,uMat); vUV=aUV; gl_Position=uVP*vec4(w,1.); }`;
+})();
+
 /* ===================== R4 : rendu principal ===================== */
 (function(){
   "use strict";
@@ -3032,7 +3139,7 @@ const R4 = {};
     if(!gl) return null;
     const hasFloat=!!gl.getExtension("EXT_color_buffer_float"); gl.getExtension("OES_texture_float_linear");
     const P={}; try{
-      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.skin=R4.compile(gl,R4.SKIN_VS,R4.STD_FS); P.skinD=R4.compile(gl,R4.SKIN_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
+      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.skin=R4.compile(gl,R4.SKIN_VS,R4.STD_FS); P.kit=R4.compile(gl,R4.KIT_VS,R4.STD_FS); P.kitD=R4.compile(gl,R4.KIT_VS,R4.DEPTH_FS); P.skinD=R4.compile(gl,R4.SKIN_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
       P.sky=R4.compile(gl,R4.SKY_VS,R4.SKY_FS); P.part=R4.compile(gl,R4.PART_VS,R4.PART_FS);
       P.bright=R4.compile(gl,R4.QUAD_VS,R4.BRIGHT_FS); P.down=R4.compile(gl,R4.QUAD_VS,R4.DOWN_FS); P.up=R4.compile(gl,R4.QUAD_VS,R4.UP_FS); P.comp=R4.compile(gl,R4.QUAD_VS,R4.COMP_FS);
     }catch(e){ console.warn("R4 shaders",e); return null; }
@@ -3087,7 +3194,19 @@ const R4 = {};
     let chars={}, order=[], me=null, votes={}, mood=opts.mood||"dusk", tod=MOOD_TOD[mood], todT=tod, paused=false, onPick=null, canPick=()=>false, hover=null;
     let camYaw=0, drag=0, dragging=false, dragX=0, moved=0, downId=null, zoom=1, T0=performance.now(), last=0, cine=0;
     const parts=[]; let pdata=new Float32Array(4096*12);
-    function loadWorld(th){ theme=th; if(world){ R4.free(gl,world.far); R4.free(gl,world.near); } world=R4.buildWorld(gl,th); applyQuality(); }
+    function kitOK(){ return opts.real!==false&&qk!=="low"; }
+    function loadWorld(th){ theme=th; if(world){ R4.free(gl,world.far); R4.free(gl,world.near); R4.freeKit(gl,world.kit); }
+      const useKit=kitOK()&&!!R4.KITS.nature; world=R4.buildWorld(gl,th,useKit);
+      if(useKit) world.kit=R4.buildKit(gl,R4.kitPlacements(th,world.hgt),th==="winter");
+      else if(kitOK()) R4.loadKit("nature").then(()=>{ if(theme===th&&world&&!world.kit) loadWorld(th); }).catch(e=>console.warn(e));
+      applyQuality(); }
+    function drawKit(p,shadow){ if(!world||!world.kit) return; const u=p.u;
+      for(const g of world.kit){ gl.uniform1f(u.uMat,g.cut?13:12);
+        gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE0);
+        if(shadow){ gl.uniform1f(u.uCut,g.cut); }
+        else { if(g.nrm){ gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); } gl.uniform1f(u.uNrmOn,g.nrm?1:0);
+          gl.uniform3fv(u.uTint,g.tint); gl.uniform1f(u.uVcol,g.vc); gl.uniform1f(u.uRock,g.rock); gl.uniform1f(u.uHi,0); gl.uniform3fv(u.uHiCol,[0,0,0]); gl.uniform1f(u.uAlpha,1); gl.uniform1f(u.uWin,0); }
+        gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,gl.UNSIGNED_INT,0); } }
     if(!preview) loadWorld(theme); else { world=null; makeShadow(q.shadow||1024); makeFireSh(8); }
 
     /* ---------- personnages ---------- */
@@ -3279,7 +3398,9 @@ const R4 = {};
         gl.uniformMatrix4fv(dp.u.uVP,false,S.lightVP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1); gl.uniform1f(dp.u.uCube,0);
         gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2,4);
         { const k=P.skinD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,S.lightVP); gl.uniform1f(k.u.uCube,0); gl.useProgram(dp.p); }
-        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t,P.skinD); gl.disable(gl.POLYGON_OFFSET_FILL); }
+        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t,P.skinD);
+        if(world&&world.kit){ const k=P.kitD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,S.lightVP); gl.uniform1f(k.u.uCube,0); gl.uniform1f(k.u.uTime,t); gl.uniform1f(k.u.uWind,1); gl.uniform1i(k.u.uAlb,3); gl.disable(gl.CULL_FACE); drawKit(k,true); gl.uniform1f(k.u.uCut,0); gl.useProgram(dp.p); }
+        gl.disable(gl.POLYGON_OFFSET_FILL); }
       // --- passe ombre du feu (6 faces)
       if(S.fireShOn){ gl.useProgram(dp.p); gl.uniform1f(dp.u.uCube,1); gl.uniform3fv(dp.u.uFireP,S.fireP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1);
         const dirs=[[[1,0,0],[0,-1,0]],[[-1,0,0],[0,-1,0]],[[0,1,0],[0,0,1]],[[0,-1,0],[0,0,-1]],[[0,0,1],[0,-1,0]],[[0,0,-1],[0,-1,0]]]; const pr=M.persp(Math.PI/2,1,.05,30);
@@ -3301,6 +3422,7 @@ const R4 = {};
       // monde
       const p=P.std; gl.useProgram(p.p); gl.uniformMatrix4fv(p.u.uVP,false,VPm); gl.uniform1f(p.u.uTime,t); gl.uniform1f(p.u.uWind,theme==="winter"?1.4:1); setLights(p,S,eye);
       if(world){ gl.disable(gl.CULL_FACE); drawM(p,world.far,I); drawM(p,world.near,I); gl.enable(gl.CULL_FACE); }
+      if(world&&world.kit){ const k=P.kit; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,VPm); gl.uniform1f(k.u.uTime,t); gl.uniform1f(k.u.uWind,theme==="winter"?1.4:1); setLights(k,S,eye); gl.disable(gl.CULL_FACE); drawKit(k,false); gl.useProgram(p.p); }
       else { /* aperçu : petit sol */ if(!prevGround){ const g=new R4.Geo(); g.cyl({t:[0,-.05,0]},1.4,1.5,.05,40,R4.lin([.22,.3,.14]),4); for(let i=0;i<9;i++){ const a=i/9*Math.PI*2; g.blob({t:[Math.sin(a)*1.45,.05,Math.cos(a)*1.45],s:[1,.6,1]},.14,1,.3,2,i,R4.lin([.4,.4,.4]),5); } prevGround=R4.mesh(gl,g); } drawM(p,prevGround,I); }
       { const k=P.skin; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,VPm); gl.uniform1f(k.u.uTime,t); setLights(k,S,eye); gl.useProgram(p.p); }
       gl.disable(gl.CULL_FACE); drawChars(p,true,t,P.skin);
