@@ -431,10 +431,10 @@ body{background:radial-gradient(1200px 700px at 30% -10%,#2a2450,transparent 60%
 .ae-big{padding:8px 10px;gap:10px} .ae-big button{width:34px;height:34px;font-size:18px;border-radius:10px}
 .ae-name{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px} .ae-name b{color:#fff;font-size:15px}
 /* ---- visages réels + infobulle des votes ---- */
-img.face{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+img.pface{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
 .face-w,.face-w svg{display:block;width:100%;height:100%}
-.chip img.face{width:26px;height:26px;flex:none}
-.mav img.face{border-radius:50%}
+.chip img.pface{width:26px;height:26px;flex:none}
+.mav img.pface{border-radius:50%}
 .votes,.votes3{pointer-events:auto;cursor:help;position:relative}
 .votes3 i{width:20px;height:20px} .votes3 em{font-style:normal;font-size:11px;font-weight:700;margin-left:2px}
 .votes i{width:20px;height:20px;border-radius:50%;overflow:hidden;display:block}
@@ -444,7 +444,7 @@ img.face{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%
 .votes3 i+i,.votes i+i{margin-left:-7px}
 .votes3 b{font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .votes,.votes3{z-index:5}
-.votes3 i img.face,.votes i img.face,.votes3 i .face-w,.votes i .face-w{width:20px!important;height:20px!important;max-width:none}
+.votes3 i img.pface,.votes i img.pface,.votes3 i .face-w,.votes i .face-w{width:20px!important;height:20px!important;max-width:none}
 
 </style>
 </head>
@@ -4003,9 +4003,9 @@ function faceHTML(av){
   const real=APP.set.gq!=="low"&&typeof R4!=="undefined"&&R4.CHAR_LIST&&typeof WebGL2RenderingContext!=="undefined"&&!QS.get("no3d")?R4.charSlug(R4.avNorm(av)):null;
   if(!real) return headSVG(av);
   const done=APP._faces&&APP._faces[real];
-  if(done) return `<img class="face" src="${done}" alt="">`;
+  if(done) return `<img class="pface" src="${done}" alt="">`;
   APP._faces=APP._faces||{};
-  R4.headshotAsync(real).then(u=>{ if(!u) return; APP._faces[real]=u; document.querySelectorAll('[data-face="'+real+'"]').forEach(el=>{ el.outerHTML=`<img class="face" src="${u}" alt="">`; }); if(APP.v3lab) APP.v3lab._h=""; });
+  R4.headshotAsync(real).then(u=>{ if(!u) return; APP._faces[real]=u; document.querySelectorAll('[data-face="'+real+'"]').forEach(el=>{ el.outerHTML=`<img class="pface" src="${u}" alt="">`; }); if(APP.v3lab) APP.v3lab._h=""; });
   return `<span data-face="${real}" class="face-w">${headSVG(av)}</span>`;
 }
 function createModal(m){

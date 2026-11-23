@@ -429,9 +429,9 @@ function faceHTML(av){
   const real=APP.set.gq!=="low"&&typeof R4!=="undefined"&&R4.CHAR_LIST&&typeof WebGL2RenderingContext!=="undefined"&&!QS.get("no3d")?R4.charSlug(R4.avNorm(av)):null;
   if(!real) return headSVG(av);
   const done=APP._faces&&APP._faces[real];
-  if(done) return `<img class="face" src="${done}" alt="">`;
+  if(done) return `<img class="pface" src="${done}" alt="">`;
   APP._faces=APP._faces||{};
-  R4.headshotAsync(real).then(u=>{ if(!u) return; APP._faces[real]=u; document.querySelectorAll('[data-face="'+real+'"]').forEach(el=>{ el.outerHTML=`<img class="face" src="${u}" alt="">`; }); if(APP.v3lab) APP.v3lab._h=""; });
+  R4.headshotAsync(real).then(u=>{ if(!u) return; APP._faces[real]=u; document.querySelectorAll('[data-face="'+real+'"]').forEach(el=>{ el.outerHTML=`<img class="pface" src="${u}" alt="">`; }); if(APP.v3lab) APP.v3lab._h=""; });
   return `<span data-face="${real}" class="face-w">${headSVG(av)}</span>`;
 }
 function createModal(m){
