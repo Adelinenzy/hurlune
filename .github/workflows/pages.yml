@@ -1,7 +1,8 @@
 name: Site web (GitHub Pages)
 
-# Site web désactivé (adresse github.io bloquée/indésirable) : lancement manuel uniquement.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
