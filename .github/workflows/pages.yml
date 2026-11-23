@@ -27,7 +27,10 @@ jobs:
       - name: Intégrer la clé de traduction
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: node tools/inject-key.js _site/index.html
+        run: |
+          npm install --prefix tools/libs mqtt@5.10.1 --no-save --no-audit --no-fund
+          node tools/inline-libs.js _site/index.html
+          node tools/inject-key.js _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
       - id: deployment
