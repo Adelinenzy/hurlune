@@ -183,7 +183,7 @@ async function joinGame(g){
   const saved=lsGet("host."+g.room);
   APP.game=g;
   if(saved&&saved.hostId===APP.me.pid){ await startHostSession(new Host(saved)); return; }
-  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); render();
+  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP._joinedAt=Date.now(); APP._hostSeen=0; APP.ui.hostLost=false; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); render();
   const room=new Room({room:g.room,key:g.key,broker:g.b,me:{pid:APP.me.pid,keys:APP.me.keys},isHost:false});
   APP.room=room;
   room.on("state",st=>{ const first=!APP.st; onState(st); if(first||!APP._synced) sendHello(); });
@@ -197,6 +197,7 @@ function send(msg){
   if(APP.host){ APP.host.local(msg); return; }
   if(APP.room&&APP.room.hostPub) APP.room.send(msg).catch(e=>console.warn(e));
 }
+setInterval(()=>{ if(APP.view==="game"&&APP.room&&!APP.host&&APP.st&&APP.st.status!=="closed"){ const lost=Date.now()-(APP._hostSeen||APP._joinedAt||Date.now())>20000; if(lost!==!!APP.ui.hostLost){ APP.ui.hostLost=lost; render(); } } },3000);
 setInterval(()=>{ if(APP.view==="game"&&APP.room&&!APP.host){ if(!APP._synced&&APP.st&&Date.now()-(APP._helloAt||0)>4000) sendHello(); else send({t:"ping"}); } },8000);
 
 function onState(st){
@@ -226,6 +227,8 @@ function onPriv(o){
     else if(m.x&&APP.me.name&&m.a!==APP.me.pid&&norm(m.x).includes("@"+norm(APP.me.name))) sfx("mention");
     else if(m.cls==="seer"||m.cls==="role"||m.cls==="love") sfx("ping");
     scheduleChat(); return; }
+  if(o.t==="hb"){ APP._hostSeen=Date.now(); if(APP.ui.hostLost){ APP.ui.hostLost=false; render(); } return; }
+  if(o.t==="closed"){ APP.ui.joinErr="hostLeft"; render(); return; }
   if(o.t==="va"){ if(o.a!==APP.me.pid){ if(!APP.set.vmute) VOICE.rx(o.a,o.s,o.d); APP.ui.vSpk={id:o.a,until:Date.now()+700}; if(APP.has3d) V3.speak(o.a); } return; }
   if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
   if(o.t==="err"){ if(o.k==="started"||o.k==="full"||o.k==="kicked"||o.k==="notInGame"){ APP.ui.joinErr=o.k; } else toast(t("e_"+o.k)); render(); }
@@ -233,7 +236,13 @@ function onPriv(o){
 function toast(s){ APP.ui.toast=s; renderToast(); clearTimeout(APP._tt); APP._tt=setTimeout(()=>{ APP.ui.toast=null; renderToast(); },3500); }
 function leaveToHub(){
   if(APP.st&&(APP.st.status==="lobby"||APP.st.status==="starting")&&!APP.host) send({t:"leave"});
-  if(APP.host&&APP.host._tick){ /* host keeps running only while page open; leaving stops the game */ }
+  if(APP.host&&APP.host._tick){
+    const st=APP.st, live=st&&st.status!=="ended";
+    if(live&&!confirm(t("hostLeaveConfirm"))) return;
+    try{ APP.host.close(); }catch(e){}
+    lsSet("host."+APP.host.roomId,null);
+    setTimeout(()=>{ location.hash=""; location.reload(); },700); return;
+  }
   location.hash=""; location.reload();
 }
 
@@ -465,11 +474,12 @@ function renderGame(){
   const scene=$("#scene"); scene.classList.toggle("night",!(st.status==="running"&&!night)); scene.classList.toggle("day",st.status==="running"&&!night);
   $("#stage").classList.toggle("is-night",night);
   $("#roomName").textContent=st.name||"";
-  const ns=APP.ui.netStatus; $("#net").innerHTML=ns==="online"?"":`<span class="netbad">⚠︎ ${esc(t("net_"+ns))}</span>`;
+  const ns=APP.ui.netStatus; $("#net").innerHTML=ns!=="online"?`<span class="netbad">⚠︎ ${esc(t("net_"+ns))}</span>`:APP.ui.hostLost?`<span class="netbad">⚠︎ ${esc(t("hostLost"))}</span>`:"";
   $("#phLabel").textContent=phaseLabel();
   updTimer();
   const rb=$("#rulesBtn"); rb.textContent=APP.ui.panel==="chat"?"📖 "+t("rulesBtn"):"💬 "+t("chatBtn");
   $("#chatlog").hidden=APP.ui.panel!=="chat"; $("#rules").hidden=APP.ui.panel!=="rules";
+  if(APP.st&&APP.st.status==="closed"&&!APP.host) APP.ui.joinErr="hostLeft";
   if(APP.ui.connecting||APP.ui.joinErr||!APP.st){ $("#chars").innerHTML=""; $("#center").innerHTML=connCard(); bindConn(); renderComposer(); return; }
   renderChars(); renderCenter(); renderComposer(); renderChat(); if(APP.ui.panel==="rules") renderRules(); renderEnd(); renderReveal();
 }

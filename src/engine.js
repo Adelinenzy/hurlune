@@ -21,7 +21,14 @@ class Host {
     room.on("toHost",(from,pub,msg)=>this.onMsg(from,pub,msg));
     if(this._tick) clearInterval(this._tick);
     this._tick=setInterval(()=>this.tick(),400);
+    if(this._hb) clearInterval(this._hb);
+    this._hb=setInterval(()=>{ if(this.room) this.room.broadcast({t:"hb",s:this.status}).catch(()=>{}); },5000);
     this.flush(true);
+  }
+  close(){ // l'hôte quitte : la partie s'arrête pour tout le monde
+    this.status="closed"; this.ph={k:"closed",seq:this.ph.seq+1}; this.flush(true);
+    if(this.room) this.room.broadcast({t:"closed"}).catch(()=>{});
+    clearInterval(this._tick); clearInterval(this._hb); this._tick=this._hb=null;
   }
   get S(){ return this.settings; }
   dur(k){ const sp=(window.TEST_SPEED)||SPEEDS[this.S.speed]||SPEEDS.normal; return (sp[k]||20)*1000; }
@@ -535,7 +542,8 @@ class Host {
     this.resync(h);
   }
   runPending(){
-    if(this.checkWin()) return;
+    if(!this.sec.pending.some(p=>p.kind==="hunter")&&this.checkWin()) return;
+    this.sec.pending.sort((a,b)=>(a.kind==="hunter"?0:1)-(b.kind==="hunter"?0:1));
     const p=this.sec.pending.shift();
     if(!p){ this.continueAfter(); return; }
     if(p.kind==="succ"&&!this.aliveIds().length){ this.runPending(); return; }
@@ -603,7 +611,8 @@ class Host {
     if(al.every(x=>this.camp(x)==="wolf")){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; }
     // les loups gagnent dès qu'ils sont au moins aussi nombreux que les autres (sauf joueur solitaire ou couple mixte encore en vie)
     { const W=al.filter(x=>this.camp(x)==="wolf").length, mixed=L&&L.every(x=>this.alive(x))&&this.camp(L[0])!==this.camp(L[1]);
-      if(W>0&&W>=al.length-W&&!al.some(x=>this.camp(x)==="solo")&&!mixed){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; } }
+      const threat=al.some(x=>this.camp(x)!=="wolf"&&(this.role(x)==="hunter"||(this.role(x)==="witch"&&(this.R(x).poison|0)>0)));
+      if(W>0&&W>=al.length-W&&!threat&&!al.some(x=>this.camp(x)==="solo")&&!mixed){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; } }
     if(!al.some(x=>this.camp(x)==="wolf"||this.camp(x)==="solo")){ this.endGame("village",this.order.filter(x=>this.camp(x)==="village")); return true; }
     return false;
   }

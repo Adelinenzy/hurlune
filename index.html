@@ -675,7 +675,14 @@ class Host {
     room.on("toHost",(from,pub,msg)=>this.onMsg(from,pub,msg));
     if(this._tick) clearInterval(this._tick);
     this._tick=setInterval(()=>this.tick(),400);
+    if(this._hb) clearInterval(this._hb);
+    this._hb=setInterval(()=>{ if(this.room) this.room.broadcast({t:"hb",s:this.status}).catch(()=>{}); },5000);
     this.flush(true);
+  }
+  close(){ // l'hôte quitte : la partie s'arrête pour tout le monde
+    this.status="closed"; this.ph={k:"closed",seq:this.ph.seq+1}; this.flush(true);
+    if(this.room) this.room.broadcast({t:"closed"}).catch(()=>{});
+    clearInterval(this._tick); clearInterval(this._hb); this._tick=this._hb=null;
   }
   get S(){ return this.settings; }
   dur(k){ const sp=(window.TEST_SPEED)||SPEEDS[this.S.speed]||SPEEDS.normal; return (sp[k]||20)*1000; }
@@ -1189,7 +1196,8 @@ class Host {
     this.resync(h);
   }
   runPending(){
-    if(this.checkWin()) return;
+    if(!this.sec.pending.some(p=>p.kind==="hunter")&&this.checkWin()) return;
+    this.sec.pending.sort((a,b)=>(a.kind==="hunter"?0:1)-(b.kind==="hunter"?0:1));
     const p=this.sec.pending.shift();
     if(!p){ this.continueAfter(); return; }
     if(p.kind==="succ"&&!this.aliveIds().length){ this.runPending(); return; }
@@ -1257,7 +1265,8 @@ class Host {
     if(al.every(x=>this.camp(x)==="wolf")){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; }
     // les loups gagnent dès qu'ils sont au moins aussi nombreux que les autres (sauf joueur solitaire ou couple mixte encore en vie)
     { const W=al.filter(x=>this.camp(x)==="wolf").length, mixed=L&&L.every(x=>this.alive(x))&&this.camp(L[0])!==this.camp(L[1]);
-      if(W>0&&W>=al.length-W&&!al.some(x=>this.camp(x)==="solo")&&!mixed){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; } }
+      const threat=al.some(x=>this.camp(x)!=="wolf"&&(this.role(x)==="hunter"||(this.role(x)==="witch"&&(this.R(x).poison|0)>0)));
+      if(W>0&&W>=al.length-W&&!threat&&!al.some(x=>this.camp(x)==="solo")&&!mixed){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; } }
     if(!al.some(x=>this.camp(x)==="wolf"||this.camp(x)==="solo")){ this.endGame("village",this.order.filter(x=>this.camp(x)==="village")); return true; }
     return false;
   }
@@ -1541,7 +1550,7 @@ en:{
  home:"Home",invite:"Invite",linkCopied:"Link copied! Send it to your friends.",copy:"Copy",rulesBtn:"Rules",chatBtn:"Chat",translate:"Translate the chat",loversChat:"Lovers’ chat",
  net_offline:"Connection lost…",net_reconnecting:"Reconnecting…",connecting:"Connecting to the village…",
  e_relayErr:"Can’t reach the relay",e_relayErr_d:"Check your internet connection and try again.",e_notFound:"Game not found",e_notFound_d:"The host may be offline. Ask them to open the game, then try again.",
- e_started:"The game has already started",e_started_d:"Wait for the next game.",e_full:"The game is full",e_full_d:"All seats are taken.",e_kicked:"You were removed from the game",e_kicked_d:"",e_notInGame:"You’re not part of this game",e_notInGame_d:"",e_needWhy:"Justify your vote: nobody is accusing this player yet.",
+ hostLeaveConfirm:"You are the host: leaving will end the game for everyone. Leave anyway?",e_hostLeft:"The host has ended the game",e_hostLeft_d:"Go back to the home page to create or join another game.",hostLost:"The host seems to be disconnected… waiting for them to come back.",e_started:"The game has already started",e_started_d:"Wait for the next game.",e_full:"The game is full",e_full_d:"All seats are taken.",e_kicked:"You were removed from the game",e_kicked_d:"",e_notInGame:"You’re not part of this game",e_notInGame_d:"",e_needWhy:"Justify your vote: nobody is accusing this player yet.",
  ph_wait:"Waiting",ph_launch:"Starting",ph_ended:"Game over",ph_n_cupid:"Cupid’s turn",ph_n_heir:"Heir’s turn",ph_n_seer:"Seer’s turn",ph_n_guard:"Guard’s turn",ph_n_rat:"Sick Rat’s turn",ph_n_pyro:"Pyromancer’s turn",ph_n_wolves:"Werewolves’ turn",ph_n_witch:"Witch’s turn",ph_n_white:"White Wolf’s turn",
  ph_d_vote:"Village vote",ph_d_cand:"Mayor candidacies",ph_d_elect:"Mayor election",ph_d_dictAsk:"Dawn",ph_d_dict:"Coup d’état",ph_d_tie:"Tie",ph_dawn:"Dawn",ph_prompt_hunter:"The Hunter shoots",ph_prompt_grave:"The Gravedigger digs",ph_prompt_succ:"Mayor succession",
  waitingPlayers:"{n}/{m} players",launchingSoon:"All seats are taken: the game is about to start!",startNow:"Start with {n}",hostNote:"You’re the host: keep this page open during the game.",
@@ -1599,7 +1608,7 @@ fr:{
  home:"Accueil",invite:"Inviter",linkCopied:"Lien copié ! Envoie-le à tes amis.",copy:"Copier",rulesBtn:"Règles",chatBtn:"Chat",translate:"Traduire le chat",loversChat:"Chat des amoureux",
  net_offline:"Connexion perdue…",net_reconnecting:"Reconnexion…",connecting:"Connexion au village…",
  e_relayErr:"Impossible de joindre le relais",e_relayErr_d:"Vérifie ta connexion internet puis réessaie.",e_notFound:"Partie introuvable",e_notFound_d:"L’hôte n’est peut-être pas connecté. Demande-lui d’ouvrir la partie, puis réessaie.",
- e_started:"La partie a déjà commencé",e_started_d:"Attends la prochaine partie.",e_full:"La partie est complète",e_full_d:"Toutes les places sont prises.",e_kicked:"Tu as été retiré·e de la partie",e_kicked_d:"",e_notInGame:"Tu ne fais pas partie de cette partie",e_notInGame_d:"",e_needWhy:"Justifie ton vote : personne n’accuse encore ce joueur.",
+ hostLeaveConfirm:"Tu es l’hôte : quitter arrêtera la partie pour tout le monde. Quitter quand même ?",e_hostLeft:"L’hôte a arrêté la partie",e_hostLeft_d:"Retourne à l’accueil pour créer ou rejoindre une autre partie.",hostLost:"L’hôte semble déconnecté… en attente de son retour.",e_started:"La partie a déjà commencé",e_started_d:"Attends la prochaine partie.",e_full:"La partie est complète",e_full_d:"Toutes les places sont prises.",e_kicked:"Tu as été retiré·e de la partie",e_kicked_d:"",e_notInGame:"Tu ne fais pas partie de cette partie",e_notInGame_d:"",e_needWhy:"Justifie ton vote : personne n’accuse encore ce joueur.",
  ph_wait:"Attente",ph_launch:"Lancement",ph_ended:"Fin de partie",ph_n_cupid:"Tour de Cupidon",ph_n_heir:"Tour de l’Héritier",ph_n_seer:"Tour de la Voyante",ph_n_guard:"Tour du Garde",ph_n_rat:"Tour du Rat Malade",ph_n_pyro:"Tour du Pyromancien",ph_n_wolves:"Tour des Loups-Garous",ph_n_witch:"Tour de la Sorcière",ph_n_white:"Tour du Loup Blanc",
  ph_d_vote:"Vote du village",ph_d_cand:"Candidatures (maire)",ph_d_elect:"Élection du maire",ph_d_dictAsk:"Aube",ph_d_dict:"Coup d’État",ph_d_tie:"Égalité",ph_dawn:"Aube",ph_prompt_hunter:"Le Chasseur tire",ph_prompt_grave:"Le Fossoyeur creuse",ph_prompt_succ:"Succession du maire",
  waitingPlayers:"{n}/{m} joueurs",launchingSoon:"Toutes les places sont prises : la partie va commencer !",startNow:"Lancer à {n}",hostNote:"Tu es l’hôte : garde cette page ouverte pendant la partie.",
@@ -1657,7 +1666,7 @@ ru:{
  home:"Главная",invite:"Пригласить",linkCopied:"Ссылка скопирована! Отправь её друзьям.",copy:"Копировать",rulesBtn:"Правила",chatBtn:"Чат",translate:"Перевести чат",loversChat:"Чат влюблённых",
  net_offline:"Нет соединения…",net_reconnecting:"Переподключение…",connecting:"Подключение к деревне…",
  e_relayErr:"Не удалось подключиться к серверу",e_relayErr_d:"Проверь интернет и попробуй снова.",e_notFound:"Игра не найдена",e_notFound_d:"Возможно, хост не в сети. Попроси его открыть игру и попробуй снова.",
- e_started:"Игра уже началась",e_started_d:"Дождись следующей игры.",e_full:"Все места заняты",e_full_d:"В игре нет свободных мест.",e_kicked:"Тебя исключили из игры",e_kicked_d:"",e_notInGame:"Ты не участвуешь в этой игре",e_notInGame_d:"",e_needWhy:"Объясни свой голос: этого игрока ещё никто не обвиняет.",
+ hostLeaveConfirm:"Ты хост: если выйдешь, игра закончится для всех. Всё равно выйти?",e_hostLeft:"Хост завершил игру",e_hostLeft_d:"Вернись на главную, чтобы создать или найти другую игру.",hostLost:"Хост, похоже, отключился… ждём его возвращения.",e_started:"Игра уже началась",e_started_d:"Дождись следующей игры.",e_full:"Все места заняты",e_full_d:"В игре нет свободных мест.",e_kicked:"Тебя исключили из игры",e_kicked_d:"",e_notInGame:"Ты не участвуешь в этой игре",e_notInGame_d:"",e_needWhy:"Объясни свой голос: этого игрока ещё никто не обвиняет.",
  ph_wait:"Ожидание",ph_launch:"Запуск",ph_ended:"Конец игры",ph_n_cupid:"Ход Купидона",ph_n_heir:"Ход Наследника",ph_n_seer:"Ход Провидицы",ph_n_guard:"Ход Стража",ph_n_rat:"Ход Больной крысы",ph_n_pyro:"Ход Пироманта",ph_n_wolves:"Ход оборотней",ph_n_witch:"Ход Ведьмы",ph_n_white:"Ход Белого волка",
  ph_d_vote:"Голосование деревни",ph_d_cand:"Кандидаты в мэры",ph_d_elect:"Выборы мэра",ph_d_dictAsk:"Рассвет",ph_d_dict:"Переворот",ph_d_tie:"Ничья",ph_dawn:"Рассвет",ph_prompt_hunter:"Охотник стреляет",ph_prompt_grave:"Могильщик копает",ph_prompt_succ:"Преемник мэра",
  waitingPlayers:"{n}/{m} игроков",launchingSoon:"Все места заняты: игра сейчас начнётся!",startNow:"Начать с {n}",hostNote:"Ты хост: не закрывай эту страницу во время игры.",
@@ -3748,7 +3757,7 @@ async function joinGame(g){
   const saved=lsGet("host."+g.room);
   APP.game=g;
   if(saved&&saved.hostId===APP.me.pid){ await startHostSession(new Host(saved)); return; }
-  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); render();
+  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP._joinedAt=Date.now(); APP._hostSeen=0; APP.ui.hostLost=false; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); render();
   const room=new Room({room:g.room,key:g.key,broker:g.b,me:{pid:APP.me.pid,keys:APP.me.keys},isHost:false});
   APP.room=room;
   room.on("state",st=>{ const first=!APP.st; onState(st); if(first||!APP._synced) sendHello(); });
@@ -3762,6 +3771,7 @@ function send(msg){
   if(APP.host){ APP.host.local(msg); return; }
   if(APP.room&&APP.room.hostPub) APP.room.send(msg).catch(e=>console.warn(e));
 }
+setInterval(()=>{ if(APP.view==="game"&&APP.room&&!APP.host&&APP.st&&APP.st.status!=="closed"){ const lost=Date.now()-(APP._hostSeen||APP._joinedAt||Date.now())>20000; if(lost!==!!APP.ui.hostLost){ APP.ui.hostLost=lost; render(); } } },3000);
 setInterval(()=>{ if(APP.view==="game"&&APP.room&&!APP.host){ if(!APP._synced&&APP.st&&Date.now()-(APP._helloAt||0)>4000) sendHello(); else send({t:"ping"}); } },8000);
 
 function onState(st){
@@ -3791,6 +3801,8 @@ function onPriv(o){
     else if(m.x&&APP.me.name&&m.a!==APP.me.pid&&norm(m.x).includes("@"+norm(APP.me.name))) sfx("mention");
     else if(m.cls==="seer"||m.cls==="role"||m.cls==="love") sfx("ping");
     scheduleChat(); return; }
+  if(o.t==="hb"){ APP._hostSeen=Date.now(); if(APP.ui.hostLost){ APP.ui.hostLost=false; render(); } return; }
+  if(o.t==="closed"){ APP.ui.joinErr="hostLeft"; render(); return; }
   if(o.t==="va"){ if(o.a!==APP.me.pid){ if(!APP.set.vmute) VOICE.rx(o.a,o.s,o.d); APP.ui.vSpk={id:o.a,until:Date.now()+700}; if(APP.has3d) V3.speak(o.a); } return; }
   if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
   if(o.t==="err"){ if(o.k==="started"||o.k==="full"||o.k==="kicked"||o.k==="notInGame"){ APP.ui.joinErr=o.k; } else toast(t("e_"+o.k)); render(); }
@@ -3798,7 +3810,13 @@ function onPriv(o){
 function toast(s){ APP.ui.toast=s; renderToast(); clearTimeout(APP._tt); APP._tt=setTimeout(()=>{ APP.ui.toast=null; renderToast(); },3500); }
 function leaveToHub(){
   if(APP.st&&(APP.st.status==="lobby"||APP.st.status==="starting")&&!APP.host) send({t:"leave"});
-  if(APP.host&&APP.host._tick){ /* host keeps running only while page open; leaving stops the game */ }
+  if(APP.host&&APP.host._tick){
+    const st=APP.st, live=st&&st.status!=="ended";
+    if(live&&!confirm(t("hostLeaveConfirm"))) return;
+    try{ APP.host.close(); }catch(e){}
+    lsSet("host."+APP.host.roomId,null);
+    setTimeout(()=>{ location.hash=""; location.reload(); },700); return;
+  }
   location.hash=""; location.reload();
 }
 
@@ -4030,11 +4048,12 @@ function renderGame(){
   const scene=$("#scene"); scene.classList.toggle("night",!(st.status==="running"&&!night)); scene.classList.toggle("day",st.status==="running"&&!night);
   $("#stage").classList.toggle("is-night",night);
   $("#roomName").textContent=st.name||"";
-  const ns=APP.ui.netStatus; $("#net").innerHTML=ns==="online"?"":`<span class="netbad">⚠︎ ${esc(t("net_"+ns))}</span>`;
+  const ns=APP.ui.netStatus; $("#net").innerHTML=ns!=="online"?`<span class="netbad">⚠︎ ${esc(t("net_"+ns))}</span>`:APP.ui.hostLost?`<span class="netbad">⚠︎ ${esc(t("hostLost"))}</span>`:"";
   $("#phLabel").textContent=phaseLabel();
   updTimer();
   const rb=$("#rulesBtn"); rb.textContent=APP.ui.panel==="chat"?"📖 "+t("rulesBtn"):"💬 "+t("chatBtn");
   $("#chatlog").hidden=APP.ui.panel!=="chat"; $("#rules").hidden=APP.ui.panel!=="rules";
+  if(APP.st&&APP.st.status==="closed"&&!APP.host) APP.ui.joinErr="hostLeft";
   if(APP.ui.connecting||APP.ui.joinErr||!APP.st){ $("#chars").innerHTML=""; $("#center").innerHTML=connCard(); bindConn(); renderComposer(); return; }
   renderChars(); renderCenter(); renderComposer(); renderChat(); if(APP.ui.panel==="rules") renderRules(); renderEnd(); renderReveal();
 }
