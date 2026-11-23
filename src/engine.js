@@ -182,7 +182,7 @@ class Host {
     this.resync(pid); this.flush(true);
   }
   checkFull(){
-    if(this.status==="lobby"&&this.order.length>=this.S.seats&&compTotal(this.S.comp)===this.S.seats){
+    if(this.status==="lobby"&&!this.hold&&this.order.length>=this.S.seats&&compTotal(this.S.comp)===this.S.seats){
       this.status="starting"; this.ph={k:"starting",seq:this.ph.seq+1,end:Date.now()+this.dur("starting")};
       this.sys("launching",{},"info");
     }
@@ -205,6 +205,7 @@ class Host {
         break;
       case "cfg": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")) this.cfg(msg.cfg); break;
       case "kick": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")&&msg.pid!==this.hostId){ const n=this.name(msg.pid); this.sendPriv(msg.pid,{t:"err",k:"kicked"}); this.order=this.order.filter(x=>x!==msg.pid); delete this.players[msg.pid]; this.sys("left",{n},"small"); if(this.status==="starting"){this.status="lobby";this.ph={k:"lobby",seq:this.ph.seq+1};} } break;
+      case "hold": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")){ this.hold=!!msg.on; if(this.hold&&this.status==="starting"){ this.status="lobby"; this.ph={k:"lobby",seq:this.ph.seq+1}; } if(!this.hold) this.checkFull(); } break;
       case "again": if(pid===this.hostId&&this.status==="ended") this.again(); break;
       case "forceStart": if(pid===this.hostId&&this.status==="lobby"&&this.order.length>=3){ this.S.seats=this.order.length; this.S.comp=suggestCompFit(this.S.comp,this.order.length); this.checkFull(); } break;
     }

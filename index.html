@@ -430,6 +430,21 @@ body{background:radial-gradient(1200px 700px at 30% -10%,#2a2450,transparent 60%
 .mhear{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;color:var(--mute)} .mhear input{width:auto}
 .ae-big{padding:8px 10px;gap:10px} .ae-big button{width:34px;height:34px;font-size:18px;border-radius:10px}
 .ae-name{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px} .ae-name b{color:#fff;font-size:15px}
+/* ---- visages réels + infobulle des votes ---- */
+img.face{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.face-w,.face-w svg{display:block;width:100%;height:100%}
+.chip img.face{width:26px;height:26px;flex:none}
+.mav img.face{border-radius:50%}
+.votes,.votes3{pointer-events:auto;cursor:help;position:relative}
+.votes3 i{width:20px;height:20px} .votes3 em{font-style:normal;font-size:11px;font-weight:700;margin-left:2px}
+.votes i{width:20px;height:20px;border-radius:50%;overflow:hidden;display:block}
+.votes[data-tip]:hover::after,.votes3[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);background:rgba(12,10,20,.95);color:#fff;font-size:12px;font-weight:600;padding:6px 10px;border-radius:9px;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.12);z-index:50;pointer-events:none}
+.compline.editable{cursor:pointer;border-radius:12px;transition:background .15s} .compline.editable:hover{background:rgba(255,255,255,.05)}
+.votes3 i,.votes i{width:24px;height:24px;border:2px solid rgba(255,255,255,.55);box-sizing:border-box;flex:none}
+.votes3 i+i,.votes i+i{margin-left:-7px}
+.votes3 b{font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.votes,.votes3{z-index:5}
+.votes3 i img.face,.votes i img.face,.votes3 i .face-w,.votes i .face-w{width:20px!important;height:20px!important;max-width:none}
 
 </style>
 </head>
@@ -821,7 +836,7 @@ class Host {
     this.resync(pid); this.flush(true);
   }
   checkFull(){
-    if(this.status==="lobby"&&this.order.length>=this.S.seats&&compTotal(this.S.comp)===this.S.seats){
+    if(this.status==="lobby"&&!this.hold&&this.order.length>=this.S.seats&&compTotal(this.S.comp)===this.S.seats){
       this.status="starting"; this.ph={k:"starting",seq:this.ph.seq+1,end:Date.now()+this.dur("starting")};
       this.sys("launching",{},"info");
     }
@@ -844,6 +859,7 @@ class Host {
         break;
       case "cfg": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")) this.cfg(msg.cfg); break;
       case "kick": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")&&msg.pid!==this.hostId){ const n=this.name(msg.pid); this.sendPriv(msg.pid,{t:"err",k:"kicked"}); this.order=this.order.filter(x=>x!==msg.pid); delete this.players[msg.pid]; this.sys("left",{n},"small"); if(this.status==="starting"){this.status="lobby";this.ph={k:"lobby",seq:this.ph.seq+1};} } break;
+      case "hold": if(pid===this.hostId&&(this.status==="lobby"||this.status==="starting")){ this.hold=!!msg.on; if(this.hold&&this.status==="starting"){ this.status="lobby"; this.ph={k:"lobby",seq:this.ph.seq+1}; } if(!this.hold) this.checkFull(); } break;
       case "again": if(pid===this.hostId&&this.status==="ended") this.again(); break;
       case "forceStart": if(pid===this.hostId&&this.status==="lobby"&&this.order.length>=3){ this.S.seats=this.order.length; this.S.comp=suggestCompFit(this.S.comp,this.order.length); this.checkFull(); } break;
     }
@@ -1520,7 +1536,7 @@ en:{
  createGame:"Create a game",orJoin:"or join",joinPh:"Paste the game link or code",join:"Join",invited:"You’ve been invited to a game! Pick a nickname, then join.",joinThis:"Join the game",
  recent:"Recent games",rolesTitle:"The village roles",needPseudo:"Pick a nickname first.",badCode:"Invalid game link.",
  camp_wolf:"Werewolf camp",camp_village:"Village camp",camp_solo:"Loner",
- defaultGameName:"{n}’s game",editGame:"Edit game",gameName:"Game name",seats:"Players",type:"Type",fun:"Fun",serious:"Serious",speed:"Pace",normal:"Normal",fast:"Fast",
+ defaultGameName:"{n}’s game",editGame:"Edit roles & settings",votedBy:"Voted by:",gameName:"Game name",seats:"Players",type:"Type",fun:"Fun",serious:"Serious",speed:"Pace",normal:"Normal",fast:"Fast",
  composition:"Composition",rolesWord:"roles",suggested:"Suggested composition",cancel:"Cancel",create:"Create",save:"Save",
  home:"Home",invite:"Invite",linkCopied:"Link copied! Send it to your friends.",copy:"Copy",rulesBtn:"Rules",chatBtn:"Chat",translate:"Translate the chat",loversChat:"Lovers’ chat",
  net_offline:"Connection lost…",net_reconnecting:"Reconnecting…",connecting:"Connecting to the village…",
@@ -1578,7 +1594,7 @@ fr:{
  createGame:"Créer une partie",orJoin:"ou rejoindre",joinPh:"Colle le lien ou le code de la partie",join:"Rejoindre",invited:"Tu as été invité·e à une partie ! Choisis ton pseudo puis rejoins-la.",joinThis:"Rejoindre la partie",
  recent:"Parties récentes",rolesTitle:"Les rôles du village",needPseudo:"Choisis d’abord un pseudo.",badCode:"Lien de partie invalide.",
  camp_wolf:"Camp des Loups-Garous",camp_village:"Camp du Village",camp_solo:"Solitaire",
- defaultGameName:"Partie de {n}",editGame:"Modifier la partie",gameName:"Nom de la partie",seats:"Joueurs",type:"Type",fun:"Fun",serious:"Sérieuse",speed:"Rythme",normal:"Normal",fast:"Rapide",
+ defaultGameName:"Partie de {n}",editGame:"Modifier la composition",votedBy:"A voté :",gameName:"Nom de la partie",seats:"Joueurs",type:"Type",fun:"Fun",serious:"Sérieuse",speed:"Rythme",normal:"Normal",fast:"Rapide",
  composition:"Composition",rolesWord:"rôles",suggested:"Composition suggérée",cancel:"Annuler",create:"Créer",save:"Enregistrer",
  home:"Accueil",invite:"Inviter",linkCopied:"Lien copié ! Envoie-le à tes amis.",copy:"Copier",rulesBtn:"Règles",chatBtn:"Chat",translate:"Traduire le chat",loversChat:"Chat des amoureux",
  net_offline:"Connexion perdue…",net_reconnecting:"Reconnexion…",connecting:"Connexion au village…",
@@ -1636,7 +1652,7 @@ ru:{
  createGame:"Создать игру",orJoin:"или войти",joinPh:"Вставь ссылку или код игры",join:"Войти",invited:"Тебя пригласили в игру! Выбери ник и заходи.",joinThis:"Войти в игру",
  recent:"Недавние игры",rolesTitle:"Роли деревни",needPseudo:"Сначала выбери ник.",badCode:"Неверная ссылка на игру.",
  camp_wolf:"Лагерь оборотней",camp_village:"Лагерь деревни",camp_solo:"Одиночка",
- defaultGameName:"Игра {n}",editGame:"Изменить игру",gameName:"Название игры",seats:"Игроки",type:"Тип",fun:"Весёлая",serious:"Серьёзная",speed:"Темп",normal:"Обычный",fast:"Быстрый",
+ defaultGameName:"Игра {n}",editGame:"Изменить состав",votedBy:"Проголосовали:",gameName:"Название игры",seats:"Игроки",type:"Тип",fun:"Весёлая",serious:"Серьёзная",speed:"Темп",normal:"Обычный",fast:"Быстрый",
  composition:"Состав",rolesWord:"ролей",suggested:"Предложенный состав",cancel:"Отмена",create:"Создать",save:"Сохранить",
  home:"Главная",invite:"Пригласить",linkCopied:"Ссылка скопирована! Отправь её друзьям.",copy:"Копировать",rulesBtn:"Правила",chatBtn:"Чат",translate:"Перевести чат",loversChat:"Чат влюблённых",
  net_offline:"Нет соединения…",net_reconnecting:"Переподключение…",connecting:"Подключение к деревне…",
@@ -3377,7 +3393,8 @@ const R4 = {};
       const meC=me&&chars[me]; let base=meC?Math.atan2(meC.x,meC.z):camYaw; if(preview) base=0;
       const R=meC?meC.R:(order.length?chars[order[0]]&&chars[order[0]].R||3:3);
       let eye,at;
-      if(preview&&cheer){ eye=[.7,1.45,2.3]; at=[0,1.12,0]; }
+      if(preview&&headMode){ const c=chars.me, hy=c&&c.headTop?c.headTop[1]-.16:1.5; eye=[.12,hy+.02,.78]; at=[0,hy-.01,0]; }
+      else if(preview&&cheer){ eye=[.7,1.45,2.3]; at=[0,1.12,0]; }
       else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.9,1.45,Math.cos(a)*3.9]; at=[0,.95,0]; }
       else { const a=base+drag; const dist=(R+3.4)*zoom+cine*2.2; const hgt=(2.9+R*.12)*zoom+cine*1.2+Math.sin(t*.3)*.05; eye=[Math.sin(a+Math.sin(t*.13)*.03)*dist,hgt,Math.cos(a+Math.sin(t*.13)*.03)*dist]; at=[0,.45+cine*1.6,0]; }
       camE=eye; const fov=preview?32:52;
@@ -3469,7 +3486,7 @@ const R4 = {};
       if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,.6,1.15);
         el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
     }
-    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false, onReady=null;
+    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false, headMode=false, onReady=null;
     const length3=a=>Math.hypot(a[0],a[1],a[2]);
     function project(p){ const m=VPm; if(!m) return {x:0,y:0,w:-1}; const x=m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12], y=m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13], w=m[3]*p[0]+m[7]*p[1]+m[11]*p[2]+m[15]; return {x:(x/w*.5+.5)*W,y:(1-(y/w*.5+.5))*H,w}; }
     function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,c.rig?.22:.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
@@ -3492,7 +3509,7 @@ const R4 = {};
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
       pause(b){ paused=!!b; }, anchor,
       whenReady(){ const c=chars.me; if(!c||!c.slug) return Promise.resolve(); return new Promise(r=>{ const k=()=>{ if(!chars.me||!chars.me.slug||(chars.me.rig&&chars.me.rig.slug===chars.me.slug)) r(); else setTimeout(k,30); }; k(); }); },
-      snap(av,m,ch){ cheer=!!ch; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
+      snap(av,m,ch,hd){ cheer=!!ch; headMode=!!hd; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
     };
   };
 })();
@@ -3526,6 +3543,16 @@ R4._portraitAsync=async function(av,mood,big){
   if(R4._ps===undefined) R4.portrait(av,mood,big); if(!R4._ps) return null;
   R4._ps.snap(av,mood,true); await R4._ps.whenReady(); R4._pc&&R4._pc.delete(JSON.stringify([av,mood,big]));
   return R4.portrait(av,mood,big);
+};
+// petites têtes (votes, chat…) : une par personnage réaliste, en cache
+R4.headshotAsync=function(slug){
+  R4._hs=R4._hs||{}; if(R4._hs[slug]) return R4._hs[slug];
+  const run=async()=>{ try{ await R4.loadChar(slug); }catch(e){ return null; }
+    if(R4._ps===undefined) R4.portrait({},"dusk",false); if(!R4._ps) return null;
+    const av={rc:R4.CHAR_LIST.indexOf(slug)}; const c=R4._pcv, w=c.width, h=c.height; c.width=c.height=112;
+    R4._ps.snap(av,"day",false,true); await R4._ps.whenReady(); R4._ps.snap(av,"day",false,true); const u=R4._ps.snap(av,"day",false,true);
+    c.width=w; c.height=h; return u; };
+  R4._pq=(R4._pq||Promise.resolve()).then(run,run); return R4._hs[slug]=R4._pq;
 };
 R4.portrait=function(av,mood,big){
   const k=JSON.stringify([av,mood,big]); R4._pc=R4._pc||new Map(); if(R4._pc.has(k)) return R4._pc.get(k);
@@ -3950,7 +3977,18 @@ function openCreate(edit){
   const st=S();
   const base= edit ? {name:st.name,seats:st.seats,comp:clone(st.comp),mode:st.mode,speed:st.speed}
                    : {name:t("defaultGameName",{n:APP.me.name}),seats:8,comp:suggestComp(8),mode:"fun",speed:"normal",voice:true};
-  APP.ui.modal={kind:"create",edit:!!edit,cfg:base}; render();
+  APP.ui.modal={kind:"create",edit:!!edit,cfg:base}; if(edit){ APP._hold=true; send({t:"hold",on:true}); } render();
+}
+function releaseHold(){ if(APP._hold){ APP._hold=false; send({t:"hold",on:false}); } }
+/* visage du vrai personnage (ou dessin 2D en repli) */
+function faceHTML(av){
+  const real=APP.set.gq!=="low"&&typeof R4!=="undefined"&&R4.CHAR_LIST&&typeof WebGL2RenderingContext!=="undefined"&&!QS.get("no3d")?R4.charSlug(R4.avNorm(av)):null;
+  if(!real) return headSVG(av);
+  const done=APP._faces&&APP._faces[real];
+  if(done) return `<img class="face" src="${done}" alt="">`;
+  APP._faces=APP._faces||{};
+  R4.headshotAsync(real).then(u=>{ if(!u) return; APP._faces[real]=u; document.querySelectorAll('[data-face="'+real+'"]').forEach(el=>{ el.outerHTML=`<img class="face" src="${u}" alt="">`; }); if(APP.v3lab) APP.v3lab._h=""; });
+  return `<span data-face="${real}" class="face-w">${headSVG(av)}</span>`;
 }
 function createModal(m){
   const c=m.cfg, tot=compTotal(c.comp), min=APP.st&&m.edit?Math.max(3,APP.st.players.length):3;
@@ -3975,10 +4013,10 @@ function bindCreate(m){
   document.querySelectorAll("[data-voice]").forEach(b=>b.onclick=()=>{ c.voice=b.dataset.voice==="1"; re(); });
   document.querySelectorAll("[data-speed]").forEach(b=>b.onclick=()=>{ c.speed=b.dataset.speed; re(); });
   $("#sugg").onclick=()=>{ c.comp=suggestComp(c.seats); re(); };
-  $("#mCancel").onclick=()=>{ APP.ui.modal=null; render(); };
+  $("#mCancel").onclick=()=>{ APP.ui.modal=null; releaseHold(); render(); };
   $("#mOk").onclick=async()=>{ c.name=$("#cName").value.trim()||t("defaultGameName",{n:APP.me.name});
     APP.ui.modal=null;
-    if(m.edit){ send({t:"cfg",cfg:c}); render(); }
+    if(m.edit){ send({t:"cfg",cfg:c}); releaseHold(); render(); }
     else { render(); await createGame(clone(c)); } };
 }
 
@@ -4044,7 +4082,7 @@ function renderVoice(){
   const left=c?Math.max(0,Math.ceil((c.until-now())/1000)):0, tot=c?Math.max(1,(c.until-c.start)/1000):1;
   const wolf=(c&&c.ch==="w")||vc.ch==="w";
   let h=`<div class="vb-top ${wolf?"wolf":""}">`;
-  if(c){ const P=pl(c.pid); h+=`<div class="vb-spk ${mine?"me":""}"><span class="vb-av">${P?headSVG(P.av):""}</span><span class="vb-t"><b>${esc(mine?t("vYou"):t("vSpeaking",{n:P?P.n:"?"}))}</b><span class="vb-bar"><i style="width:${(100*left/tot).toFixed(1)}%"></i></span></span><span class="vb-s">${left}s</span>${mine?`<span class="vb-lvl"><i style="transform:scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})"></i></span><button class="vb-btn done" id="vDone">${esc(t("vDone"))}</button>`:""}</div>`; }
+  if(c){ const P=pl(c.pid); h+=`<div class="vb-spk ${mine?"me":""}"><span class="vb-av">${P?faceHTML(P.av):""}</span><span class="vb-t"><b>${esc(mine?t("vYou"):t("vSpeaking",{n:P?P.n:"?"}))}</b><span class="vb-bar"><i style="width:${(100*left/tot).toFixed(1)}%"></i></span></span><span class="vb-s">${left}s</span>${mine?`<span class="vb-lvl"><i style="transform:scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})"></i></span><button class="vb-btn done" id="vDone">${esc(t("vDone"))}</button>`:""}</div>`; }
   else h+=`<div class="vb-idle">🎙️ ${esc(t(wolf?"vIdleWolf":"vIdle"))}</div>`;
   if(vc.ch&&!mine){ h+= pos>=0?`<button class="vb-btn on" id="vReq">✋ ${esc(t("vCancel"))} · ${esc(t("vPos",{n:pos+1}))}</button>`:`<button class="vb-btn" id="vReq" ${VOICE.canSpeak()?"":"disabled"} title="${VOICE.canSpeak()?"":esc(t("vNoMic"))}">✋ ${esc(t("vReq"))}</button>`; }
   h+=`</div>`;
@@ -4122,7 +4160,7 @@ function renderChars(){
       ${isCand?`<div class="cand">🎗️ ${esc(t("candidate"))}</div>`:""}
       ${bubbleFor(p.id)}
       <div class="fig ${dead?"":"bob"}" style="animation-delay:${(i*0.37)%2}s">${dead?tombSVG():charSVG(p.av,{sleep:sleeping&&p.id!==me})}</div><div class="isle">${isleSVG()}</div>
-      ${voters.length?`<div class="votes"><b>${voters.length}</b>${voters.slice(0,6).map(a=>`<i title="${esc(pname(a))}">${headSVG((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
+      ${voters.length?`<div class="votes" data-tip="${esc(t("votedBy")+" "+voters.map(pname).join(", "))}"><b>${voters.length}</b>${voters.slice(0,6).map(a=>`<i>${faceHTML((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
       ${wcnt[p.id]?`<div class="votes wolfv"><b>🐺 ${wcnt[p.id]}</b></div>`:""}
     </div>`;
   }).join("");
@@ -4159,7 +4197,7 @@ function renderChars3D(){
       ${isCand?`<div class="cand">🎗️ ${esc(t("candidate"))}</div>`:""}
       ${roleTag?`<div class="rtag">${er?`<span class="re">${emb(er)}</span>`:""}${esc(roleTag)}</div>`:""}
       <div class="tag"><span class="nm">${esc(p.n)}</span>${badges.join("")}</div>
-      ${voters.length?`<div class="votes3 ${v.prompt&&v.prompt.k==="wolves"?"wolfv":""}"><b>${voters.length}</b>${voters.slice(0,5).map(a=>`<i>${headSVG((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
+      ${voters.length?`<div class="votes3 ${v.prompt&&v.prompt.k==="wolves"?"wolfv":""}" data-tip="${esc(t("votedBy")+" "+voters.map(pname).join(", "))}"><b>${voters.length}</b>${voters.slice(0,6).map(a=>`<i>${faceHTML((pl(a)||{}).av)}</i>`).join("")}${voters.length>6?`<em>+${voters.length-6}</em>`:""}</div>`:""}
     </div>`; }).join("");
   if(lab._h!==html){ lab._h=html; lab.innerHTML=html; lab.querySelectorAll(".nm").forEach(el=>el.onclick=e=>{ e.stopPropagation(); const i=$("#msgIn"); if(i){ i.value=(i.value+" @"+el.textContent+" ").replace(/^ /,""); i.focus(); } }); }
 }
@@ -4213,9 +4251,9 @@ function renderCenter(){
     const n=st.players.length;
     h=`<div class="card-c lobby"><div class="lb-top">${logoSVG()}<div><h3>${esc(st.name||"")}</h3><div class="muted">${esc(t("waitingPlayers",{n,m:st.seats}))} · ${esc(t(st.mode==="serious"?"serious":"fun"))} · ${esc(t(st.speed==="fast"?"fast":"normal"))}</div></div></div>
       <div class="invite"><input readonly value="${esc(gameLink())}" id="invIn"><button class="btn-primary sm" id="copyInv">${esc(t("copy"))}</button></div>
-      <div class="compline">${Object.entries(st.comp||{}).filter(([r,c])=>c).map(([r,c])=>`<span class="cpill c-${ROLES[r].camp}" title="${esc(roleDesc(r))}"><span class="re">${emb(r)}</span>${esc(roleName(r))}${c>1?" ×"+c:""}</span>`).join("")}</div>
+      <div class="compline ${APP.host?"editable":""}" ${APP.host?`id="compEdit" title="${esc(t("editGame"))}"`:""}>${Object.entries(st.comp||{}).filter(([r,c])=>c).map(([r,c])=>`<span class="cpill c-${ROLES[r].camp}" title="${esc(roleDesc(r))}"><span class="re">${emb(r)}</span>${esc(roleName(r))}${c>1?" ×"+c:""}</span>`).join("")}</div>
       ${st.status==="starting"?`<div class="launch">${esc(t("launchingSoon"))}</div>`:""}
-      ${APP.host?`<div class="row c"><button class="btn-ghost sm" id="editG">⚙︎ ${esc(t("editGame"))}</button>${n>=3&&n<st.seats?`<button class="btn-ghost sm" id="forceG">▶ ${esc(t("startNow",{n}))}</button>`:""}</div><p class="muted sm">${esc(t("hostNote"))}</p>`:""}
+      ${APP.host?`<div class="row c"><button class="btn-primary sm" id="editG">✏️ ${esc(t("editGame"))}</button>${n>=3&&n<st.seats?`<button class="btn-ghost sm" id="forceG">▶ ${esc(t("startNow",{n}))}</button>`:""}</div><p class="muted sm">${esc(t("hostNote"))}</p>`:""}
     </div>`;
   } else if(pr&&(!pr.acted||pr.k==="wolves")&&pr.k!=="cand"){
     const total=(SPEEDS[st.speed]||SPEEDS.normal); APP._mbarTotal=Math.max(1,Math.round(((st.ph.end||0)-now())/1000));
@@ -4232,7 +4270,7 @@ function renderCenter(){
       const opts=st.players.filter(p=>promptValid(pr,p.id));
       if(pr.k==="pyro") h+=`<div class="row c"><button class="btn-ghost" id="ignite">🔥 ${esc(t("ignite",{n:(pr.barrels||[]).length}))}</button></div>`;
       if(pr.k==="wolves"&&pr.infect) h+=`<label class="chk"><input type="checkbox" id="infChk" ${APP.ui.infect?"checked":""}> 🦠 ${esc(t("infectOpt"))}</label>`;
-      h+=`<div class="chips">${opts.map(p=>`<button class="chip ${APP.ui.sel.includes(p.id)||(pr.k==="wolves"&&(v.wolfVotes||{})[me]===p.id)?"on":""}" data-pk="${esc(p.id)}">${headSVG(p.av)}<span>${esc(p.n)}${p.id===me?" ("+esc(t("you"))+")":""}</span>${pr.k==="wolves"&&countW(p.id)?`<em>🐺${countW(p.id)}</em>`:""}</button>`).join("")}</div>`;
+      h+=`<div class="chips">${opts.map(p=>`<button class="chip ${APP.ui.sel.includes(p.id)||(pr.k==="wolves"&&(v.wolfVotes||{})[me]===p.id)?"on":""}" data-pk="${esc(p.id)}">${faceHTML(p.av)}<span>${esc(p.n)}${p.id===me?" ("+esc(t("you"))+")":""}</span>${pr.k==="wolves"&&countW(p.id)?`<em>🐺${countW(p.id)}</em>`:""}</button>`).join("")}</div>`;
       if(pr.k==="hunter") h+=`<div class="row c"><button class="btn-ghost" id="hNone">${esc(t("noOne"))}</button></div>`;
       if(pr.k!=="wolves") h+=`<div class="row c"><button class="btn-primary" id="pOk" ${APP.ui.sel.length===(pr.k==="cupid"?2:pr.k==="rat"?APP.ui.sel.length||99:1)&&APP.ui.sel.length?"":"disabled"}>${esc(t("confirm"))}</button></div>`;
     }
@@ -4247,7 +4285,7 @@ function renderCenter(){
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
   b("#copyInv",()=>{ copyText(gameLink()); toast(t("codeCopied")); });
-  b("#editG",()=>openCreate(true));
+  b("#editG",()=>openCreate(true)); b("#compEdit",()=>openCreate(true));
   b("#forceG",()=>send({t:"forceStart"}));
   el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));
   b("#pOk",confirmPrompt);
@@ -4314,7 +4352,7 @@ function renderChat(){
     const same=lastA===(m.a||m.n)+m.ch&&!m.cls;
     lastA=(m.a||m.n)+m.ch;
     const pre = m.cls==="accuse"?`<div class="acc">🗳️ ${fmt("accuse",m.p)}</div>`: m.cls==="pres"?`<div class="acc pres">🎗️ ${esc(t("m_presents"))}</div>`:"";
-    h+=`<div class="${cls} ${same?"cont":""}">${same?"":`<div class="mav">${P?headSVG(P.av):m.anon?"🐺":m.necro?"💀":""}</div>`}<div class="mbody">${same?"":`<div class="mname"><b class="mn" data-n="${esc(P?P.n:m.n)}">${esc(name)}</b>${m.vo?` <span class="vo" title="${esc(t("vTranscript"))}">🎤</span>`:""}${m.ch==="w"?` <span class="chtag w">${esc(t("wolves"))}</span>`:m.ch==="d"?` <span class="chtag d">${esc(t("graveyard"))}</span>`:m.ch==="l"?` <span class="chtag l">${esc(t("lovers"))}</span>`:""}</div>`}${pre}<div class="mtext">${body}</div>${trH}</div></div>`;
+    h+=`<div class="${cls} ${same?"cont":""}">${same?"":`<div class="mav">${P?faceHTML(P.av):m.anon?"🐺":m.necro?"💀":""}</div>`}<div class="mbody">${same?"":`<div class="mname"><b class="mn" data-n="${esc(P?P.n:m.n)}">${esc(name)}</b>${m.vo?` <span class="vo" title="${esc(t("vTranscript"))}">🎤</span>`:""}${m.ch==="w"?` <span class="chtag w">${esc(t("wolves"))}</span>`:m.ch==="d"?` <span class="chtag d">${esc(t("graveyard"))}</span>`:m.ch==="l"?` <span class="chtag l">${esc(t("lovers"))}</span>`:""}</div>`}${pre}<div class="mtext">${body}</div>${trH}</div></div>`;
   }
   log.innerHTML=h;
   if(atBottom||APP.msgs.length!==_lastChatLen&&APP.msgs.length&&APP.msgs[APP.msgs.length-1].a===me) log.scrollTop=log.scrollHeight;

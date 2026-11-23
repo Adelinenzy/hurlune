@@ -264,7 +264,8 @@
       const meC=me&&chars[me]; let base=meC?Math.atan2(meC.x,meC.z):camYaw; if(preview) base=0;
       const R=meC?meC.R:(order.length?chars[order[0]]&&chars[order[0]].R||3:3);
       let eye,at;
-      if(preview&&cheer){ eye=[.7,1.45,2.3]; at=[0,1.12,0]; }
+      if(preview&&headMode){ const c=chars.me, hy=c&&c.headTop?c.headTop[1]-.16:1.5; eye=[.12,hy+.02,.78]; at=[0,hy-.01,0]; }
+      else if(preview&&cheer){ eye=[.7,1.45,2.3]; at=[0,1.12,0]; }
       else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.9,1.45,Math.cos(a)*3.9]; at=[0,.95,0]; }
       else { const a=base+drag; const dist=(R+3.4)*zoom+cine*2.2; const hgt=(2.9+R*.12)*zoom+cine*1.2+Math.sin(t*.3)*.05; eye=[Math.sin(a+Math.sin(t*.13)*.03)*dist,hgt,Math.cos(a+Math.sin(t*.13)*.03)*dist]; at=[0,.45+cine*1.6,0]; }
       camE=eye; const fov=preview?32:52;
@@ -356,7 +357,7 @@
       if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,.6,1.15);
         el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
     }
-    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false, onReady=null;
+    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false, headMode=false, onReady=null;
     const length3=a=>Math.hypot(a[0],a[1],a[2]);
     function project(p){ const m=VPm; if(!m) return {x:0,y:0,w:-1}; const x=m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12], y=m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13], w=m[3]*p[0]+m[7]*p[1]+m[11]*p[2]+m[15]; return {x:(x/w*.5+.5)*W,y:(1-(y/w*.5+.5))*H,w}; }
     function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,c.rig?.22:.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
@@ -379,7 +380,7 @@
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
       pause(b){ paused=!!b; }, anchor,
       whenReady(){ const c=chars.me; if(!c||!c.slug) return Promise.resolve(); return new Promise(r=>{ const k=()=>{ if(!chars.me||!chars.me.slug||(chars.me.rig&&chars.me.rig.slug===chars.me.slug)) r(); else setTimeout(k,30); }; k(); }); },
-      snap(av,m,ch){ cheer=!!ch; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
+      snap(av,m,ch,hd){ cheer=!!ch; headMode=!!hd; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
     };
   };
 })();
@@ -413,6 +414,16 @@ R4._portraitAsync=async function(av,mood,big){
   if(R4._ps===undefined) R4.portrait(av,mood,big); if(!R4._ps) return null;
   R4._ps.snap(av,mood,true); await R4._ps.whenReady(); R4._pc&&R4._pc.delete(JSON.stringify([av,mood,big]));
   return R4.portrait(av,mood,big);
+};
+// petites têtes (votes, chat…) : une par personnage réaliste, en cache
+R4.headshotAsync=function(slug){
+  R4._hs=R4._hs||{}; if(R4._hs[slug]) return R4._hs[slug];
+  const run=async()=>{ try{ await R4.loadChar(slug); }catch(e){ return null; }
+    if(R4._ps===undefined) R4.portrait({},"dusk",false); if(!R4._ps) return null;
+    const av={rc:R4.CHAR_LIST.indexOf(slug)}; const c=R4._pcv, w=c.width, h=c.height; c.width=c.height=112;
+    R4._ps.snap(av,"day",false,true); await R4._ps.whenReady(); R4._ps.snap(av,"day",false,true); const u=R4._ps.snap(av,"day",false,true);
+    c.width=w; c.height=h; return u; };
+  R4._pq=(R4._pq||Promise.resolve()).then(run,run); return R4._hs[slug]=R4._pq;
 };
 R4.portrait=function(av,mood,big){
   const k=JSON.stringify([av,mood,big]); R4._pc=R4._pc||new Map(); if(R4._pc.has(k)) return R4._pc.get(k);

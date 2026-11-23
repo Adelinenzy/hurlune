@@ -412,7 +412,18 @@ function openCreate(edit){
   const st=S();
   const base= edit ? {name:st.name,seats:st.seats,comp:clone(st.comp),mode:st.mode,speed:st.speed}
                    : {name:t("defaultGameName",{n:APP.me.name}),seats:8,comp:suggestComp(8),mode:"fun",speed:"normal",voice:true};
-  APP.ui.modal={kind:"create",edit:!!edit,cfg:base}; render();
+  APP.ui.modal={kind:"create",edit:!!edit,cfg:base}; if(edit){ APP._hold=true; send({t:"hold",on:true}); } render();
+}
+function releaseHold(){ if(APP._hold){ APP._hold=false; send({t:"hold",on:false}); } }
+/* visage du vrai personnage (ou dessin 2D en repli) */
+function faceHTML(av){
+  const real=APP.set.gq!=="low"&&typeof R4!=="undefined"&&R4.CHAR_LIST&&typeof WebGL2RenderingContext!=="undefined"&&!QS.get("no3d")?R4.charSlug(R4.avNorm(av)):null;
+  if(!real) return headSVG(av);
+  const done=APP._faces&&APP._faces[real];
+  if(done) return `<img class="face" src="${done}" alt="">`;
+  APP._faces=APP._faces||{};
+  R4.headshotAsync(real).then(u=>{ if(!u) return; APP._faces[real]=u; document.querySelectorAll('[data-face="'+real+'"]').forEach(el=>{ el.outerHTML=`<img class="face" src="${u}" alt="">`; }); if(APP.v3lab) APP.v3lab._h=""; });
+  return `<span data-face="${real}" class="face-w">${headSVG(av)}</span>`;
 }
 function createModal(m){
   const c=m.cfg, tot=compTotal(c.comp), min=APP.st&&m.edit?Math.max(3,APP.st.players.length):3;
@@ -437,10 +448,10 @@ function bindCreate(m){
   document.querySelectorAll("[data-voice]").forEach(b=>b.onclick=()=>{ c.voice=b.dataset.voice==="1"; re(); });
   document.querySelectorAll("[data-speed]").forEach(b=>b.onclick=()=>{ c.speed=b.dataset.speed; re(); });
   $("#sugg").onclick=()=>{ c.comp=suggestComp(c.seats); re(); };
-  $("#mCancel").onclick=()=>{ APP.ui.modal=null; render(); };
+  $("#mCancel").onclick=()=>{ APP.ui.modal=null; releaseHold(); render(); };
   $("#mOk").onclick=async()=>{ c.name=$("#cName").value.trim()||t("defaultGameName",{n:APP.me.name});
     APP.ui.modal=null;
-    if(m.edit){ send({t:"cfg",cfg:c}); render(); }
+    if(m.edit){ send({t:"cfg",cfg:c}); releaseHold(); render(); }
     else { render(); await createGame(clone(c)); } };
 }
 
@@ -506,7 +517,7 @@ function renderVoice(){
   const left=c?Math.max(0,Math.ceil((c.until-now())/1000)):0, tot=c?Math.max(1,(c.until-c.start)/1000):1;
   const wolf=(c&&c.ch==="w")||vc.ch==="w";
   let h=`<div class="vb-top ${wolf?"wolf":""}">`;
-  if(c){ const P=pl(c.pid); h+=`<div class="vb-spk ${mine?"me":""}"><span class="vb-av">${P?headSVG(P.av):""}</span><span class="vb-t"><b>${esc(mine?t("vYou"):t("vSpeaking",{n:P?P.n:"?"}))}</b><span class="vb-bar"><i style="width:${(100*left/tot).toFixed(1)}%"></i></span></span><span class="vb-s">${left}s</span>${mine?`<span class="vb-lvl"><i style="transform:scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})"></i></span><button class="vb-btn done" id="vDone">${esc(t("vDone"))}</button>`:""}</div>`; }
+  if(c){ const P=pl(c.pid); h+=`<div class="vb-spk ${mine?"me":""}"><span class="vb-av">${P?faceHTML(P.av):""}</span><span class="vb-t"><b>${esc(mine?t("vYou"):t("vSpeaking",{n:P?P.n:"?"}))}</b><span class="vb-bar"><i style="width:${(100*left/tot).toFixed(1)}%"></i></span></span><span class="vb-s">${left}s</span>${mine?`<span class="vb-lvl"><i style="transform:scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})"></i></span><button class="vb-btn done" id="vDone">${esc(t("vDone"))}</button>`:""}</div>`; }
   else h+=`<div class="vb-idle">🎙️ ${esc(t(wolf?"vIdleWolf":"vIdle"))}</div>`;
   if(vc.ch&&!mine){ h+= pos>=0?`<button class="vb-btn on" id="vReq">✋ ${esc(t("vCancel"))} · ${esc(t("vPos",{n:pos+1}))}</button>`:`<button class="vb-btn" id="vReq" ${VOICE.canSpeak()?"":"disabled"} title="${VOICE.canSpeak()?"":esc(t("vNoMic"))}">✋ ${esc(t("vReq"))}</button>`; }
   h+=`</div>`;
@@ -584,7 +595,7 @@ function renderChars(){
       ${isCand?`<div class="cand">🎗️ ${esc(t("candidate"))}</div>`:""}
       ${bubbleFor(p.id)}
       <div class="fig ${dead?"":"bob"}" style="animation-delay:${(i*0.37)%2}s">${dead?tombSVG():charSVG(p.av,{sleep:sleeping&&p.id!==me})}</div><div class="isle">${isleSVG()}</div>
-      ${voters.length?`<div class="votes"><b>${voters.length}</b>${voters.slice(0,6).map(a=>`<i title="${esc(pname(a))}">${headSVG((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
+      ${voters.length?`<div class="votes" data-tip="${esc(t("votedBy")+" "+voters.map(pname).join(", "))}"><b>${voters.length}</b>${voters.slice(0,6).map(a=>`<i>${faceHTML((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
       ${wcnt[p.id]?`<div class="votes wolfv"><b>🐺 ${wcnt[p.id]}</b></div>`:""}
     </div>`;
   }).join("");
@@ -621,7 +632,7 @@ function renderChars3D(){
       ${isCand?`<div class="cand">🎗️ ${esc(t("candidate"))}</div>`:""}
       ${roleTag?`<div class="rtag">${er?`<span class="re">${emb(er)}</span>`:""}${esc(roleTag)}</div>`:""}
       <div class="tag"><span class="nm">${esc(p.n)}</span>${badges.join("")}</div>
-      ${voters.length?`<div class="votes3 ${v.prompt&&v.prompt.k==="wolves"?"wolfv":""}"><b>${voters.length}</b>${voters.slice(0,5).map(a=>`<i>${headSVG((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
+      ${voters.length?`<div class="votes3 ${v.prompt&&v.prompt.k==="wolves"?"wolfv":""}" data-tip="${esc(t("votedBy")+" "+voters.map(pname).join(", "))}"><b>${voters.length}</b>${voters.slice(0,6).map(a=>`<i>${faceHTML((pl(a)||{}).av)}</i>`).join("")}${voters.length>6?`<em>+${voters.length-6}</em>`:""}</div>`:""}
     </div>`; }).join("");
   if(lab._h!==html){ lab._h=html; lab.innerHTML=html; lab.querySelectorAll(".nm").forEach(el=>el.onclick=e=>{ e.stopPropagation(); const i=$("#msgIn"); if(i){ i.value=(i.value+" @"+el.textContent+" ").replace(/^ /,""); i.focus(); } }); }
 }
@@ -675,9 +686,9 @@ function renderCenter(){
     const n=st.players.length;
     h=`<div class="card-c lobby"><div class="lb-top">${logoSVG()}<div><h3>${esc(st.name||"")}</h3><div class="muted">${esc(t("waitingPlayers",{n,m:st.seats}))} · ${esc(t(st.mode==="serious"?"serious":"fun"))} · ${esc(t(st.speed==="fast"?"fast":"normal"))}</div></div></div>
       <div class="invite"><input readonly value="${esc(gameLink())}" id="invIn"><button class="btn-primary sm" id="copyInv">${esc(t("copy"))}</button></div>
-      <div class="compline">${Object.entries(st.comp||{}).filter(([r,c])=>c).map(([r,c])=>`<span class="cpill c-${ROLES[r].camp}" title="${esc(roleDesc(r))}"><span class="re">${emb(r)}</span>${esc(roleName(r))}${c>1?" ×"+c:""}</span>`).join("")}</div>
+      <div class="compline ${APP.host?"editable":""}" ${APP.host?`id="compEdit" title="${esc(t("editGame"))}"`:""}>${Object.entries(st.comp||{}).filter(([r,c])=>c).map(([r,c])=>`<span class="cpill c-${ROLES[r].camp}" title="${esc(roleDesc(r))}"><span class="re">${emb(r)}</span>${esc(roleName(r))}${c>1?" ×"+c:""}</span>`).join("")}</div>
       ${st.status==="starting"?`<div class="launch">${esc(t("launchingSoon"))}</div>`:""}
-      ${APP.host?`<div class="row c"><button class="btn-ghost sm" id="editG">⚙︎ ${esc(t("editGame"))}</button>${n>=3&&n<st.seats?`<button class="btn-ghost sm" id="forceG">▶ ${esc(t("startNow",{n}))}</button>`:""}</div><p class="muted sm">${esc(t("hostNote"))}</p>`:""}
+      ${APP.host?`<div class="row c"><button class="btn-primary sm" id="editG">✏️ ${esc(t("editGame"))}</button>${n>=3&&n<st.seats?`<button class="btn-ghost sm" id="forceG">▶ ${esc(t("startNow",{n}))}</button>`:""}</div><p class="muted sm">${esc(t("hostNote"))}</p>`:""}
     </div>`;
   } else if(pr&&(!pr.acted||pr.k==="wolves")&&pr.k!=="cand"){
     const total=(SPEEDS[st.speed]||SPEEDS.normal); APP._mbarTotal=Math.max(1,Math.round(((st.ph.end||0)-now())/1000));
@@ -694,7 +705,7 @@ function renderCenter(){
       const opts=st.players.filter(p=>promptValid(pr,p.id));
       if(pr.k==="pyro") h+=`<div class="row c"><button class="btn-ghost" id="ignite">🔥 ${esc(t("ignite",{n:(pr.barrels||[]).length}))}</button></div>`;
       if(pr.k==="wolves"&&pr.infect) h+=`<label class="chk"><input type="checkbox" id="infChk" ${APP.ui.infect?"checked":""}> 🦠 ${esc(t("infectOpt"))}</label>`;
-      h+=`<div class="chips">${opts.map(p=>`<button class="chip ${APP.ui.sel.includes(p.id)||(pr.k==="wolves"&&(v.wolfVotes||{})[me]===p.id)?"on":""}" data-pk="${esc(p.id)}">${headSVG(p.av)}<span>${esc(p.n)}${p.id===me?" ("+esc(t("you"))+")":""}</span>${pr.k==="wolves"&&countW(p.id)?`<em>🐺${countW(p.id)}</em>`:""}</button>`).join("")}</div>`;
+      h+=`<div class="chips">${opts.map(p=>`<button class="chip ${APP.ui.sel.includes(p.id)||(pr.k==="wolves"&&(v.wolfVotes||{})[me]===p.id)?"on":""}" data-pk="${esc(p.id)}">${faceHTML(p.av)}<span>${esc(p.n)}${p.id===me?" ("+esc(t("you"))+")":""}</span>${pr.k==="wolves"&&countW(p.id)?`<em>🐺${countW(p.id)}</em>`:""}</button>`).join("")}</div>`;
       if(pr.k==="hunter") h+=`<div class="row c"><button class="btn-ghost" id="hNone">${esc(t("noOne"))}</button></div>`;
       if(pr.k!=="wolves") h+=`<div class="row c"><button class="btn-primary" id="pOk" ${APP.ui.sel.length===(pr.k==="cupid"?2:pr.k==="rat"?APP.ui.sel.length||99:1)&&APP.ui.sel.length?"":"disabled"}>${esc(t("confirm"))}</button></div>`;
     }
@@ -709,7 +720,7 @@ function renderCenter(){
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
   b("#copyInv",()=>{ copyText(gameLink()); toast(t("codeCopied")); });
-  b("#editG",()=>openCreate(true));
+  b("#editG",()=>openCreate(true)); b("#compEdit",()=>openCreate(true));
   b("#forceG",()=>send({t:"forceStart"}));
   el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));
   b("#pOk",confirmPrompt);
@@ -776,7 +787,7 @@ function renderChat(){
     const same=lastA===(m.a||m.n)+m.ch&&!m.cls;
     lastA=(m.a||m.n)+m.ch;
     const pre = m.cls==="accuse"?`<div class="acc">🗳️ ${fmt("accuse",m.p)}</div>`: m.cls==="pres"?`<div class="acc pres">🎗️ ${esc(t("m_presents"))}</div>`:"";
-    h+=`<div class="${cls} ${same?"cont":""}">${same?"":`<div class="mav">${P?headSVG(P.av):m.anon?"🐺":m.necro?"💀":""}</div>`}<div class="mbody">${same?"":`<div class="mname"><b class="mn" data-n="${esc(P?P.n:m.n)}">${esc(name)}</b>${m.vo?` <span class="vo" title="${esc(t("vTranscript"))}">🎤</span>`:""}${m.ch==="w"?` <span class="chtag w">${esc(t("wolves"))}</span>`:m.ch==="d"?` <span class="chtag d">${esc(t("graveyard"))}</span>`:m.ch==="l"?` <span class="chtag l">${esc(t("lovers"))}</span>`:""}</div>`}${pre}<div class="mtext">${body}</div>${trH}</div></div>`;
+    h+=`<div class="${cls} ${same?"cont":""}">${same?"":`<div class="mav">${P?faceHTML(P.av):m.anon?"🐺":m.necro?"💀":""}</div>`}<div class="mbody">${same?"":`<div class="mname"><b class="mn" data-n="${esc(P?P.n:m.n)}">${esc(name)}</b>${m.vo?` <span class="vo" title="${esc(t("vTranscript"))}">🎤</span>`:""}${m.ch==="w"?` <span class="chtag w">${esc(t("wolves"))}</span>`:m.ch==="d"?` <span class="chtag d">${esc(t("graveyard"))}</span>`:m.ch==="l"?` <span class="chtag l">${esc(t("lovers"))}</span>`:""}</div>`}${pre}<div class="mtext">${body}</div>${trH}</div></div>`;
   }
   log.innerHTML=h;
   if(atBottom||APP.msgs.length!==_lastChatLen&&APP.msgs.length&&APP.msgs[APP.msgs.length-1].a===me) log.scrollTop=log.scrollHeight;
