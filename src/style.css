@@ -328,3 +328,42 @@ body{background:radial-gradient(1200px 700px at 30% -10%,#2a2450,transparent 60%
 .island-rock{display:none}
 .rcard.small .rc-name{font-size:11px;overflow-wrap:anywhere;hyphens:auto;padding:0 3px}
 .rcard.small .rc-camp{font-size:5.5px;letter-spacing:.08em}
+/* ================= v3: 3D village ================= */
+.v3{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+.v3labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.stage.has3d .scene,.stage.has3d .fireflies,.stage.has3d .fog,.stage.has3d .chars{display:none}
+.lb{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:2px;will-change:transform;transform-origin:50% 100%}
+.lb .tag{pointer-events:auto;background:rgba(12,10,20,.78);border:1px solid rgba(255,255,255,.08)}
+.lb.me .tag{background:linear-gradient(90deg,#6c5ce7,#8b6cf2)}
+.lb.dead .tag{opacity:.75} .lb.dead .tag .nm{text-decoration:line-through}
+.lb.inact{opacity:.5}
+.lb .rtag{display:flex;align-items:center;gap:4px;background:rgba(12,10,20,.7);font-weight:600}
+.lb .rtag .re{width:16px;height:16px}
+.lb .bubble{position:relative;bottom:auto;left:auto;transform:none;margin-bottom:4px;animation:pop3 .3s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop3{from{transform:scale(.3);opacity:0}}
+.votes3{display:flex;align-items:center;gap:2px;background:linear-gradient(90deg,#6c5ce7,#9b7bff);border-radius:12px;padding:2px 7px 2px 5px;box-shadow:0 2px 10px rgba(108,92,231,.6);margin-top:2px}
+.votes3 b{font-size:12px;margin-right:3px} .votes3 i{width:16px;height:16px;border-radius:50%;overflow:hidden;background:#1b1c2a;display:block} .votes3 .hd-svg{width:16px;height:16px;display:block}
+.votes3.wolfv{background:linear-gradient(90deg,#b0283a,#e0525a);box-shadow:0 2px 10px rgba(224,82,90,.6)}
+.vignette{position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at 50% 55%,transparent 45%,rgba(0,0,0,.35) 80%,rgba(0,0,0,.65));transition:opacity 2s}
+.stage.is-night .vignette{background:radial-gradient(ellipse at 50% 58%,transparent 30%,rgba(2,3,10,.55) 70%,rgba(0,0,4,.92))}
+.stage.wolfturn .vignette{background:radial-gradient(ellipse at 50% 58%,transparent 26%,rgba(40,0,6,.55) 66%,rgba(10,0,2,.95));animation:throb 1.76s ease-in-out infinite}
+@keyframes throb{0%,100%{opacity:1}12%{opacity:.82}24%{opacity:1}36%{opacity:.88}}
+.stage.has3d .center{top:64px}
+.stage .stage-top,.stage .center,.pbanner,.flash{z-index:30}
+/* end table fix */
+.endcard{width:min(760px,100%)}
+.winners{gap:10px} .wch{width:78px;min-width:0;display:flex;flex-direction:column;align-items:center} .wch b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reveal{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))!important;gap:6px!important}
+.reveal>div{display:grid!important;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:8px;min-width:0;padding:6px 9px!important;outline-offset:-1px}
+.reveal .re{width:36px!important;height:36px!important}
+.rvt{min-width:0;display:flex;flex-direction:column;gap:1px;text-align:left}
+.rvt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.rvt span{display:block;color:var(--mute);font-size:11.5px;line-height:1.25;overflow-wrap:anywhere}
+.endcard .row.c{flex-wrap:wrap}
+@media (max-width:600px){ .reveal{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important} .endcard{padding:18px} .endcard h2{font-size:22px} }
+.v3labels{z-index:5}
+.stage{isolation:isolate}
+.reveal .rvt{display:flex!important;flex-direction:column;align-items:flex-start;text-align:left;gap:1px;padding:0!important;background:none!important;outline:none!important}
+.reveal .rvt{width:100%;min-width:0;overflow:hidden}
+.reveal .rvt b,.reveal .rvt span{max-width:100%}
+.reveal .rvt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

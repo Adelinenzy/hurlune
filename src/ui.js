@@ -44,7 +44,8 @@ function tone(c,T,{f=440,type="sine",d=.25,v=.18,glide=null,delay=0}){
   g.gain.setValueAtTime(.0001,T+delay); g.gain.exponentialRampToValueAtTime(v,T+delay+.015); g.gain.exponentialRampToValueAtTime(.0001,T+delay+d);
   o.connect(g).connect(c.destination); o.start(T+delay); o.stop(T+delay+d+.05);
 }
-function sfx(kind){
+function sfx(kind){ if(!APP.set.sound) return; AUD.play(kind==="howl"?"night":kind); }
+function sfxOld(kind){
   if(!APP.set.sound) return; const c=ac(); if(!c) return;
   try{
     const T=c.currentTime;
@@ -198,7 +199,7 @@ function onState(st){
       else if(wasN&&st.status==="running"){ sfx("day"); setTimeout(()=>showBanner("☀️",t("bn_day",{n:st.day}),"day"),60); }
       else if(st.ph.k==="d_cand"||st.ph.k==="d_vote"&&prev.ph.k!=="d_vote"||st.ph.k==="d_elect"||st.ph.k==="prompt") sfx("step");
       if(prev.status!=="running"&&st.status==="running") sfx("start");
-      if(prev.status!=="ended"&&st.status==="ended") setTimeout(()=>sfx("win"),900);
+      if(prev.status!=="ended"&&st.status==="ended") setTimeout(()=>sfx((st.winners||[]).includes(APP.me.pid)?"win":"lose"),900);
     }
   }
   if(prev&&prev.round!==st.round){ APP.ui.endClosed=false; }
@@ -208,7 +209,7 @@ function onPriv(o){
   if(o.t==="sync"){ APP._synced=true; APP.msgs=o.msgs; APP.msgIds=new Set(o.msgs.map(m=>m.id)); APP.v=o.v||{}; render(); scrollChat(true); return; }
   if(o.t==="v"){ APP.v=o.v||{}; render(); return; }
   if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift();
-    if(m.a&&m.x&&(m.ch==="v")&&!m.cls){ APP.ui.bubbles=APP.ui.bubbles||{}; APP.ui.bubbles[m.a]={m,until:Date.now()+5500}; if(APP.view==="game") renderChars(); setTimeout(()=>{ if(APP.view==="game") renderChars(); },5700); }
+    if(m.a&&m.x&&(m.ch==="v")&&!m.cls){ APP.ui.bubbles=APP.ui.bubbles||{}; APP.ui.bubbles[m.a]={m,until:Date.now()+5500}; if(APP.has3d) V3.speak(m.a); if(APP.view==="game") renderChars(); setTimeout(()=>{ if(APP.view==="game") renderChars(); },5700); }
     if(m.cls==="death"){ sfx("thunder"); flash(); }
     else if(m.k==="voted"||m.k==="votedMayor"||m.cls==="accuse") sfx("vote");
     else if(m.x&&APP.me.name&&m.a!==APP.me.pid&&norm(m.x).includes("@"+norm(APP.me.name))) sfx("mention");
@@ -293,7 +294,7 @@ function hubSkeleton(){
 }
 function gameSkeleton(){
   return `<div class="game">
-   <div class="stage" id="stage"><div class="scene" id="scene">${sceneSVG()}</div><div class="fog"></div><div class="fireflies">${fireflies()}</div><div class="flash" id="flash"></div><div class="pbanner" id="pbanner"></div>
+   <div class="stage" id="stage"><div class="scene" id="scene">${sceneSVG()}</div><div id="v3slot"></div><div class="vignette"></div><div class="fog"></div><div class="fireflies">${fireflies()}</div><div class="flash" id="flash"></div><div class="pbanner" id="pbanner"></div>
      <div class="stage-top"><button class="iconbtn" id="homeBtn" title="${esc(t("home"))}">⌂</button><span class="roomname" id="roomName"></span><button class="pillbtn" id="inviteBtn">🔗 ${esc(t("invite"))}</button><span class="net" id="net"></span></div>
      <div class="chars" id="chars"></div>
      <div class="center" id="center"></div>
@@ -330,12 +331,14 @@ function bindStatic(){
     grid.innerHTML=ROLE_GROUPS.map(([g,rs])=>rs.map(r=>`<div class="role-tile">${roleCardHTML(r,{small:1})}<p>${esc(roleDesc(r))}</p></div>`).join("")).join("");
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
+    if(!APP.v3cv&&!QS.get("no3d")){ APP.v3cv=document.createElement("canvas"); APP.v3cv.className="v3"; APP.v3lab=document.createElement("div"); APP.v3lab.className="v3labels"; }
+    if(APP.v3cv){ $("#v3slot").append(APP.v3cv,APP.v3lab); if(!APP.v3init){ APP.v3init=true; APP.has3d=V3.init(APP.v3cv,APP.v3lab); V3.setPick(id=>clickChar(id),id=>targetable(id)); } $("#stage").classList.toggle("has3d",!!APP.has3d); }
     $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("linkCopied")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
     $("#trBtn").onclick=()=>{ APP.set.tr=!APP.set.tr; saveSettings(); renderComposer(); renderChat(); };
     $("#loveBtn").onclick=()=>{ APP.ui.lovers=!APP.ui.lovers; renderComposer(); };
-    $("#composer").onsubmit=e=>{ e.preventDefault(); const i=$("#msgIn"); const x=i.value.trim(); const ch=chatChannel(); if(!x||!ch) return; send({t:"chat",ch,x}); i.value=""; };
+    $("#composer").onsubmit=e=>{ e.preventDefault(); const i=$("#msgIn"); const x=i.value.trim(); const ch=chatChannel(); if(!x||!ch) return; send({t:"chat",ch,x}); i.value=""; sfx("send"); };
     $("#chatlog").onclick=e=>{ const b=e.target.closest(".mn"); if(b){ const i=$("#msgIn"); i.value=(i.value+" @"+b.dataset.n+" ").replace(/^ /,""); i.focus(); } const o=e.target.closest(".showog"); if(o){ o.parentElement.classList.add("og-open"); } };
   }
 }
@@ -344,6 +347,7 @@ function setLang(l){ LANG=l; lsSet("lang",l); const app=$("#app"); app.dataset.v
 
 /* ---------- HUB ---------- */
 function renderHub(){
+  AUD.setMood("dusk");
   document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
   $("#heroChar").innerHTML=charSVG(APP.me.av);
   const ae=$("#avEdit"); const av=APP.me.av;
@@ -400,6 +404,8 @@ function bindCreate(m){
 function renderGame(){
   const st=S(), v=V();
   const night = st.status==="running"&&isNight();
+  const mood= st.status==="running" ? (st.ph.k==="n_wolves"?"wolves":night?"night":"day") : "dusk";
+  if(APP.has3d) V3.setMood(mood); AUD.setMood(mood); $("#stage").classList.toggle("wolfturn",mood==="wolves");
   $("#stage").classList.toggle("lobbying",st.status==="lobby"||st.status==="starting"||st.status==="ended");
   const scene=$("#scene"); scene.classList.toggle("night",!(st.status==="running"&&!night)); scene.classList.toggle("day",st.status==="running"&&!night);
   $("#stage").classList.toggle("is-night",night);
@@ -464,6 +470,7 @@ function promptValid(pr,id){
   return id!==me;
 }
 function renderChars(){
+  if(APP.has3d) return renderChars3D();
   const st=S(), v=V(), me=APP.me.pid;
   const ps=st.players; const pos=layoutPositions(ps.length);
   const votes=st.votes||{}, cnt={}; for(const a in votes){ cnt[votes[a]]=(cnt[votes[a]]||[]); cnt[votes[a]].push(a); }
@@ -500,6 +507,40 @@ function renderChars(){
   }).join("");
   document.querySelectorAll(".ch.clk").forEach(el=>el.onclick=()=>clickChar(el.dataset.id));
   document.querySelectorAll(".ch .nm").forEach(el=>el.onclick=e=>{ e.stopPropagation(); const i=$("#msgIn"); if(i){ i.value=(i.value+" @"+el.textContent+" ").replace(/^ /,""); i.focus(); } });
+}
+function renderChars3D(){
+  const st=S(), v=V(), me=APP.me.pid, ps=st.players;
+  const votes=(v.prompt&&v.prompt.k==="wolves"&&v.wolfVotes)?v.wolfVotes:(st.votes||{}); const cnt={}; for(const a in votes){ (cnt[votes[a]]=cnt[votes[a]]||[]).push(a); }
+  const wolves=v.wolves||[], seen={}; (v.seen||[]).forEach(s=>seen[s.t]=s);
+  const myVote=(st.votes||{})[me], wv=(v.wolfVotes||{})[me];
+  const sleeping=st.status==="running"&&isNight();
+  V3.setPlayers(ps.map(p=>({id:p.id,av:p.av,alive:st.status==="lobby"||st.status==="starting"?true:p.alive,inact:p.inact,sleep:sleeping,
+     click:targetable(p.id),sel:APP.ui.sel.includes(p.id)||myVote===p.id||(v.prompt&&v.prompt.k==="wolves"&&wv===p.id),wolf:!!(v.prompt&&v.prompt.k==="wolves")})),me);
+  V3.setVotes(votes);
+  const lab=APP.v3lab; if(!lab) return;
+  const html=ps.map(p=>{
+    const dead=st.status!=="lobby"&&st.status!=="starting"&&!p.alive;
+    const badges=[];
+    if(wolves.includes(p.id)||(st.status==="ended"&&p.role&&ROLES[p.role].camp==="wolf")) badges.push(`<span class="bd wolf">🐾</span>`);
+    if(st.mayor===p.id&&p.alive) badges.push(`<span class="bd mayor">★</span>`);
+    if(v.lover===p.id||(p.id===me&&v.lover)||(v.couple||[]).includes(p.id)||(st.lovers||[]).includes(p.id)) badges.push(`<span class="bd love">♥</span>`);
+    if((v.conta||[]).includes(p.id)) badges.push(`<span class="bd conta">✚</span>`);
+    if((v.barrels||[]).includes(p.id)) badges.push(`<span class="bd fire">🛢️</span>`);
+    let roleTag="";
+    if(p.role) roleTag=roleName(p.role); else if(p.id===me&&v.role) roleTag=roleName(v.role);
+    else if(seen[p.id]) roleTag=seen[p.id].r?"🔮 "+roleName(seen[p.id].r):"✨ "+t(seen[p.id].aura==="dark"?"auraDarkS":"auraLightS");
+    else if(v.lover===p.id&&v.loverRole) roleTag="💘 "+roleName(v.loverRole);
+    const er=p.role||(p.id===me?v.role:null)||(seen[p.id]&&seen[p.id].r)||null;
+    const voters=cnt[p.id]||[];
+    const isCand=(st.cands||[]).includes(p.id)&&(st.ph.k==="d_cand"||st.ph.k==="d_elect");
+    return `<div class="lb ${dead?"dead":""} ${p.id===me?"me":""} ${p.inact?"inact":""}" data-id="${esc(p.id)}">
+      ${bubbleFor(p.id)}
+      ${isCand?`<div class="cand">🎗️ ${esc(t("candidate"))}</div>`:""}
+      ${roleTag?`<div class="rtag">${er?`<span class="re">${emb(er)}</span>`:""}${esc(roleTag)}</div>`:""}
+      <div class="tag"><span class="nm">${esc(p.n)}</span>${badges.join("")}</div>
+      ${voters.length?`<div class="votes3 ${v.prompt&&v.prompt.k==="wolves"?"wolfv":""}"><b>${voters.length}</b>${voters.slice(0,5).map(a=>`<i>${headSVG((pl(a)||{}).av)}</i>`).join("")}</div>`:""}
+    </div>`; }).join("");
+  if(lab._h!==html){ lab._h=html; lab.innerHTML=html; lab.querySelectorAll(".nm").forEach(el=>el.onclick=e=>{ e.stopPropagation(); const i=$("#msgIn"); if(i){ i.value=(i.value+" @"+el.textContent+" ").replace(/^ /,""); i.focus(); } }); }
 }
 function bubbleFor(id){
   const b=APP.ui.bubbles&&APP.ui.bubbles[id]; if(!b||b.until<Date.now()) return "";
@@ -715,8 +756,8 @@ function renderEnd(){
   const mine=win.includes(APP.me.pid);
   let conf=""; if(mine){ for(let i=0;i<60;i++) conf+=`<i style="left:${Math.random()*100}%;background:hsl(${Math.random()*360} 85% 65%);animation-delay:${(Math.random()*2.5).toFixed(2)}s;animation-duration:${(2.5+Math.random()*2).toFixed(2)}s"></i>`; }
   el.innerHTML=`<div class="confetti">${conf}</div><div class="endcard w-${esc(st.winner)}"><div class="end-res ${mine?"won":"lost"}">${esc(t(mine?"youWon":"youLost"))}</div><div class="endico">${{village:"🏡",wolf:"🐺",lovers:"💘",white:"🤍",rat:"🐀",merc:"🗡️",draw:"⚖️"}[st.winner]||"🏁"}</div><h2>${esc(t("win_"+st.winner))}</h2>
-   <div class="winners">${win.map(id=>{ const p=pl(id); return p?`<div class="wch">${charSVG(p.av)}<b>${esc(p.n)}</b></div>`:""; }).join("")}</div>
-   <div class="reveal">${st.players.map(p=>`<div class="${win.includes(p.id)?"w":""} ${p.alive?"":"dead"}"><span class="re">${p.role?emb(p.role):""}</span><div><b>${esc(p.n)}</b>${p.alive?"":" 💀"}<br><span>${p.role?esc(roleName(p.role)):""}${p.inf?" 🦠":""}</span></div></div>`).join("")}</div>
+   <div class="winners">${win.map(id=>{ const p=pl(id); return p?`<div class="wch">${charSVG(p.av)}<b title="${esc(p.n)}">${esc(p.n)}</b></div>`:""; }).join("")}</div>
+   <div class="reveal">${st.players.map(p=>`<div class="${win.includes(p.id)?"w":""} ${p.alive?"":"dead"}"><span class="re">${p.role?emb(p.role):""}</span><div class="rvt"><b title="${esc(p.n)}">${p.alive?"":"💀 "}${esc(p.n)}</b><span>${p.role?esc(roleName(p.role)):""}${p.inf?" 🦠":""}</span></div></div>`).join("")}</div>
    <div class="row c">${APP.host?`<button class="btn-primary" id="againBtn">↻ ${esc(t("playAgain"))}</button>`:`<span class="muted">${esc(t("waitAgain"))}</span>`}<button class="btn-ghost" id="closeEnd">${esc(t("seeChat"))}</button></div></div>`;
   const a=$("#againBtn"); if(a) a.onclick=()=>send({t:"again"});
   $("#closeEnd").onclick=()=>{ APP.ui.endClosed=true; renderEnd(); };
@@ -732,12 +773,13 @@ function renderModal(){
     el.innerHTML=`<div class="mcard"><h2>${esc(t("settings"))}</h2>
       <div class="frm"><label>${esc(t("language"))}</label><div class="seg"><button data-l="fr" class="${LANG==="fr"?"on":""}">Français</button><button data-l="ru" class="${LANG==="ru"?"on":""}">Русский</button><button data-l="en" class="${LANG==="en"?"on":""}">English</button></div></div>
       <div class="frm"><label class="chk"><input type="checkbox" id="sTr" ${APP.set.tr?"checked":""}> 🌐 ${esc(t("autoTr"))}</label><p class="muted sm">${esc(t("autoTrHelp"))}</p></div>
-      <div class="frm"><label class="chk"><input type="checkbox" id="sSnd" ${APP.set.sound?"checked":""}> 🔊 ${esc(t("sounds"))}</label></div>
+      <div class="frm"><label class="chk"><input type="checkbox" id="sSnd" ${APP.set.sound?"checked":""}> 🔊 ${esc(t("sounds"))}</label><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.8}" style="width:100%;margin-top:8px;accent-color:var(--pur)"></div>
       <div class="frm oa"><label>🤖 ${esc(t("oaKey"))}</label>${builtinKey()?`<p class="sm" style="color:var(--green);margin:0 0 6px">✔ ${esc(t("oaBuiltin"))}</p>`:""}<input id="sKey" type="password" placeholder="${builtinKey()?esc(t("oaOverride")):"sk-..."}" value="${esc((lsGet("oaKey")||""))}" autocomplete="off"><label style="margin-top:8px">${esc(t("oaModel"))}</label><input id="sModel" value="${esc(oaModel())}"><p class="muted sm">${esc(t("oaHelp"))}</p>${APP.oaErr?`<p class="sm" style="color:var(--red)">${esc(t("oaErr",{e:APP.oaErr}))}</p>`:""}</div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
-    $("#sSnd").onchange=e=>{ APP.set.sound=e.target.checked; saveSettings(); };
+    $("#sSnd").onchange=e=>{ APP.set.sound=e.target.checked; saveSettings(); AUD.setVolume(); };
+    $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); AUD.play("ping"); };
     $("#sOk").onclick=()=>{ lsSet("oaKey",$("#sKey").value.trim()); lsSet("oaModel",$("#sModel").value.trim()||"gpt-5.6-luna"); if(APP.host){ APP.host.translator=hostTranslator(); APP.host.flush(true); } APP.ui.modal=null; render(); };
     return;
   }
