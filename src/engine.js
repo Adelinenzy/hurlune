@@ -540,6 +540,9 @@ class Host {
     const rat=this.aliveWith("sickRat")[0];
     if(rat&&al.filter(x=>x!==rat).every(x=>sec.contaminated.includes(x))&&al.length>1){ this.endGame("rat",[rat]); return true; }
     if(al.every(x=>this.camp(x)==="wolf")){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; }
+    // les loups gagnent dès qu'ils sont au moins aussi nombreux que les autres (sauf joueur solitaire ou couple mixte encore en vie)
+    { const W=al.filter(x=>this.camp(x)==="wolf").length, mixed=L&&L.every(x=>this.alive(x))&&this.camp(L[0])!==this.camp(L[1]);
+      if(W>0&&W>=al.length-W&&!al.some(x=>this.camp(x)==="solo")&&!mixed){ this.endGame("wolf",this.order.filter(x=>this.camp(x)==="wolf")); return true; } }
     if(!al.some(x=>this.camp(x)==="wolf"||this.camp(x)==="solo")){ this.endGame("village",this.order.filter(x=>this.camp(x)==="village")); return true; }
     return false;
   }

@@ -109,7 +109,8 @@
       T.shL=[-.42,0,-.1]; T.shR=[-.42,0,.1]; T.elL=[-1.0,0,0]; T.elR=[-1.0,0,0];
       T.px=0; T.py=0; T.pz=0; T.pelvis=[0,0,0];
       if(preview){ T.hipL=[0,0,.03]; T.hipR=[0,0,-.03]; T.knL=[.05,0,0]; T.knR=[.05,0,0]; T.py=.33; T.shL=[.05,0,-.12]; T.shR=[.05,0,.12]; T.elL=[-.25,0,0]; T.elR=[-.25,0,0];
-        T.shR=[-.2+Math.sin(t*.9)*.05,0,.15]; T.head=[Math.sin(t*.7)*.06,Math.sin(t*.45)*.25,0]; }
+        T.shR=[-.2+Math.sin(t*.9)*.05,0,.15]; T.head=[Math.sin(t*.7)*.06,Math.sin(t*.45)*.25,0];
+        if(cheer){ T.shR=[-.3,0,-2.6]; T.elR=[-.5,0,0]; T.shL=[.05,0,-.3]; T.head=[-.1,.12,0]; } }
       // regard
       const hp=[c.x,1.2,c.z]; const L=c.look||[0,.8,0]; const d=sub(L,hp); const f=-c.face; const lx=d[0]*Math.cos(f)+d[2]*Math.sin(f)*-1, lz=d[0]*Math.sin(f)+d[2]*Math.cos(f);
       let yaw=clamp(Math.atan2(lx,lz),-1.1,1.1), pitch=clamp(-Math.atan2(d[1],Math.hypot(lx,lz)),-.5,.6);
@@ -216,12 +217,14 @@
     function frame(){
       raf=requestAnimationFrame(frame);
       if(paused||document.hidden) return;
+      render(); }
+    function render(){
       const now=performance.now(), t=(now-T0)/1000, dt=Math.min(.05,(now-(last||now))/1000); last=now;
       // taille
-      const dpr=Math.min(window.devicePixelRatio||1,q.dpr); const w=Math.max(2,Math.floor(canvas.clientWidth*dpr)), h=Math.max(2,Math.floor(canvas.clientHeight*dpr));
-      if(canvas.width!==w||canvas.height!==h){ canvas.width=w; canvas.height=h; }
+      const dpr=Math.min(window.devicePixelRatio||1,q.dpr); const offs=!canvas.clientWidth; const w=offs?canvas.width:Math.max(2,Math.floor(canvas.clientWidth*dpr)), h=offs?canvas.height:Math.max(2,Math.floor(canvas.clientHeight*dpr));
+      if(!offs&&(canvas.width!==w||canvas.height!==h)){ canvas.width=w; canvas.height=h; }
       if(!RT||RT.w!==w||RT.h!==h) makeRT(w,h);
-      W=canvas.clientWidth; H=canvas.clientHeight;
+      W=offs?w:canvas.clientWidth; H=offs?h:canvas.clientHeight;
       // heure du jour : avance toujours vers l'avant (vrai crépuscule / vraie aube)
       let d=(todT-tod)%1; if(d<0) d+=1; if(d>1e-4){ const sp=Math.max(.012,Math.min(.11,d*.9)); const st=Math.min(d,sp*dt); tod=(tod+st)%1; cine=lerp(cine,d>.03?1:0,1-Math.exp(-dt*1.5)); } else cine=lerp(cine,0,1-Math.exp(-dt*1.5));
       const e=Math.sin(2*Math.PI*(tod-.25));
@@ -230,7 +233,8 @@
       const meC=me&&chars[me]; let base=meC?Math.atan2(meC.x,meC.z):camYaw; if(preview) base=0;
       const R=meC?meC.R:(order.length?chars[order[0]]&&chars[order[0]].R||3:3);
       let eye,at;
-      if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.4,1.5,Math.cos(a)*3.4]; at=[0,.92,0]; }
+      if(preview&&cheer){ eye=[1.0,1.35,2.75]; at=[0,1.0,0]; }
+      else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.4,1.5,Math.cos(a)*3.4]; at=[0,.92,0]; }
       else { const a=base+drag; const dist=(R+3.4)*zoom+cine*2.2; const hgt=(2.9+R*.12)*zoom+cine*1.2+Math.sin(t*.3)*.05; eye=[Math.sin(a+Math.sin(t*.13)*.03)*dist,hgt,Math.cos(a+Math.sin(t*.13)*.03)*dist]; at=[0,.45+cine*1.6,0]; }
       camE=eye; const fov=preview?32:52;
       const proj=M.persp(fov*Math.PI/180,W/H,.08,600), view=M.lookAt(eye,at,[0,1,0]); VPm=M.mul(proj,view);
@@ -307,14 +311,14 @@
       // composition
       gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,w,h); const cp=P.comp; gl.useProgram(cp.p);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,RT.scene); gl.uniform1i(cp.u.uScene,0); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,L[0].b); gl.uniform1i(cp.u.uBloom,1);
-      gl.uniform1f(cp.u.uExp,S.exp*(preview?1.1:1)*(theme==="winter"?lerp(.62,.9,S.night):1)); gl.uniform1f(cp.u.uBloomK,q.bloom?.22:0); gl.uniform1f(cp.u.uVig,preview?.35:lerp(.35,.8,S.night)); gl.uniform1f(cp.u.uTime,t); gl.uniform1f(cp.u.uGrain,.018);
+      gl.uniform1f(cp.u.uExp,(preview?Math.min(S.exp*1.1,1.05):S.exp)*(theme==="winter"?lerp(.62,.9,S.night):1)); gl.uniform1f(cp.u.uBloomK,q.bloom?.22:0); gl.uniform1f(cp.u.uVig,preview?.35:lerp(.35,.8,S.night)); gl.uniform1f(cp.u.uTime,t); gl.uniform1f(cp.u.uGrain,.018);
       gl.uniform3fv(cp.u.uLift,wolves?[.035,0,0]:lerp3([0,0,0],[0,.006,.02],S.night)); gl.uniform3fv(cp.u.uGain,wolves?[1.12,.86,.84]:lerp3([1.03,1,.97],[.94,.97,1.08],S.night)); gl.uniform3fv(cp.u.uVigCol,wolves?[.06,0,0]:[0,0,0]);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4); gl.bindVertexArray(null); gl.activeTexture(gl.TEXTURE0);
       // étiquettes
       if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,.6,1.15);
         el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
     }
-    let prevGround=null, raf=0, labels=opts.labels||null;
+    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false;
     const length3=a=>Math.hypot(a[0],a[1],a[2]);
     function project(p){ const m=VPm; if(!m) return {x:0,y:0,w:-1}; const x=m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12], y=m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13], w=m[3]*p[0]+m[7]*p[1]+m[11]*p[2]+m[15]; return {x:(x/w*.5+.5)*W,y:(1-(y/w*.5+.5))*H,w}; }
     function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
@@ -334,7 +338,8 @@
       setQuality(k){ if(!QUAL[k]) return; q=Object.assign({},QUAL[k]); if(!hasFloat) q.msaa=0; applyQuality(); RT=null; },
       setAvatar(av){ if(preview) setPlayers([{id:"me",av,alive:true}],"me"); },
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
-      pause(b){ paused=!!b; }, anchor, destroy(){ cancelAnimationFrame(raf); }
+      pause(b){ paused=!!b; }, anchor,
+      snap(av,m,ch){ cheer=!!ch; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
     };
   };
 })();
@@ -360,3 +365,13 @@ const V3=(function(){
     setQuality:k=>{ if(eng) eng.setQuality(k); }, get ok(){ return ok; }, get r4(){ return !!eng; }
   };
 })();
+
+/* portraits 3D (écran de fin) */
+R4.portrait=function(av,mood,big){
+  const k=JSON.stringify([av,mood,big]); R4._pc=R4._pc||new Map(); if(R4._pc.has(k)) return R4._pc.get(k);
+  if(R4._ps===undefined){ const c=document.createElement("canvas"); c.width=240; c.height=320; try{ R4._ps=R4.create(c,{preview:true,quality:"med",mood:"dusk"}); if(R4._ps) R4._ps.pause(true); }catch(e){ R4._ps=null; } R4._pcv=c; }
+  if(!R4._ps) return null;
+  const s=big?1:.6; if(R4._pcv.width!==Math.round(240*s)){ R4._pcv.width=Math.round(240*s); R4._pcv.height=Math.round(320*s); }
+  let u=null; try{ u=R4._ps.snap(av,mood,true); }catch(e){ console.warn(e); }
+  if(u) R4._pc.set(k,u); return u;
+};

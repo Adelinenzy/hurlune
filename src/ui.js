@@ -98,7 +98,7 @@ function trRequest(m){
 async function trPump(){
   while(TR.active<3&&TR.q.length){
     const job=TR.q.shift(); TR.active++;
-    trOne(job.x,job.L).then(r=>{ TR.cache.set(job.key,r); }).catch(()=>{ TR.cache.set(job.key,{fail:1}); })
+    trOne(job.x,job.L).then(r=>{ TR.cache.set(job.key,r); if(APP.view==="game"&&APP.ui.bubbles&&Object.values(APP.ui.bubbles).some(b=>b.until>Date.now()&&trKey(b.m.x)===job.key)) renderChars(); }).catch(()=>{ TR.cache.set(job.key,{fail:1}); })
       .finally(()=>{ TR.active--; TR.pending.delete(job.key); scheduleChat(); trPump(); });
   }
 }
@@ -216,7 +216,7 @@ function onPriv(o){
     else if(m.x&&APP.me.name&&m.a!==APP.me.pid&&norm(m.x).includes("@"+norm(APP.me.name))) sfx("mention");
     else if(m.cls==="seer"||m.cls==="role"||m.cls==="love") sfx("ping");
     scheduleChat(); return; }
-  if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); } return; }
+  if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
   if(o.t==="err"){ if(o.k==="started"||o.k==="full"||o.k==="kicked"||o.k==="notInGame"){ APP.ui.joinErr=o.k; } else toast(t("e_"+o.k)); render(); }
 }
 function toast(s){ APP.ui.toast=s; renderToast(); clearTimeout(APP._tt); APP._tt=setTimeout(()=>{ APP.ui.toast=null; renderToast(); },3500); }
@@ -572,7 +572,7 @@ function renderChars3D(){
 }
 function bubbleFor(id){
   const b=APP.ui.bubbles&&APP.ui.bubbles[id]; if(!b||b.until<Date.now()) return "";
-  let x=b.m.x; if(needTr(b.m)){ const r=trGet(b.m); if(r&&r.x) x=r.x; }
+  let x=b.m.x; if(needTr(b.m)){ const r=trGet(b.m); if(r&&r.x) x=r.x; else if(r===undefined) trRequest(b.m); }
   if(x.length>70) x=x.slice(0,68)+"…";
   return `<div class="bubble">${esc(x)}</div>`;
 }
@@ -776,6 +776,10 @@ function renderReveal(){
   fc.onclick=()=>{ if(fc.classList.contains("flipped")) return; fc.classList.add("flipped"); sfx("flip"); $("#rvHint").hidden=true; setTimeout(()=>{ const x=$("#rvExtra"); if(x) x.hidden=false; },650); };
   $("#rvOk").onclick=()=>{ const s=lsGet("seenRev")||[]; s.push(key); lsSet("seenRev",s.slice(-40)); el.hidden=true; };
 }
+function winPortrait(av,w){
+  if(APP.has3d&&V3.r4){ const u=R4.portrait(av,w==="wolf"?"wolves":w==="village"?"day":"dusk",APP.set.gq!=="low"); if(u) return `<img class="w3d" src="${u}" alt="">`; }
+  return charSVG(av);
+}
 function renderEnd(){
   const el=$("#endov"), st=S();
   if(st.status!=="ended"||APP.ui.endClosed){ el.hidden=true; return; }
@@ -784,7 +788,7 @@ function renderEnd(){
   const mine=win.includes(APP.me.pid);
   let conf=""; if(mine){ for(let i=0;i<60;i++) conf+=`<i style="left:${Math.random()*100}%;background:hsl(${Math.random()*360} 85% 65%);animation-delay:${(Math.random()*2.5).toFixed(2)}s;animation-duration:${(2.5+Math.random()*2).toFixed(2)}s"></i>`; }
   el.innerHTML=`<div class="confetti">${conf}</div><div class="endcard w-${esc(st.winner)}"><div class="end-res ${mine?"won":"lost"}">${esc(t(mine?"youWon":"youLost"))}</div><div class="endico">${{village:"🏡",wolf:"🐺",lovers:"💘",white:"🤍",rat:"🐀",merc:"🗡️",draw:"⚖️"}[st.winner]||"🏁"}</div><h2>${esc(t("win_"+st.winner))}</h2>
-   <div class="winners">${win.map(id=>{ const p=pl(id); return p?`<div class="wch">${charSVG(p.av)}<b title="${esc(p.n)}">${esc(p.n)}</b></div>`:""; }).join("")}</div>
+   <div class="winners">${win.map(id=>{ const p=pl(id); return p?`<div class="wch">${winPortrait(p.av,st.winner)}<b title="${esc(p.n)}">${esc(p.n)}</b></div>`:""; }).join("")}</div>
    <div class="reveal">${st.players.map(p=>`<div class="${win.includes(p.id)?"w":""} ${p.alive?"":"dead"}"><span class="re">${p.role?emb(p.role):""}</span><div class="rvt"><b title="${esc(p.n)}">${p.alive?"":"💀 "}${esc(p.n)}</b><span>${p.role?esc(roleName(p.role)):""}${p.inf?" 🦠":""}</span></div></div>`).join("")}</div>
    <div class="row c">${APP.host?`<button class="btn-primary" id="againBtn">↻ ${esc(t("playAgain"))}</button>`:`<span class="muted">${esc(t("waitAgain"))}</span>`}<button class="btn-ghost" id="closeEnd">${esc(t("seeChat"))}</button></div></div>`;
   const a=$("#againBtn"); if(a) a.onclick=()=>send({t:"again"});
