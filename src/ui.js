@@ -391,9 +391,12 @@ function renderHub(){
   const hero=$("#heroChar"); hero3d(hero,av);
   const ae=$("#avEdit"); const F=R4.AV_FIELDS;
   const grp=(lab,ks)=>`<div class="ae-g"><div class="ae-gt">${esc(t(lab))}</div>${ks.map(([k,l])=>`<div class="ae"><span>${esc(t(l))}</span><button data-ae="${k}" data-d="-1">‹</button><i class="ae-v">${av[k]+1}/${F[k]}</i><button data-ae="${k}" data-d="1">›</button></div>`).join("")}</div>`;
-  ae.innerHTML=grp("av_skinc",[["s","av_skin"],["fs","av_face"],["ey","av_eyes"],["gl","av_glasses"],["h2","av_hair"],["hc","av_hairc"],["bd","av_beard"]])
+  const real=R4.CHAR_LIST&&APP.set.gq!=="low"&&typeof WebGL2RenderingContext!=="undefined";
+  if(real){ const L=R4.CHAR_LIST.length; ae.innerHTML=`<div class="ae-g ae-ch"><div class="ae-gt">${esc(t("av_char"))}</div><div class="ae ae-big"><button data-ae="rc" data-d="-1">‹</button><span class="ae-name"><b>${esc(t("ch_"+R4.CHAR_LIST[av.rc%L]))}</b><i class="ae-v">${av.rc%L+1}/${L}</i></span><button data-ae="rc" data-d="1">›</button></div></div>`;
+    ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ av.rc=((av.rc|0)+(+b.dataset.d)+L)%L; saveMe(); renderHub(); }); }
+  else ae.innerHTML=grp("av_skinc",[["s","av_skin"],["fs","av_face"],["ey","av_eyes"],["gl","av_glasses"],["h2","av_hair"],["hc","av_hairc"],["bd","av_beard"]])
     +grp("av_clothes",[["o2","av_outfit"],["t","av_color"],["t2","av_color2"],["p","av_pants"],["bt","av_boots"],["bl","av_belt"],["a2","av_hat"],["sc","av_scarf"]]);
-  ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ae; av[k]=(av[k]+(+b.dataset.d)+F[k])%F[k]; syncLegacyAv(av); saveMe(); b.parentNode.querySelector(".ae-v").textContent=(av[k]+1)+"/"+F[k]; hero3d(hero,av); });
+  if(!real) ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ae; av[k]=(av[k]+(+b.dataset.d)+F[k])%F[k]; syncLegacyAv(av); saveMe(); b.parentNode.querySelector(".ae-v").textContent=(av[k]+1)+"/"+F[k]; hero3d(hero,av); });
   const jb=$("#joinBox"); const g=parseHash();
   jb.innerHTML=g?`<div class="joinhint">${esc(t("invited"))}</div>`:"";
   if(g){ $("#createBtn").innerHTML="▶ "+esc(t("joinThis")); $("#createBtn").onclick=()=>{ if(!APP.me.name){ $("#pseudo").focus(); toast(t("needPseudo")); return; } joinGame(g); }; }
@@ -829,7 +832,12 @@ function renderReveal(){
   $("#rvOk").onclick=()=>{ const s=lsGet("seenRev")||[]; s.push(key); lsSet("seenRev",s.slice(-40)); el.hidden=true; };
 }
 function winPortrait(av,w){
-  if(APP.has3d&&V3.r4){ const u=R4.portrait(av,w==="wolf"?"wolves":w==="village"?"day":"dusk",APP.set.gq!=="low"); if(u) return `<img class="w3d" src="${u}" alt="">`; }
+  if(APP.has3d&&V3.r4){ const mood=w==="wolf"?"wolves":w==="village"?"day":"dusk", big=APP.set.gq!=="low";
+    const real=APP.set.gq!=="low"&&R4.charSlug(R4.avNorm(av));
+    if(!real){ const u=R4.portrait(av,mood,big); if(u) return `<img class="w3d" src="${u}" alt="">`; }
+    else { const k=JSON.stringify([av,mood,big]); const u=R4._pc&&R4._pc.get(k)&&R4.CHARS[real]&&R4._pcReal&&R4._pcReal.has(k)?R4._pc.get(k):null; if(u) return `<img class="w3d" src="${u}" alt="">`;
+      const id="wp"+(APP._wpN=(APP._wpN||0)+1); R4.portraitAsync(av,mood,big).then(x=>{ if(!x) return; (R4._pcReal=R4._pcReal||new Set()).add(k); const el=document.getElementById(id); if(el) el.src=x; });
+      return `<img class="w3d" id="${id}" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="">`; } }
   return charSVG(av);
 }
 function renderEnd(){

@@ -107,13 +107,14 @@ const R4 = {};
   R4.STD_VS=`#version 300 es
   layout(location=0) in vec3 aP; layout(location=1) in vec3 aN; layout(location=2) in vec4 aC;
   uniform mat4 uVP,uM; uniform float uTime,uWind;
-  out vec3 vW; out vec3 vN; out vec4 vC;
-  void main(){ vec4 w=uM*vec4(aP,1.); float m=floor(aC.a+.5);
+  out vec3 vW; out vec3 vN; out vec4 vC; out vec2 vUV;
+  void main(){ vec4 w=uM*vec4(aP,1.); float m=floor(aC.a+.5); vUV=vec2(0.);
     if(m==6.){ float h=max(w.y-.3,0.); w.x+=sin(uTime*1.3+w.z*.31+w.x*.2)*.025*h*uWind; w.z+=cos(uTime*1.1+w.x*.27)*.02*h*uWind; }
     vW=w.xyz; vN=mat3(uM)*aN; vC=aC; gl_Position=uVP*w; }`;
   R4.STD_FS=`#version 300 es
   precision highp float; precision highp sampler2DShadow;
-  in vec3 vW; in vec3 vN; in vec4 vC; out vec4 o;
+  in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; out vec4 o;
+  uniform sampler2D uAlb,uNrm;
   uniform vec3 uCam,uKeyDir,uKeyCol,uSkyCol,uGndCol,uFogCol,uFogSun,uFireP,uFireC,uTint,uHiCol,uLampC; uniform vec3 uLamp[4];
   uniform float uFogD,uFogH,uTime,uWin,uHi,uAlpha,uFireR,uShadowOn,uFireShOn,uSnow,uGround,uClr;
   uniform sampler2DShadow uShadow; uniform mat4 uLightVP; uniform highp samplerCube uFireSh; uniform float uShTexel;
@@ -141,6 +142,10 @@ const R4 = {};
     if(m==9.){ wrap=.3; alb*=.93+.12*vn(vW*60.); }
     if(m==6.){ wrap=.6; alb*=.8+.4*fbm(vW*3.); alb=mix(alb,vec3(.92,.95,1.),smoothstep(.2,.6,n.y)*uSnow); }
     if(m==10.){ rough=.15; spec=.6; }
+    if(m==11.){ alb=texture(uAlb,vUV).rgb*uTint; vec3 tn=texture(uNrm,vUV).xyz*2.-1.;
+      vec3 dp1=dFdx(vW),dp2=dFdy(vW); vec2 du1=dFdx(vUV),du2=dFdy(vUV); vec3 d2p=cross(dp2,n),d1p=cross(n,dp1);
+      vec3 T=d2p*du1.x+d1p*du2.x, B=d2p*du1.y+d1p*du2.y; float iv=inversesqrt(max(max(dot(T,T),dot(B,B)),1e-12));
+      n=normalize(mat3(T*iv,B*iv,n)*vec3(tn.xy*.8,tn.z)); wrap=.3; rough=.6; spec=.035; }
     vec3 V=normalize(uCam-vW); float a=rough*rough;
     float ndl=dot(n,uKeyDir); float dif=max((ndl+wrap)/(1.+wrap),0.);
     float sh=uShadowOn>.5?sunShadow(vW,n):1.;
@@ -157,7 +162,7 @@ const R4 = {};
     if(m==2.) col+=vC.rgb*3.;
     float rim=pow(1.-max(dot(n,V),0.),3.);
     col+=uHiCol*uHi*(rim*2.5+.12);
-    if(m==3.||m==8.||m==9.) col+=rim*(uSkyCol*.35+uFireC*att*.25);
+    if(m==3.||m==8.||m==9.||m==11.) col+=rim*(uSkyCol*.35+uFireC*att*.25);
     float dist=length(uCam-vW);
     float fa=1.-exp(-dist*uFogD*exp(-max(vW.y,0.)*uFogH));
     vec3 vd=normalize(vW-uCam); vec3 fc=uFogCol+uFogSun*pow(max(dot(vd,uKeyDir),0.),8.);
@@ -166,7 +171,7 @@ const R4 = {};
     if(uAlpha<.999){ float th=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); if(th>uAlpha) discard; }
     o=vec4(col,1.); }`;
   R4.DEPTH_FS=`#version 300 es
-  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; uniform vec3 uFireP; uniform float uCube; out vec4 o;
+  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; uniform vec3 uFireP; uniform float uCube; out vec4 o;
   void main(){ o=vec4(uCube>.5?length(vW-uFireP):0.); }`;
   // herbe instanciée
   R4.GRASS_VS=`#version 300 es

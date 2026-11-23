@@ -418,3 +418,5 @@ body{background:radial-gradient(1200px 700px at 30% -10%,#2a2450,transparent 60%
 .opt.mtest{gap:10px;align-items:center}
 .mlvl{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;min-width:80px} .mlvl i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4cd47a,#c8e04c 70%,#e0565b);transition:width .1s}
 .mhear{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;color:var(--mute)} .mhear input{width:auto}
+.ae-big{padding:8px 10px;gap:10px} .ae-big button{width:34px;height:34px;font-size:18px;border-radius:10px}
+.ae-name{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px} .ae-name b{color:#fff;font-size:15px}

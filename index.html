@@ -428,6 +428,8 @@ body{background:radial-gradient(1200px 700px at 30% -10%,#2a2450,transparent 60%
 .opt.mtest{gap:10px;align-items:center}
 .mlvl{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;min-width:80px} .mlvl i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4cd47a,#c8e04c 70%,#e0565b);transition:width .1s}
 .mhear{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;color:var(--mute)} .mhear input{width:auto}
+.ae-big{padding:8px 10px;gap:10px} .ae-big button{width:34px;height:34px;font-size:18px;border-radius:10px}
+.ae-name{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px} .ae-name b{color:#fff;font-size:15px}
 
 </style>
 </head>
@@ -1514,7 +1516,7 @@ en:{
  bn_night:"Night {n}",bn_day:"Day {n}",rv_title:"Your card has been dealt",rv_changed:"Your role has changed!",rv_click:"Click the card to turn it over",rv_ok:"Let’s go!",youWon:"You won!",youLost:"You lost…",
  oaKey:"OpenAI API key (optional)",oaModel:"OpenAI model",oaHelp:"When you host, this key translates every message of the game for everyone (your friends need nothing). The key is stored only on this device. Without a key: Google Translate.",oaErr:"OpenAI error ({e}): check the key or the model. Google Translate is used as a fallback.",
  play:"Play",hubTitle:"The village needs you",hubSub:"Online Werewolf with friends — no account, in English, French and Russian.",
- pseudo:"Your nickname",pseudoPh:"Type your nickname…",newLook:"New look",av_skin:"Skin",av_hair:"Hairstyle",av_hairc:"Hair",av_color:"Colour",av_outfit:"Outfit",av_acc:"Accessory",micT:"Microphone",micDev:"Microphone",micDefault:"Default (system)",micGain:"Mic volume",micTest:"🎤 Test my mic",micStop:"⏹ Stop test",micHear:"Hear myself",optNs:"Noise and echo reduction",optNsD:"Removes background noise and stops your speakers leaking into the mic.",spkDev:"Audio output (headset / speakers)",micHint:"Speak during the test: the green bar should move. If your mics have no names, start the test first to allow mic access.",vTranscript:"Transcribed from voice",vYou:"🎙️ You have the floor",vSpeaking:"{n} has the floor",vDone:"I'm done",vIdle:"Nobody is talking. Ask for the floor to speak.",vIdleWolf:"Wolves' voice chat: ask for the floor to speak.",vCancel:"Cancel",vPos:"#{n}",vReq:"Ask to speak",vNoMic:"No microphone found",vMicDenied:"Microphone access denied: allow it to speak.",vQueue:"Queue:",voiceOpt:"Voice chat",yes:"Yes",optVc:"Listen to voice chat",optVcD:"Hear the players who have the floor.",av_face:"Face",av_eyes:"Eyes",av_glasses:"Glasses",av_beard:"Beard",av_hat:"Hat",av_color2:"Shirt",av_pants:"Trousers",av_boots:"Boots",av_belt:"Belt",av_scarf:"Scarf / cape",av_skinc:"Body",av_clothes:"Clothes",th_camp:"Moonlit camp",th_camp_d:"3D · mountains, real sky",gfx:"Graphics quality",gfx_low:"Low",gfx_med:"Medium",gfx_high:"High",gfxHelp:"Lower it if the game is slow on your computer.",
+ pseudo:"Your nickname",pseudoPh:"Type your nickname…",newLook:"New look",av_skin:"Skin",av_hair:"Hairstyle",av_hairc:"Hair",av_color:"Colour",av_outfit:"Outfit",av_acc:"Accessory",av_char:"Character","ch_medieval-villager":"Villager","ch_farmer":"Farmer","ch_farmer-woman":"Farmer woman","ch_witch":"Witch","ch_plague-doctor":"Plague doctor","ch_hooded-rogue":"Hooded rogue","ch_elderly-woman":"Old woman","ch_elderly-man":"Old man","ch_leather-armor-warrior":"Leather warrior","ch_armored-knight":"Knight","ch_king":"King","ch_queen":"Queen","ch_dwarf":"Dwarf","ch_elf":"Elf","ch_pirate":"Pirate","ch_vampire":"Vampire",micT:"Microphone",micDev:"Microphone",micDefault:"Default (system)",micGain:"Mic volume",micTest:"🎤 Test my mic",micStop:"⏹ Stop test",micHear:"Hear myself",optNs:"Noise and echo reduction",optNsD:"Removes background noise and stops your speakers leaking into the mic.",spkDev:"Audio output (headset / speakers)",micHint:"Speak during the test: the green bar should move. If your mics have no names, start the test first to allow mic access.",vTranscript:"Transcribed from voice",vYou:"🎙️ You have the floor",vSpeaking:"{n} has the floor",vDone:"I'm done",vIdle:"Nobody is talking. Ask for the floor to speak.",vIdleWolf:"Wolves' voice chat: ask for the floor to speak.",vCancel:"Cancel",vPos:"#{n}",vReq:"Ask to speak",vNoMic:"No microphone found",vMicDenied:"Microphone access denied: allow it to speak.",vQueue:"Queue:",voiceOpt:"Voice chat",yes:"Yes",optVc:"Listen to voice chat",optVcD:"Hear the players who have the floor.",av_face:"Face",av_eyes:"Eyes",av_glasses:"Glasses",av_beard:"Beard",av_hat:"Hat",av_color2:"Shirt",av_pants:"Trousers",av_boots:"Boots",av_belt:"Belt",av_scarf:"Scarf / cape",av_skinc:"Body",av_clothes:"Clothes",th_camp:"Moonlit camp",th_camp_d:"3D · mountains, real sky",gfx:"Graphics quality",gfx_low:"Low",gfx_med:"Medium",gfx_high:"High",gfxHelp:"Lower it if the game is slow on your computer.",
  createGame:"Create a game",orJoin:"or join",joinPh:"Paste the game link or code",join:"Join",invited:"You’ve been invited to a game! Pick a nickname, then join.",joinThis:"Join the game",
  recent:"Recent games",rolesTitle:"The village roles",needPseudo:"Pick a nickname first.",badCode:"Invalid game link.",
  camp_wolf:"Werewolf camp",camp_village:"Village camp",camp_solo:"Loner",
@@ -1572,7 +1574,7 @@ fr:{
  bn_night:"Nuit {n}",bn_day:"Jour {n}",rv_title:"Ta carte a été distribuée",rv_changed:"Ton rôle a changé !",rv_click:"Clique sur la carte pour la retourner",rv_ok:"C’est parti !",youWon:"Tu as gagné !",youLost:"Tu as perdu…",
  oaKey:"Clé API OpenAI (optionnel)",oaModel:"Modèle OpenAI",oaHelp:"Si tu es l’hôte, ta clé traduit tous les messages de la partie pour tout le monde (tes amis n’ont besoin de rien). La clé reste enregistrée uniquement sur cet appareil. Sans clé : Google Traduction.",oaErr:"Erreur OpenAI ({e}) : vérifie ta clé ou le modèle. Google Traduction est utilisé en secours.",
  play:"Jouer",hubTitle:"Le village a besoin de toi",hubSub:"Loups-Garous en ligne entre amis — sans compte, en français, russe et anglais.",
- pseudo:"Ton pseudo",pseudoPh:"Écris ton pseudo…",newLook:"Nouveau look",av_skin:"Peau",av_hair:"Coiffure",av_hairc:"Cheveux",av_color:"Couleur",av_outfit:"Tenue",av_acc:"Accessoire",micT:"Micro",micDev:"Micro utilisé",micDefault:"Par défaut (système)",micGain:"Volume du micro",micTest:"🎤 Tester mon micro",micStop:"⏹ Arrêter le test",micHear:"M'entendre",optNs:"Réduction du bruit et de l'écho",optNsD:"Coupe les bruits de fond et évite que tes haut-parleurs repassent dans le micro.",spkDev:"Sortie audio (casque / haut-parleurs)",micHint:"Parle pendant le test : la barre verte doit bouger. Si tes micros n'ont pas de nom, lance d'abord le test pour autoriser le micro.",vTranscript:"Retranscrit depuis le vocal",vYou:"🎙️ Tu as la parole",vSpeaking:"{n} a la parole",vDone:"J'ai fini",vIdle:"Personne ne parle. Demande la parole pour parler au micro.",vIdleWolf:"Vocal des loups : demande la parole pour parler.",vCancel:"Annuler",vPos:"n°{n}",vReq:"Demander la parole",vNoMic:"Micro introuvable",vMicDenied:"Accès au micro refusé : autorise-le pour parler.",vQueue:"File :",voiceOpt:"Chat vocal",yes:"Oui",optVc:"Écouter le chat vocal",optVcD:"Entendre les joueurs qui ont la parole au micro.",av_face:"Visage",av_eyes:"Yeux",av_glasses:"Lunettes",av_beard:"Barbe",av_hat:"Chapeau",av_color2:"Chemise",av_pants:"Pantalon",av_boots:"Bottes",av_belt:"Ceinture",av_scarf:"Écharpe / cape",av_skinc:"Corps",av_clothes:"Vêtements",th_camp:"Campement lunaire",th_camp_d:"3D · montagnes, vrai ciel",gfx:"Qualité graphique",gfx_low:"Basse",gfx_med:"Moyenne",gfx_high:"Haute",gfxHelp:"Baisse-la si le jeu rame sur ton ordinateur.",
+ pseudo:"Ton pseudo",pseudoPh:"Écris ton pseudo…",newLook:"Nouveau look",av_skin:"Peau",av_hair:"Coiffure",av_hairc:"Cheveux",av_color:"Couleur",av_outfit:"Tenue",av_acc:"Accessoire",av_char:"Personnage","ch_medieval-villager":"Villageois","ch_farmer":"Fermier","ch_farmer-woman":"Fermière","ch_witch":"Sorcière","ch_plague-doctor":"Médecin de peste","ch_hooded-rogue":"Voleur encapuchonné","ch_elderly-woman":"Vieille femme","ch_elderly-man":"Vieil homme","ch_leather-armor-warrior":"Guerrier en cuir","ch_armored-knight":"Chevalier","ch_king":"Roi","ch_queen":"Reine","ch_dwarf":"Nain","ch_elf":"Elfe","ch_pirate":"Pirate","ch_vampire":"Vampire",micT:"Micro",micDev:"Micro utilisé",micDefault:"Par défaut (système)",micGain:"Volume du micro",micTest:"🎤 Tester mon micro",micStop:"⏹ Arrêter le test",micHear:"M'entendre",optNs:"Réduction du bruit et de l'écho",optNsD:"Coupe les bruits de fond et évite que tes haut-parleurs repassent dans le micro.",spkDev:"Sortie audio (casque / haut-parleurs)",micHint:"Parle pendant le test : la barre verte doit bouger. Si tes micros n'ont pas de nom, lance d'abord le test pour autoriser le micro.",vTranscript:"Retranscrit depuis le vocal",vYou:"🎙️ Tu as la parole",vSpeaking:"{n} a la parole",vDone:"J'ai fini",vIdle:"Personne ne parle. Demande la parole pour parler au micro.",vIdleWolf:"Vocal des loups : demande la parole pour parler.",vCancel:"Annuler",vPos:"n°{n}",vReq:"Demander la parole",vNoMic:"Micro introuvable",vMicDenied:"Accès au micro refusé : autorise-le pour parler.",vQueue:"File :",voiceOpt:"Chat vocal",yes:"Oui",optVc:"Écouter le chat vocal",optVcD:"Entendre les joueurs qui ont la parole au micro.",av_face:"Visage",av_eyes:"Yeux",av_glasses:"Lunettes",av_beard:"Barbe",av_hat:"Chapeau",av_color2:"Chemise",av_pants:"Pantalon",av_boots:"Bottes",av_belt:"Ceinture",av_scarf:"Écharpe / cape",av_skinc:"Corps",av_clothes:"Vêtements",th_camp:"Campement lunaire",th_camp_d:"3D · montagnes, vrai ciel",gfx:"Qualité graphique",gfx_low:"Basse",gfx_med:"Moyenne",gfx_high:"Haute",gfxHelp:"Baisse-la si le jeu rame sur ton ordinateur.",
  createGame:"Créer une partie",orJoin:"ou rejoindre",joinPh:"Colle le lien ou le code de la partie",join:"Rejoindre",invited:"Tu as été invité·e à une partie ! Choisis ton pseudo puis rejoins-la.",joinThis:"Rejoindre la partie",
  recent:"Parties récentes",rolesTitle:"Les rôles du village",needPseudo:"Choisis d’abord un pseudo.",badCode:"Lien de partie invalide.",
  camp_wolf:"Camp des Loups-Garous",camp_village:"Camp du Village",camp_solo:"Solitaire",
@@ -1630,7 +1632,7 @@ ru:{
  bn_night:"Ночь {n}",bn_day:"День {n}",rv_title:"Тебе раздали карту",rv_changed:"Твоя роль изменилась!",rv_click:"Нажми на карту, чтобы перевернуть её",rv_ok:"Поехали!",youWon:"Ты победил(а)!",youLost:"Ты проиграл(а)…",
  oaKey:"Ключ API OpenAI (необязательно)",oaModel:"Модель OpenAI",oaHelp:"Если ты хост, твой ключ переводит все сообщения игры для всех (друзьям ничего не нужно). Ключ хранится только на этом устройстве. Без ключа используется Google Переводчик.",oaErr:"Ошибка OpenAI ({e}): проверь ключ или модель. Используется Google Переводчик.",
  play:"Играть",hubTitle:"Деревне нужна твоя помощь",hubSub:"Оборотни онлайн с друзьями — без регистрации, на русском, французском и английском.",
- pseudo:"Твой ник",pseudoPh:"Введи свой ник…",newLook:"Новый образ",av_skin:"Кожа",av_hair:"Причёска",av_hairc:"Волосы",av_color:"Цвет",av_outfit:"Одежда",av_acc:"Аксессуар",micT:"Микрофон",micDev:"Микрофон",micDefault:"По умолчанию (система)",micGain:"Громкость микрофона",micTest:"🎤 Проверить микрофон",micStop:"⏹ Остановить проверку",micHear:"Слышать себя",optNs:"Шумо- и эхоподавление",optNsD:"Убирает фоновый шум и не даёт динамикам попадать в микрофон.",spkDev:"Вывод звука (наушники / колонки)",micHint:"Говори во время проверки: зелёная полоска должна двигаться. Если у микрофонов нет названий, сначала запусти проверку, чтобы разрешить доступ.",vTranscript:"Расшифровка голоса",vYou:"🎙️ Тебе слово",vSpeaking:"Слово у {n}",vDone:"Я закончил(а)",vIdle:"Никто не говорит. Попроси слово, чтобы говорить в микрофон.",vIdleWolf:"Голосовой чат волков: попроси слово.",vCancel:"Отменить",vPos:"№{n}",vReq:"Попросить слово",vNoMic:"Микрофон не найден",vMicDenied:"Нет доступа к микрофону: разреши его, чтобы говорить.",vQueue:"Очередь:",voiceOpt:"Голосовой чат",yes:"Да",optVc:"Слушать голосовой чат",optVcD:"Слышать игроков, у которых слово.",av_face:"Лицо",av_eyes:"Глаза",av_glasses:"Очки",av_beard:"Борода",av_hat:"Шляпа",av_color2:"Рубашка",av_pants:"Штаны",av_boots:"Сапоги",av_belt:"Пояс",av_scarf:"Шарф / плащ",av_skinc:"Тело",av_clothes:"Одежда",th_camp:"Лунный лагерь",th_camp_d:"3D · горы, настоящее небо",gfx:"Качество графики",gfx_low:"Низкое",gfx_med:"Среднее",gfx_high:"Высокое",gfxHelp:"Понизь, если игра тормозит на твоём компьютере.",
+ pseudo:"Твой ник",pseudoPh:"Введи свой ник…",newLook:"Новый образ",av_skin:"Кожа",av_hair:"Причёска",av_hairc:"Волосы",av_color:"Цвет",av_outfit:"Одежда",av_acc:"Аксессуар",av_char:"Персонаж","ch_medieval-villager":"Селянин","ch_farmer":"Фермер","ch_farmer-woman":"Фермерша","ch_witch":"Ведьма","ch_plague-doctor":"Чумной доктор","ch_hooded-rogue":"Разбойник в капюшоне","ch_elderly-woman":"Старушка","ch_elderly-man":"Старик","ch_leather-armor-warrior":"Воин в коже","ch_armored-knight":"Рыцарь","ch_king":"Король","ch_queen":"Королева","ch_dwarf":"Гном","ch_elf":"Эльф","ch_pirate":"Пират","ch_vampire":"Вампир",micT:"Микрофон",micDev:"Микрофон",micDefault:"По умолчанию (система)",micGain:"Громкость микрофона",micTest:"🎤 Проверить микрофон",micStop:"⏹ Остановить проверку",micHear:"Слышать себя",optNs:"Шумо- и эхоподавление",optNsD:"Убирает фоновый шум и не даёт динамикам попадать в микрофон.",spkDev:"Вывод звука (наушники / колонки)",micHint:"Говори во время проверки: зелёная полоска должна двигаться. Если у микрофонов нет названий, сначала запусти проверку, чтобы разрешить доступ.",vTranscript:"Расшифровка голоса",vYou:"🎙️ Тебе слово",vSpeaking:"Слово у {n}",vDone:"Я закончил(а)",vIdle:"Никто не говорит. Попроси слово, чтобы говорить в микрофон.",vIdleWolf:"Голосовой чат волков: попроси слово.",vCancel:"Отменить",vPos:"№{n}",vReq:"Попросить слово",vNoMic:"Микрофон не найден",vMicDenied:"Нет доступа к микрофону: разреши его, чтобы говорить.",vQueue:"Очередь:",voiceOpt:"Голосовой чат",yes:"Да",optVc:"Слушать голосовой чат",optVcD:"Слышать игроков, у которых слово.",av_face:"Лицо",av_eyes:"Глаза",av_glasses:"Очки",av_beard:"Борода",av_hat:"Шляпа",av_color2:"Рубашка",av_pants:"Штаны",av_boots:"Сапоги",av_belt:"Пояс",av_scarf:"Шарф / плащ",av_skinc:"Тело",av_clothes:"Одежда",th_camp:"Лунный лагерь",th_camp_d:"3D · горы, настоящее небо",gfx:"Качество графики",gfx_low:"Низкое",gfx_med:"Среднее",gfx_high:"Высокое",gfxHelp:"Понизь, если игра тормозит на твоём компьютере.",
  createGame:"Создать игру",orJoin:"или войти",joinPh:"Вставь ссылку или код игры",join:"Войти",invited:"Тебя пригласили в игру! Выбери ник и заходи.",joinThis:"Войти в игру",
  recent:"Недавние игры",rolesTitle:"Роли деревни",needPseudo:"Сначала выбери ник.",badCode:"Неверная ссылка на игру.",
  camp_wolf:"Лагерь оборотней",camp_village:"Лагерь деревни",camp_solo:"Одиночка",
@@ -2480,13 +2482,14 @@ const R4 = {};
   R4.STD_VS=`#version 300 es
   layout(location=0) in vec3 aP; layout(location=1) in vec3 aN; layout(location=2) in vec4 aC;
   uniform mat4 uVP,uM; uniform float uTime,uWind;
-  out vec3 vW; out vec3 vN; out vec4 vC;
-  void main(){ vec4 w=uM*vec4(aP,1.); float m=floor(aC.a+.5);
+  out vec3 vW; out vec3 vN; out vec4 vC; out vec2 vUV;
+  void main(){ vec4 w=uM*vec4(aP,1.); float m=floor(aC.a+.5); vUV=vec2(0.);
     if(m==6.){ float h=max(w.y-.3,0.); w.x+=sin(uTime*1.3+w.z*.31+w.x*.2)*.025*h*uWind; w.z+=cos(uTime*1.1+w.x*.27)*.02*h*uWind; }
     vW=w.xyz; vN=mat3(uM)*aN; vC=aC; gl_Position=uVP*w; }`;
   R4.STD_FS=`#version 300 es
   precision highp float; precision highp sampler2DShadow;
-  in vec3 vW; in vec3 vN; in vec4 vC; out vec4 o;
+  in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; out vec4 o;
+  uniform sampler2D uAlb,uNrm;
   uniform vec3 uCam,uKeyDir,uKeyCol,uSkyCol,uGndCol,uFogCol,uFogSun,uFireP,uFireC,uTint,uHiCol,uLampC; uniform vec3 uLamp[4];
   uniform float uFogD,uFogH,uTime,uWin,uHi,uAlpha,uFireR,uShadowOn,uFireShOn,uSnow,uGround,uClr;
   uniform sampler2DShadow uShadow; uniform mat4 uLightVP; uniform highp samplerCube uFireSh; uniform float uShTexel;
@@ -2514,6 +2517,10 @@ const R4 = {};
     if(m==9.){ wrap=.3; alb*=.93+.12*vn(vW*60.); }
     if(m==6.){ wrap=.6; alb*=.8+.4*fbm(vW*3.); alb=mix(alb,vec3(.92,.95,1.),smoothstep(.2,.6,n.y)*uSnow); }
     if(m==10.){ rough=.15; spec=.6; }
+    if(m==11.){ alb=texture(uAlb,vUV).rgb*uTint; vec3 tn=texture(uNrm,vUV).xyz*2.-1.;
+      vec3 dp1=dFdx(vW),dp2=dFdy(vW); vec2 du1=dFdx(vUV),du2=dFdy(vUV); vec3 d2p=cross(dp2,n),d1p=cross(n,dp1);
+      vec3 T=d2p*du1.x+d1p*du2.x, B=d2p*du1.y+d1p*du2.y; float iv=inversesqrt(max(max(dot(T,T),dot(B,B)),1e-12));
+      n=normalize(mat3(T*iv,B*iv,n)*vec3(tn.xy*.8,tn.z)); wrap=.3; rough=.6; spec=.035; }
     vec3 V=normalize(uCam-vW); float a=rough*rough;
     float ndl=dot(n,uKeyDir); float dif=max((ndl+wrap)/(1.+wrap),0.);
     float sh=uShadowOn>.5?sunShadow(vW,n):1.;
@@ -2530,7 +2537,7 @@ const R4 = {};
     if(m==2.) col+=vC.rgb*3.;
     float rim=pow(1.-max(dot(n,V),0.),3.);
     col+=uHiCol*uHi*(rim*2.5+.12);
-    if(m==3.||m==8.||m==9.) col+=rim*(uSkyCol*.35+uFireC*att*.25);
+    if(m==3.||m==8.||m==9.||m==11.) col+=rim*(uSkyCol*.35+uFireC*att*.25);
     float dist=length(uCam-vW);
     float fa=1.-exp(-dist*uFogD*exp(-max(vW.y,0.)*uFogH));
     vec3 vd=normalize(vW-uCam); vec3 fc=uFogCol+uFogSun*pow(max(dot(vd,uKeyDir),0.),8.);
@@ -2539,7 +2546,7 @@ const R4 = {};
     if(uAlpha<.999){ float th=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); if(th>uAlpha) discard; }
     o=vec4(col,1.); }`;
   R4.DEPTH_FS=`#version 300 es
-  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; uniform vec3 uFireP; uniform float uCube; out vec4 o;
+  precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; uniform vec3 uFireP; uniform float uCube; out vec4 o;
   void main(){ o=vec4(uCube>.5?length(vW-uFireP):0.); }`;
   // herbe instanciée
   R4.GRASS_VS=`#version 300 es
@@ -2652,7 +2659,7 @@ const R4 = {};
     boots:["#a0683e","#6b4226","#2a2228","#c8925c","#3a3a44","#8a2f2f","#d8c8a8"],
     eyes:["#3b6fb0","#4a8a4a","#6b4a2a","#2a2a2a","#7a8a9a","#9a6abf"]
   };
-  R4.AV_FIELDS={s:8,fs:3,ey:6,gl:4,h2:10,hc:10,bd:4,a2:8,o2:5,t:14,t2:14,p:14,bt:7,bl:2,sc:3};
+  R4.AV_FIELDS={rc:16,s:8,fs:3,ey:6,gl:4,h2:10,hc:10,bd:4,a2:8,o2:5,t:14,t2:14,p:14,bt:7,bl:2,sc:3};
   // normalise un avatar (compatibilité avec l'ancien format 2D)
   R4.avNorm=function(av){
     av=Object.assign({},av||{}); const seed=JSON.stringify(av).split("").reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
@@ -2875,6 +2882,123 @@ const R4 = {};
   };
 })();
 
+/* ===================== R4 : personnages réalistes (Grab3D, CC0) avec squelette ===================== */
+(function(){
+  "use strict";
+  const {M}=R4;
+  R4.CHAR_LIST=["medieval-villager","farmer","farmer-woman","witch","plague-doctor","hooded-rogue","elderly-woman","elderly-man","leather-armor-warrior","armored-knight","king","queen","dwarf","elf","pirate","vampire"];
+  R4.CHARS={}; const waiters={}, loading={};
+  window.HURLUNE_CHAR=function(d){ R4.CHARS[d.slug]=d; (waiters[d.slug]||[]).forEach(f=>f[0](d)); delete waiters[d.slug]; };
+  R4.charSlug=av=>{ const i=av&&av.rc; return i!=null&&i>=0?R4.CHAR_LIST[i%R4.CHAR_LIST.length]:null; };
+  R4.loadChar=function(slug){
+    if(R4.CHARS[slug]) return Promise.resolve(R4.CHARS[slug]);
+    return new Promise((res,rej)=>{
+      (waiters[slug]=waiters[slug]||[]).push([res,rej]);
+      if(loading[slug]) return; loading[slug]=true;
+      const s=document.createElement("script"); s.src="chars/"+slug+".js"; s.async=true;
+      s.onerror=()=>{ loading[slug]=false; (waiters[slug]||[]).forEach(f=>f[1](new Error("char "+slug))); delete waiters[slug]; };
+      document.head.appendChild(s);
+    });
+  };
+
+  /* ---------- quaternions ---------- */
+  const qmul=(a,b)=>[a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1], a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0], a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3], a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]];
+  const qinv=q=>[-q[0],-q[1],-q[2],q[3]];
+  const qax=(x,y,z,a)=>{ const s=Math.sin(a/2); return [x*s,y*s,z*s,Math.cos(a/2)]; };
+  const qeul=(e)=>qmul(qax(0,1,0,e[1]),qmul(qax(1,0,0,e[0]),qax(0,0,1,e[2]))); // Ry*Rx*Rz, comme M.rot3
+  const qrot=(q,v)=>{ const u=[q[0],q[1],q[2]], s=q[3]; const c=R4.cross(u,v); const c2=R4.cross(u,c); return [v[0]+2*(s*c[0]+c2[0]), v[1]+2*(s*c[1]+c2[1]), v[2]+2*(s*c[2]+c2[2])]; };
+  function qfromto(a,b){ a=R4.nrm(a); b=R4.nrm(b); const d=R4.dot(a,b); if(d<-.9999){ return [1,0,0,0]; } const c=R4.cross(a,b); const q=[c[0],c[1],c[2],1+d]; const l=Math.hypot(...q); return q.map(x=>x/l); }
+  function mtrs(t,q,s){ const [x,y,z,w]=q, o=new Float32Array(16);
+    o[0]=(1-2*(y*y+z*z))*s[0]; o[1]=2*(x*y+z*w)*s[0]; o[2]=2*(x*z-y*w)*s[0];
+    o[4]=2*(x*y-z*w)*s[1]; o[5]=(1-2*(x*x+z*z))*s[1]; o[6]=2*(y*z+x*w)*s[1];
+    o[8]=2*(x*z+y*w)*s[2]; o[9]=2*(y*z-x*w)*s[2]; o[10]=(1-2*(x*x+y*y))*s[2];
+    o[12]=t[0]; o[13]=t[1]; o[14]=t[2]; o[15]=1; return o; }
+  function mul4(a,b,o){ for(let i=0;i<4;i++)for(let j=0;j<4;j++){ let s=0; for(let k=0;k<4;k++) s+=a[k*4+j]*b[i*4+k]; o[i*4+j]=s; } return o; }
+
+  /* ---------- squelette préparé (une fois par personnage) ---------- */
+  const MAP={pelvis:["Hips",1],neck:["neck",1],head:["Head",1],shL:["LeftArm",1],shR:["RightArm",1],elL:["LeftForeArm",1],elR:["RightForeArm",1],hipL:["LeftUpLeg",1],hipR:["RightUpLeg",1],knL:["LeftLeg",1],knR:["RightLeg",1]};
+  const rigs={};
+  R4.charRig=function(slug){
+    if(rigs[slug]) return rigs[slug]; const d=R4.CHARS[slug]; if(!d) return null;
+    const B=d.bones, n=B.length, id={}; B.forEach((b,i)=>id[b.n]=i);
+    let root=Float32Array.from(d.root);
+    const ibm=[]; for(let i=0;i<n;i++) ibm.push(Float32Array.from(d.ibm.slice(i*16,i*16+16)));
+    // positions/rotations du monde au repos
+    const fk=(locQ)=>{ const W=[], R=[]; for(let i=0;i<n;i++){ const b=B[i]; const L=mtrs(b.t,locQ[i],b.s); W[i]=b.p<0?mul4(root,L,new Float32Array(16)):mul4(W[b.p],L,new Float32Array(16)); R[i]=b.p<0?locQ[i]:qmul(R[b.p],locQ[i]); } return {W,R}; };
+    const pos=m=>[m[12],m[13],m[14]];
+    let locQ=B.map(b=>b.r.slice());
+    let rest=fk(locQ);
+    // orientation : le personnage doit regarder vers +Z
+    if(id.headfront!=null&&id.Head!=null){ const f=R4.sub(pos(rest.W[id.headfront]),pos(rest.W[id.Head])); if(f[2]<0&&Math.abs(f[2])>Math.abs(f[0])){ root=mul4(mtrs([0,0,0],[0,1,0,0],[1,1,1]),root,new Float32Array(16)); rest=fk(locQ); } }
+    // corrections de pose A -> bras et jambes droits vers le bas
+    const fix=(bone,child,target)=>{ const i=id[bone], c=id[child]; if(i==null||c==null) return;
+      const cur=fk(locQ); const dir=R4.sub(pos(cur.W[c]),pos(cur.W[i])); const dq=qfromto(dir,target);
+      const A=cur.R[i]; locQ[i]=qmul(locQ[i],qmul(qinv(A),qmul(dq,A))); };
+    fix("LeftArm","LeftForeArm",[.12,-1,0]); fix("RightArm","RightForeArm",[-.12,-1,0]);
+    fix("LeftForeArm","LeftHand",[.08,-1,.04]); fix("RightForeArm","RightHand",[-.08,-1,.04]);
+    fix("LeftUpLeg","LeftLeg",[.04,-1,0]); fix("RightUpLeg","RightLeg",[-.04,-1,0]);
+    fix("LeftLeg","LeftFoot",[0,-1,0]); fix("RightLeg","RightFoot",[0,-1,0]);
+    const base=fk(locQ);
+    const hipsY=pos(base.W[id.Hips])[1];
+    const rig={slug,n,B,id,root,ibm,locQ,A:base.R,hipsY,head:id.Head,hand:id.RightHand,
+      sp:[id.Spine02,id.Spine01].filter(x=>x!=null), mats:new Float32Array(n*16), W:[]};
+    return rigs[slug]=rig;
+  };
+  // pose (même format que les personnages en pâte) -> matrices de peau
+  const I=[0,0,0,1];
+  R4.charPose=function(rig,pose){
+    const {n,B,id,locQ,A}=rig; const D=new Array(n).fill(null);
+    for(const k in MAP){ const e=pose[k]; if(!e) continue; const i=id[MAP[k][0]]; if(i!=null) D[i]=qeul(e); }
+    if(pose.spine&&rig.sp.length){ const e=pose.spine.map(x=>x/rig.sp.length); for(const i of rig.sp) D[i]=qeul(e); }
+    const W=rig.W, tmp=new Float32Array(16);
+    for(let i=0;i<n;i++){ const b=B[i]; let q=locQ[i]; if(D[i]) q=qmul(q,qmul(qinv(A[i]),qmul(D[i],A[i])));
+      const L=mtrs(b.t,q,b.s); W[i]=W[i]||new Float32Array(16); if(b.p<0) mul4(rig.root,L,W[i]); else mul4(W[b.p],L,W[i]);
+      mul4(W[i],rig.ibm[i],tmp); rig.mats.set(tmp,i*16); }
+    return rig.mats;
+  };
+  R4.charHead=rig=>{ const m=rig.W[rig.head]; return m?[m[12],m[13],m[14]]:[0,1.6,0]; };
+  R4.charHand=rig=>{ const m=rig.W[rig.hand]; return m?[m[12],m[13],m[14]]:[0,1,0]; };
+
+  /* ---------- GPU ---------- */
+  const gpu=new WeakMap();
+  function tex(gl,b64,srgb){
+    const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(srgb?[200,190,180,255]:[128,128,255,255]));
+    let pr=Promise.resolve();
+    if(b64){ const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)); pr=createImageBitmap(new Blob([bin],{type:"image/jpeg"})).then(img=>{
+      gl.bindTexture(gl.TEXTURE_2D,t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+      gl.texImage2D(gl.TEXTURE_2D,0,srgb?gl.SRGB8_ALPHA8:gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,img); gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR); const af=gl.getExtension("EXT_texture_filter_anisotropic"); if(af) gl.texParameterf(gl.TEXTURE_2D,af.TEXTURE_MAX_ANISOTROPY_EXT,4); img.close&&img.close(); }).catch(()=>{}); }
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    tex.last=pr; return t; }
+  R4.charGPU=function(gl,slug){
+    let m=gpu.get(gl); if(!m){ m={}; gpu.set(gl,m); } if(m[slug]) return m[slug];
+    const d=R4.CHARS[slug]; if(!d) return null;
+    const bin=Uint8Array.from(atob(d.bin),c=>c.charCodeAt(0)).buffer; const nv=d.nv; let o=0;
+    const take=(bytes)=>{ const s=o; o+=bytes; return s; };
+    const oP=take(nv*12), oN=take(nv*4), oU=take(nv*4), oJ=take(nv*4), oW=take(nv*4), oI=take(d.ni*(d.i32?4:2));
+    const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+    const vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb); gl.bufferData(gl.ARRAY_BUFFER,new Uint8Array(bin,0,oI),gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,oP);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.BYTE,true,4,oN);
+    gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.UNSIGNED_SHORT,true,0,oU);
+    gl.enableVertexAttribArray(3); gl.vertexAttribIPointer(3,4,gl.UNSIGNED_BYTE,0,oJ);
+    gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4,4,gl.UNSIGNED_BYTE,true,0,oW);
+    const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint8Array(bin,oI,d.ni*(d.i32?4:2)),gl.STATIC_DRAW);
+    gl.bindVertexArray(null);
+    const alb=tex(gl,d.tc,true), p1=tex.last, nrm=tex(gl,d.tn,false), p2=tex.last;
+    return m[slug]={vao,n:d.ni,type:d.i32?gl.UNSIGNED_INT:gl.UNSIGNED_SHORT,alb,nrm,ready:Promise.all([p1,p2])};
+  };
+
+  /* ---------- shader de peau (squelette) ---------- */
+  R4.SKIN_VS=`#version 300 es
+  layout(location=0) in vec3 aP; layout(location=1) in vec3 aN; layout(location=2) in vec2 aUV; layout(location=3) in uvec4 aJ; layout(location=4) in vec4 aW;
+  uniform mat4 uVP,uM; uniform mat4 uB[24];
+  out vec3 vW; out vec3 vN; out vec4 vC; out vec2 vUV;
+  void main(){ mat4 S=uB[aJ.x]*aW.x+uB[aJ.y]*aW.y+uB[aJ.z]*aW.z+uB[aJ.w]*aW.w;
+    vec4 w=uM*S*vec4(aP,1.); vW=w.xyz; vN=mat3(uM)*mat3(S)*aN; vC=vec4(1.,1.,1.,11.); vUV=aUV; gl_Position=uVP*w; }`;
+})();
+
 /* ===================== R4 : rendu principal ===================== */
 (function(){
   "use strict";
@@ -2908,12 +3032,12 @@ const R4 = {};
     if(!gl) return null;
     const hasFloat=!!gl.getExtension("EXT_color_buffer_float"); gl.getExtension("OES_texture_float_linear");
     const P={}; try{
-      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
+      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.skin=R4.compile(gl,R4.SKIN_VS,R4.STD_FS); P.skinD=R4.compile(gl,R4.SKIN_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
       P.sky=R4.compile(gl,R4.SKY_VS,R4.SKY_FS); P.part=R4.compile(gl,R4.PART_VS,R4.PART_FS);
       P.bright=R4.compile(gl,R4.QUAD_VS,R4.BRIGHT_FS); P.down=R4.compile(gl,R4.QUAD_VS,R4.DOWN_FS); P.up=R4.compile(gl,R4.QUAD_VS,R4.UP_FS); P.comp=R4.compile(gl,R4.QUAD_VS,R4.COMP_FS);
     }catch(e){ console.warn("R4 shaders",e); return null; }
     const preview=!!opts.preview;
-    let q=Object.assign({},QUAL[opts.quality||"med"]||QUAL.med); if(!hasFloat){ q.msaa=0; }
+    let qk=QUAL[opts.quality]?opts.quality:"med"; let q=Object.assign({},QUAL[qk]); if(!hasFloat){ q.msaa=0; }
     let theme=opts.theme||"forest"; let world=null, grass=null; const logM=R4.buildLog(gl), graveM=R4.buildGrave(gl), ringM=R4.buildRing(gl), eyesM=R4.buildEyes(gl);
     // quad plein écran
     const quad=gl.createVertexArray(); gl.bindVertexArray(quad); const qb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,qb); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); gl.bindVertexArray(null);
@@ -2971,14 +3095,20 @@ const R4 = {};
     function setPlayers(list,meId){
       me=meId; const n=Math.max(list.length,1); const seen=new Set();
       list.forEach((p,i)=>{ seen.add(p.id); let c=chars[p.id]; const key=JSON.stringify(R4.avNorm(p.av));
-        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av)}); }
+        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av),rig:null,slug:null});
+          useReal(c,p.av); }
         const s=seat(i,n); if(preview){ s.x=0; s.z=0; } c.tx=s.x; c.tz=s.z; c.sa=s.a; c.R=s.R; if(c.init){ c.x=s.x; c.z=s.z; c.init=false; if(p.alive===false){ c.die=1; } }
         if(c.alive!==false&&p.alive===false&&!c.init) c.dying=0.0001;
         c.alive=p.alive!==false; c.sel=!!p.sel; c.click=!!p.click; c.sleep=!!p.sleep; c.inact=!!p.inact; c.wolf=!!p.wolf; c.point=p.point||null; });
       for(const id of Object.keys(chars)) if(!seen.has(id)){ R4.freeChar(gl,chars[id].m); delete chars[id]; }
       order=list.map(p=>p.id);
     }
-    function headPos(c){ return c.W?M.xf(c.W.head,[0,.21,0]):[c.x,1.25,c.z]; }
+    function headPos(c){ if(c.rig&&c.headTop) return c.headTop; return c.W?M.xf(c.W.head,[0,.21,0]):[c.x,1.25,c.z]; }
+    function realOK(){ return opts.real!==false&&qk!=="low"; }
+    function useReal(c,av){ const slug=realOK()?R4.charSlug(R4.avNorm(av)):null; c.slug=slug; c.rig=null; if(!slug) return;
+      const setup=()=>{ if(c.slug!==slug) return; const base=R4.charRig(slug); if(!base) return; const g=R4.charGPU(gl,slug);
+        const inst=Object.create(base); inst.mats=new Float32Array(base.n*16); inst.W=[]; c.rig=inst; c.ready=g.ready; if(preview&&onReady) onReady(); };
+      if(R4.CHARS[slug]) setup(); else R4.loadChar(slug).then(setup).catch(e=>console.warn(e)); }
     function poseOf(c,t,dt){
       const T={}; const breath=Math.sin(t*1.7+c.seed)*.025;
       T.spine=[.06+breath,0,0]; T.neck=[0,0,0]; T.head=[0,0,0];
@@ -3000,7 +3130,7 @@ const R4 = {};
         const py=clamp(Math.atan2(plx,plz),-1.3,1.3); T.shR=[-1.4,py,.0]; T.elR=[-.12,0,0]; T.neck[1]=py*.35; T.head[1]=py*.65; }
       if(c.sleep){ T.spine=[.38+breath*.5,0,0]; T.neck=[.32,0,0]; T.head=[.38,0,Math.sin(t*.5+c.seed)*.12]; T.shL=[-.3,0,-.05]; T.shR=[-.3,0,.05]; T.elL=[-.6,0,0]; T.elR=[-.6,0,0]; }
       if(c.dying||c.die>=1){ const k=c.dying?clamp(c.dying/.9,0,1):1; const e=k*k*(3-2*k);
-        T.pelvis=[-1.35*e,0,0]; T.py=-.32*e; T.pz=-.45*e; T.spine=[-.25*e,0,0]; T.head=[-.3*e,0,.2*e]; T.shL=[-2.4*e,0,-.5*e]; T.shR=[-2.4*e,0,.5*e]; T.elL=[0,0,0]; T.elR=[0,0,0]; T.knL=[1.45*(1-e)+.2*e,0,0]; T.knR=[1.45*(1-e)+.2*e,0,0]; }
+        T.pelvis=[-1.35*e,0,0]; T.py=-.32*e; T.pz=-.45*e; T.spine=[-.25*e,0,0]; T.head=[-.3*e,0,.2*e]; T.shL=[-2.4*e,0,-.5*e]; T.shR=[-2.4*e,0,.5*e]; T.elL=[0,0,0]; T.elR=[0,0,0]; T.knL=[1.45*(1-e)+.2*e,0,0]; T.knR=[1.45*(1-e)+.2*e,0,0]; T.hipL=[-1.5*(1-e)-.25*e,0,.05*e]; T.hipR=[-1.5*(1-e)-.25*e,0,-.05*e]; if(c.rig){ T.py=-.42*e; T.pz=-.75*e; } }
       // lissage
       const k=1-Math.exp(-dt*(c.dying?12:6));
       for(const b in T){ if(Array.isArray(T[b])){ const cur=c.pose[b]||T[b]; c.pose[b]=[lerp(cur[0],T[b][0],k),lerp(cur[1],T[b][1],k),lerp(cur[2],T[b][2],k)]; } else c.pose[b]=lerp(c.pose[b]==null?T[b]:c.pose[b],T[b],k); }
@@ -3019,6 +3149,9 @@ const R4 = {};
         if(id===me&&!spk&&!c.point) c.look=[0,.7,0];
         poseOf(c,t,dt);
         const root=M.trs([c.x,0,c.z],[0,c.face,0],1); c.root=root; c.W=R4.skeleton(root,c.pose);
+        if(c.rig){ const P2=c.pose; R4.charPose(c.rig,P2); c.rootR=M.mul(root,M.trs([P2.px||0,preview?0:(.47-c.rig.hipsY)+(P2.py||0),P2.pz||0],[0,0,0],1));
+          const hd=c.rig.W[c.rig.id.head_end!=null?c.rig.id.head_end:c.rig.head]; c.headTop=M.xf(c.rootR,[hd[12],hd[13]+.04,hd[14]]);
+          const hp=c.rig.W[c.rig.id.Hips]; c.hipsW=M.xf(c.rootR,[hp[12],hp[13],hp[14]]); }
       }
     }
     const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -3072,19 +3205,25 @@ const R4 = {};
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,SH.t); gl.uniform1i(u.uShadow,1);
       if(u.uFireSh){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_CUBE_MAP,FS.t); gl.uniform1i(u.uFireSh,2); gl.uniform1f(u.uFireShOn,S.fireShOn); }
       if(u.uGround) gl.uniform1f(u.uGround,theme==="winter"?0:1); if(u.uClr) gl.uniform1f(u.uClr,S.clr);
+      if(u.uAlb){ gl.uniform1i(u.uAlb,3); gl.uniform1i(u.uNrm,4); }
       gl.activeTexture(gl.TEXTURE0); }
     function drawM(p,m,Mx,opts){ const u=p.u; gl.uniformMatrix4fv(u.uM,false,Mx);
       if(u.uTint) gl.uniform3fv(u.uTint,(opts&&opts.tint)||[1,1,1]); if(u.uHi!=null) gl.uniform1f(u.uHi,(opts&&opts.hi)||0); if(u.uHiCol) gl.uniform3fv(u.uHiCol,(opts&&opts.hic)||[0,0,0]);
       if(u.uAlpha) gl.uniform1f(u.uAlpha,opts&&opts.alpha!=null?opts.alpha:1); if(u.uWin!=null) gl.uniform1f(u.uWin,S.win);
       gl.bindVertexArray(m.vao); gl.drawArrays(gl.TRIANGLES,0,m.n); }
     const I=M.id();
-    function drawChars(p,isMain,t){
+    function drawChars(p,isMain,t,sp){
       for(const id of order){ const c=chars[id]; if(!c||!c.W) continue;
         gl.uniformMatrix4fv(p.u.uM,false,c.root);
-        if(!preview){ drawM(p,logM,M.mul(c.root,M.trs([0,0,-.03],[0,0,0],1)),null); }
+        if(!preview){ drawM(p,logM,M.mul(c.root,M.trs([0,0,-.03],[0,0,0],c.rig?1.08:1)),null); }
         if(c.die<1){ const alpha=c.dying?clamp(1-(c.die-.45)/.55,0,1):1; const hi=isMain&&!c.dying?(id===hover?1:(c.click?.4+.25*Math.sin(t*4):0)):0;
           const o={tint:c.inact?[.55,.55,.62]:[1,1,1],hi,hic:id===hover?[1.2,.9,.4]:[.7,.5,1.4],alpha};
-          for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
+          const g=c.rig&&sp&&R4.charGPU(gl,c.rig.slug);
+          if(g){ gl.useProgram(sp.p); const u=sp.u; gl.uniformMatrix4fv(u.uM,false,c.rootR); gl.uniformMatrix4fv(u.uB,false,c.rig.mats);
+            if(u.uTint){ gl.uniform3fv(u.uTint,o.tint); gl.uniform1f(u.uHi,o.hi); gl.uniform3fv(u.uHiCol,o.hic); gl.uniform1f(u.uAlpha,o.alpha); gl.uniform1f(u.uWin,S.win);
+              gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); }
+            gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,g.type,0); gl.useProgram(p.p); }
+          else for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
             if(R4.PART_OFF[part]){ let sy=1; if(part==="eyes") sy=(c.sleep||c.die>.3)?.08:(c.blink<0?.1:1); if(part==="mouth") sy=c.talk>0?.5+Math.abs(Math.sin(t*11+c.seed))*1.8:1; Mx=M.mul(Mx,M.trs(R4.PART_OFF[part],[0,0,0],1,sy)); }
             drawM(p,m,Mx,o); } }
         if(c.die>.6&&!preview){ const r=clamp((c.die-.6)/.4,0,1); drawM(p,graveM,M.mul(c.root,M.trs([0,-(1-r)*1.1,-.75],[0,0,0],1)),null); }
@@ -3110,8 +3249,8 @@ const R4 = {};
       const meC=me&&chars[me]; let base=meC?Math.atan2(meC.x,meC.z):camYaw; if(preview) base=0;
       const R=meC?meC.R:(order.length?chars[order[0]]&&chars[order[0]].R||3:3);
       let eye,at;
-      if(preview&&cheer){ eye=[1.0,1.35,2.75]; at=[0,1.0,0]; }
-      else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.4,1.5,Math.cos(a)*3.4]; at=[0,.92,0]; }
+      if(preview&&cheer){ eye=[.7,1.45,2.3]; at=[0,1.12,0]; }
+      else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.9,1.45,Math.cos(a)*3.9]; at=[0,.95,0]; }
       else { const a=base+drag; const dist=(R+3.4)*zoom+cine*2.2; const hgt=(2.9+R*.12)*zoom+cine*1.2+Math.sin(t*.3)*.05; eye=[Math.sin(a+Math.sin(t*.13)*.03)*dist,hgt,Math.cos(a+Math.sin(t*.13)*.03)*dist]; at=[0,.45+cine*1.6,0]; }
       camE=eye; const fov=preview?32:52;
       const proj=M.persp(fov*Math.PI/180,W/H,.08,600), view=M.lookAt(eye,at,[0,1,0]); VPm=M.mul(proj,view);
@@ -3139,12 +3278,15 @@ const R4 = {};
       if(S.shadowOn){ gl.bindFramebuffer(gl.FRAMEBUFFER,SH.f); gl.viewport(0,0,SH.size,SH.size); gl.clear(gl.DEPTH_BUFFER_BIT); gl.useProgram(dp.p);
         gl.uniformMatrix4fv(dp.u.uVP,false,S.lightVP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1); gl.uniform1f(dp.u.uCube,0);
         gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2,4);
-        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t); gl.disable(gl.POLYGON_OFFSET_FILL); }
+        { const k=P.skinD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,S.lightVP); gl.uniform1f(k.u.uCube,0); gl.useProgram(dp.p); }
+        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t,P.skinD); gl.disable(gl.POLYGON_OFFSET_FILL); }
       // --- passe ombre du feu (6 faces)
       if(S.fireShOn){ gl.useProgram(dp.p); gl.uniform1f(dp.u.uCube,1); gl.uniform3fv(dp.u.uFireP,S.fireP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1);
         const dirs=[[[1,0,0],[0,-1,0]],[[-1,0,0],[0,-1,0]],[[0,1,0],[0,0,1]],[[0,-1,0],[0,0,-1]],[[0,0,1],[0,-1,0]],[[0,0,-1],[0,-1,0]]]; const pr=M.persp(Math.PI/2,1,.05,30);
         for(let i=0;i<6;i++){ gl.bindFramebuffer(gl.FRAMEBUFFER,FS.f[i]); gl.viewport(0,0,FS.size,FS.size); gl.clearColor(100,100,100,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-          gl.uniformMatrix4fv(dp.u.uVP,false,M.mul(pr,M.lookAt(S.fireP,add(S.fireP,dirs[i][0]),dirs[i][1]))); drawChars(dp,false,t); } }
+          const fvp=M.mul(pr,M.lookAt(S.fireP,add(S.fireP,dirs[i][0]),dirs[i][1])); gl.uniformMatrix4fv(dp.u.uVP,false,fvp);
+          { const k=P.skinD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,fvp); gl.uniform1f(k.u.uCube,1); gl.uniform3fv(k.u.uFireP,S.fireP); gl.useProgram(dp.p); }
+          drawChars(dp,false,t,P.skinD); } }
       // --- passe principale
       gl.bindFramebuffer(gl.FRAMEBUFFER,RT.ms||RT.sceneF); gl.viewport(0,0,w,h); gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       // ciel
@@ -3160,7 +3302,8 @@ const R4 = {};
       const p=P.std; gl.useProgram(p.p); gl.uniformMatrix4fv(p.u.uVP,false,VPm); gl.uniform1f(p.u.uTime,t); gl.uniform1f(p.u.uWind,theme==="winter"?1.4:1); setLights(p,S,eye);
       if(world){ gl.disable(gl.CULL_FACE); drawM(p,world.far,I); drawM(p,world.near,I); gl.enable(gl.CULL_FACE); }
       else { /* aperçu : petit sol */ if(!prevGround){ const g=new R4.Geo(); g.cyl({t:[0,-.05,0]},1.4,1.5,.05,40,R4.lin([.22,.3,.14]),4); for(let i=0;i<9;i++){ const a=i/9*Math.PI*2; g.blob({t:[Math.sin(a)*1.45,.05,Math.cos(a)*1.45],s:[1,.6,1]},.14,1,.3,2,i,R4.lin([.4,.4,.4]),5); } prevGround=R4.mesh(gl,g); } drawM(p,prevGround,I); }
-      gl.disable(gl.CULL_FACE); drawChars(p,true,t);
+      { const k=P.skin; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,VPm); gl.uniform1f(k.u.uTime,t); setLights(k,S,eye); gl.useProgram(p.p); }
+      gl.disable(gl.CULL_FACE); drawChars(p,true,t,P.skin);
       // yeux de loups dans la forêt
       if(!preview&&S.night>.4){ gl.uniform1f(p.u.uFogD,0); const n=wolves?10:5;
         for(let i=0;i<n;i++){ const a=hash(i*13.3)*Math.PI*2, r=14+hash(i*4.1)*6; const x=Math.sin(a)*r,z=Math.cos(a)*r; const bl=Math.sin(t*.5+i*2.3); if(bl<-.3) continue; const open=clamp((Math.sin(t*2.7+i*5)+1)*4,0.05,1);
@@ -3195,12 +3338,12 @@ const R4 = {};
       if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,.6,1.15);
         el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
     }
-    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false;
+    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false, onReady=null;
     const length3=a=>Math.hypot(a[0],a[1],a[2]);
     function project(p){ const m=VPm; if(!m) return {x:0,y:0,w:-1}; const x=m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12], y=m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13], w=m[3]*p[0]+m[7]*p[1]+m[11]*p[2]+m[15]; return {x:(x/w*.5+.5)*W,y:(1-(y/w*.5+.5))*H,w}; }
-    function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
+    function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,c.rig?.22:.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
     function hit(e){ const r=canvas.getBoundingClientRect(); const mx=e.clientX-r.left,my=e.clientY-r.top; let best=null,bd=1e9;
-      for(const id of order){ const c=chars[id]; if(!c||!c.W) continue; const pts=[M.xf(c.W.spine,[0,.25,0]),headPos(c)]; for(const pt of pts){ const a=project(pt); if(a.w<=0) continue; const rad=H*.42/a.w; const d=Math.hypot(mx-a.x,my-a.y); if(d<rad&&d<bd){ bd=d; best=id; } } }
+      for(const id of order){ const c=chars[id]; if(!c||!c.W) continue; const pts=c.rig&&c.hipsW?[c.hipsW,M.xf(c.rootR||c.root,[0,1.05,0]),headPos(c)]:[M.xf(c.W.spine,[0,.25,0]),headPos(c)]; for(const pt of pts){ const a=project(pt); if(a.w<=0) continue; const rad=H*.42/a.w; const d=Math.hypot(mx-a.x,my-a.y); if(d<rad&&d<bd){ bd=d; best=id; } } }
       return best; }
     canvas.addEventListener("pointermove",e=>{ if(dragging){ drag+=(e.clientX-dragX)*.005; dragX=e.clientX; moved++; return; } if(preview) return; const id=hit(e); hover=id&&canPick(id)?id:null; canvas.style.cursor=hover?"pointer":"grab"; });
     canvas.addEventListener("pointerdown",e=>{ dragging=true; dragX=e.clientX; moved=0; downId=preview?null:hit(e); });
@@ -3212,10 +3355,12 @@ const R4 = {};
       setPlayers, setVotes(v){ votes=v||{}; }, speak(id){ if(chars[id]) chars[id].talk=2.4; },
       setMood(m){ if(MOOD_TOD[m]==null) return; mood=m; todT=MOOD_TOD[m]; },
       setTheme(th){ if(th===theme||preview) return; parts.length=0; loadWorld(th); },
-      setQuality(k){ if(!QUAL[k]) return; q=Object.assign({},QUAL[k]); if(!hasFloat) q.msaa=0; applyQuality(); RT=null; },
+      onCharReady(f){ onReady=f; }, charReady(){ const c=chars.me; return !c||!c.slug||!!c.rig; },
+      setQuality(k){ if(!QUAL[k]) return; qk=k; q=Object.assign({},QUAL[k]); for(const id in chars){ chars[id].key=null; } if(!hasFloat) q.msaa=0; applyQuality(); RT=null; },
       setAvatar(av){ if(preview) setPlayers([{id:"me",av,alive:true}],"me"); },
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
       pause(b){ paused=!!b; }, anchor,
+      whenReady(){ const c=chars.me; return c&&c.ready?c.ready:Promise.resolve(); },
       snap(av,m,ch){ cheer=!!ch; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
     };
   };
@@ -3244,6 +3389,13 @@ const V3=(function(){
 })();
 
 /* portraits 3D (écran de fin) */
+R4.portraitAsync=function(av,mood,big){ const run=()=>R4._portraitAsync(av,mood,big); R4._pq=(R4._pq||Promise.resolve()).then(run,run); return R4._pq; };
+R4._portraitAsync=async function(av,mood,big){
+  const slug=R4.charSlug&&R4.charSlug(R4.avNorm(av)); if(slug){ try{ await R4.loadChar(slug); }catch(e){} }
+  if(R4._ps===undefined) R4.portrait(av,mood,big); if(!R4._ps) return null;
+  R4._ps.snap(av,mood,true); await R4._ps.whenReady(); R4._pc&&R4._pc.delete(JSON.stringify([av,mood,big]));
+  return R4.portrait(av,mood,big);
+};
 R4.portrait=function(av,mood,big){
   const k=JSON.stringify([av,mood,big]); R4._pc=R4._pc||new Map(); if(R4._pc.has(k)) return R4._pc.get(k);
   if(R4._ps===undefined){ const c=document.createElement("canvas"); c.width=240; c.height=320; try{ R4._ps=R4.create(c,{preview:true,quality:"med",mood:"dusk"}); if(R4._ps) R4._ps.pause(true); }catch(e){ R4._ps=null; } R4._pcv=c; }
@@ -3646,9 +3798,12 @@ function renderHub(){
   const hero=$("#heroChar"); hero3d(hero,av);
   const ae=$("#avEdit"); const F=R4.AV_FIELDS;
   const grp=(lab,ks)=>`<div class="ae-g"><div class="ae-gt">${esc(t(lab))}</div>${ks.map(([k,l])=>`<div class="ae"><span>${esc(t(l))}</span><button data-ae="${k}" data-d="-1">‹</button><i class="ae-v">${av[k]+1}/${F[k]}</i><button data-ae="${k}" data-d="1">›</button></div>`).join("")}</div>`;
-  ae.innerHTML=grp("av_skinc",[["s","av_skin"],["fs","av_face"],["ey","av_eyes"],["gl","av_glasses"],["h2","av_hair"],["hc","av_hairc"],["bd","av_beard"]])
+  const real=R4.CHAR_LIST&&APP.set.gq!=="low"&&typeof WebGL2RenderingContext!=="undefined";
+  if(real){ const L=R4.CHAR_LIST.length; ae.innerHTML=`<div class="ae-g ae-ch"><div class="ae-gt">${esc(t("av_char"))}</div><div class="ae ae-big"><button data-ae="rc" data-d="-1">‹</button><span class="ae-name"><b>${esc(t("ch_"+R4.CHAR_LIST[av.rc%L]))}</b><i class="ae-v">${av.rc%L+1}/${L}</i></span><button data-ae="rc" data-d="1">›</button></div></div>`;
+    ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ av.rc=((av.rc|0)+(+b.dataset.d)+L)%L; saveMe(); renderHub(); }); }
+  else ae.innerHTML=grp("av_skinc",[["s","av_skin"],["fs","av_face"],["ey","av_eyes"],["gl","av_glasses"],["h2","av_hair"],["hc","av_hairc"],["bd","av_beard"]])
     +grp("av_clothes",[["o2","av_outfit"],["t","av_color"],["t2","av_color2"],["p","av_pants"],["bt","av_boots"],["bl","av_belt"],["a2","av_hat"],["sc","av_scarf"]]);
-  ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ae; av[k]=(av[k]+(+b.dataset.d)+F[k])%F[k]; syncLegacyAv(av); saveMe(); b.parentNode.querySelector(".ae-v").textContent=(av[k]+1)+"/"+F[k]; hero3d(hero,av); });
+  if(!real) ae.querySelectorAll("[data-ae]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ae; av[k]=(av[k]+(+b.dataset.d)+F[k])%F[k]; syncLegacyAv(av); saveMe(); b.parentNode.querySelector(".ae-v").textContent=(av[k]+1)+"/"+F[k]; hero3d(hero,av); });
   const jb=$("#joinBox"); const g=parseHash();
   jb.innerHTML=g?`<div class="joinhint">${esc(t("invited"))}</div>`:"";
   if(g){ $("#createBtn").innerHTML="▶ "+esc(t("joinThis")); $("#createBtn").onclick=()=>{ if(!APP.me.name){ $("#pseudo").focus(); toast(t("needPseudo")); return; } joinGame(g); }; }
@@ -4084,7 +4239,12 @@ function renderReveal(){
   $("#rvOk").onclick=()=>{ const s=lsGet("seenRev")||[]; s.push(key); lsSet("seenRev",s.slice(-40)); el.hidden=true; };
 }
 function winPortrait(av,w){
-  if(APP.has3d&&V3.r4){ const u=R4.portrait(av,w==="wolf"?"wolves":w==="village"?"day":"dusk",APP.set.gq!=="low"); if(u) return `<img class="w3d" src="${u}" alt="">`; }
+  if(APP.has3d&&V3.r4){ const mood=w==="wolf"?"wolves":w==="village"?"day":"dusk", big=APP.set.gq!=="low";
+    const real=APP.set.gq!=="low"&&R4.charSlug(R4.avNorm(av));
+    if(!real){ const u=R4.portrait(av,mood,big); if(u) return `<img class="w3d" src="${u}" alt="">`; }
+    else { const k=JSON.stringify([av,mood,big]); const u=R4._pc&&R4._pc.get(k)&&R4.CHARS[real]&&R4._pcReal&&R4._pcReal.has(k)?R4._pc.get(k):null; if(u) return `<img class="w3d" src="${u}" alt="">`;
+      const id="wp"+(APP._wpN=(APP._wpN||0)+1); R4.portraitAsync(av,mood,big).then(x=>{ if(!x) return; (R4._pcReal=R4._pcReal||new Set()).add(k); const el=document.getElementById(id); if(el) el.src=x; });
+      return `<img class="w3d" id="${id}" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="">`; } }
   return charSVG(av);
 }
 function renderEnd(){

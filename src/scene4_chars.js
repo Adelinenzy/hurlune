@@ -10,7 +10,7 @@
     boots:["#a0683e","#6b4226","#2a2228","#c8925c","#3a3a44","#8a2f2f","#d8c8a8"],
     eyes:["#3b6fb0","#4a8a4a","#6b4a2a","#2a2a2a","#7a8a9a","#9a6abf"]
   };
-  R4.AV_FIELDS={s:8,fs:3,ey:6,gl:4,h2:10,hc:10,bd:4,a2:8,o2:5,t:14,t2:14,p:14,bt:7,bl:2,sc:3};
+  R4.AV_FIELDS={rc:16,s:8,fs:3,ey:6,gl:4,h2:10,hc:10,bd:4,a2:8,o2:5,t:14,t2:14,p:14,bt:7,bl:2,sc:3};
   // normalise un avatar (compatibilité avec l'ancien format 2D)
   R4.avNorm=function(av){
     av=Object.assign({},av||{}); const seed=JSON.stringify(av).split("").reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);

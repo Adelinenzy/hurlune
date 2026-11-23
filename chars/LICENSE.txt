@@ -1,0 +1,2 @@
+Personnages 3D : Grab3D (https://grab3d.com), licence CC0 1.0 (domaine public).
+Allégés pour Hurlune avec tools/chars/convert.mjs (meshoptimizer, licence MIT).

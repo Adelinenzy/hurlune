@@ -31,12 +31,12 @@
     if(!gl) return null;
     const hasFloat=!!gl.getExtension("EXT_color_buffer_float"); gl.getExtension("OES_texture_float_linear");
     const P={}; try{
-      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
+      P.std=R4.compile(gl,R4.STD_VS,R4.STD_FS); P.depth=R4.compile(gl,R4.STD_VS,R4.DEPTH_FS); P.skin=R4.compile(gl,R4.SKIN_VS,R4.STD_FS); P.skinD=R4.compile(gl,R4.SKIN_VS,R4.DEPTH_FS); P.grass=R4.compile(gl,R4.GRASS_VS,R4.GRASS_FS);
       P.sky=R4.compile(gl,R4.SKY_VS,R4.SKY_FS); P.part=R4.compile(gl,R4.PART_VS,R4.PART_FS);
       P.bright=R4.compile(gl,R4.QUAD_VS,R4.BRIGHT_FS); P.down=R4.compile(gl,R4.QUAD_VS,R4.DOWN_FS); P.up=R4.compile(gl,R4.QUAD_VS,R4.UP_FS); P.comp=R4.compile(gl,R4.QUAD_VS,R4.COMP_FS);
     }catch(e){ console.warn("R4 shaders",e); return null; }
     const preview=!!opts.preview;
-    let q=Object.assign({},QUAL[opts.quality||"med"]||QUAL.med); if(!hasFloat){ q.msaa=0; }
+    let qk=QUAL[opts.quality]?opts.quality:"med"; let q=Object.assign({},QUAL[qk]); if(!hasFloat){ q.msaa=0; }
     let theme=opts.theme||"forest"; let world=null, grass=null; const logM=R4.buildLog(gl), graveM=R4.buildGrave(gl), ringM=R4.buildRing(gl), eyesM=R4.buildEyes(gl);
     // quad plein écran
     const quad=gl.createVertexArray(); gl.bindVertexArray(quad); const qb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,qb); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); gl.bindVertexArray(null);
@@ -94,14 +94,20 @@
     function setPlayers(list,meId){
       me=meId; const n=Math.max(list.length,1); const seen=new Set();
       list.forEach((p,i)=>{ seen.add(p.id); let c=chars[p.id]; const key=JSON.stringify(R4.avNorm(p.av));
-        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av)}); }
+        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av),rig:null,slug:null});
+          useReal(c,p.av); }
         const s=seat(i,n); if(preview){ s.x=0; s.z=0; } c.tx=s.x; c.tz=s.z; c.sa=s.a; c.R=s.R; if(c.init){ c.x=s.x; c.z=s.z; c.init=false; if(p.alive===false){ c.die=1; } }
         if(c.alive!==false&&p.alive===false&&!c.init) c.dying=0.0001;
         c.alive=p.alive!==false; c.sel=!!p.sel; c.click=!!p.click; c.sleep=!!p.sleep; c.inact=!!p.inact; c.wolf=!!p.wolf; c.point=p.point||null; });
       for(const id of Object.keys(chars)) if(!seen.has(id)){ R4.freeChar(gl,chars[id].m); delete chars[id]; }
       order=list.map(p=>p.id);
     }
-    function headPos(c){ return c.W?M.xf(c.W.head,[0,.21,0]):[c.x,1.25,c.z]; }
+    function headPos(c){ if(c.rig&&c.headTop) return c.headTop; return c.W?M.xf(c.W.head,[0,.21,0]):[c.x,1.25,c.z]; }
+    function realOK(){ return opts.real!==false&&qk!=="low"; }
+    function useReal(c,av){ const slug=realOK()?R4.charSlug(R4.avNorm(av)):null; c.slug=slug; c.rig=null; if(!slug) return;
+      const setup=()=>{ if(c.slug!==slug) return; const base=R4.charRig(slug); if(!base) return; const g=R4.charGPU(gl,slug);
+        const inst=Object.create(base); inst.mats=new Float32Array(base.n*16); inst.W=[]; c.rig=inst; c.ready=g.ready; if(preview&&onReady) onReady(); };
+      if(R4.CHARS[slug]) setup(); else R4.loadChar(slug).then(setup).catch(e=>console.warn(e)); }
     function poseOf(c,t,dt){
       const T={}; const breath=Math.sin(t*1.7+c.seed)*.025;
       T.spine=[.06+breath,0,0]; T.neck=[0,0,0]; T.head=[0,0,0];
@@ -123,7 +129,7 @@
         const py=clamp(Math.atan2(plx,plz),-1.3,1.3); T.shR=[-1.4,py,.0]; T.elR=[-.12,0,0]; T.neck[1]=py*.35; T.head[1]=py*.65; }
       if(c.sleep){ T.spine=[.38+breath*.5,0,0]; T.neck=[.32,0,0]; T.head=[.38,0,Math.sin(t*.5+c.seed)*.12]; T.shL=[-.3,0,-.05]; T.shR=[-.3,0,.05]; T.elL=[-.6,0,0]; T.elR=[-.6,0,0]; }
       if(c.dying||c.die>=1){ const k=c.dying?clamp(c.dying/.9,0,1):1; const e=k*k*(3-2*k);
-        T.pelvis=[-1.35*e,0,0]; T.py=-.32*e; T.pz=-.45*e; T.spine=[-.25*e,0,0]; T.head=[-.3*e,0,.2*e]; T.shL=[-2.4*e,0,-.5*e]; T.shR=[-2.4*e,0,.5*e]; T.elL=[0,0,0]; T.elR=[0,0,0]; T.knL=[1.45*(1-e)+.2*e,0,0]; T.knR=[1.45*(1-e)+.2*e,0,0]; }
+        T.pelvis=[-1.35*e,0,0]; T.py=-.32*e; T.pz=-.45*e; T.spine=[-.25*e,0,0]; T.head=[-.3*e,0,.2*e]; T.shL=[-2.4*e,0,-.5*e]; T.shR=[-2.4*e,0,.5*e]; T.elL=[0,0,0]; T.elR=[0,0,0]; T.knL=[1.45*(1-e)+.2*e,0,0]; T.knR=[1.45*(1-e)+.2*e,0,0]; T.hipL=[-1.5*(1-e)-.25*e,0,.05*e]; T.hipR=[-1.5*(1-e)-.25*e,0,-.05*e]; if(c.rig){ T.py=-.42*e; T.pz=-.75*e; } }
       // lissage
       const k=1-Math.exp(-dt*(c.dying?12:6));
       for(const b in T){ if(Array.isArray(T[b])){ const cur=c.pose[b]||T[b]; c.pose[b]=[lerp(cur[0],T[b][0],k),lerp(cur[1],T[b][1],k),lerp(cur[2],T[b][2],k)]; } else c.pose[b]=lerp(c.pose[b]==null?T[b]:c.pose[b],T[b],k); }
@@ -142,6 +148,9 @@
         if(id===me&&!spk&&!c.point) c.look=[0,.7,0];
         poseOf(c,t,dt);
         const root=M.trs([c.x,0,c.z],[0,c.face,0],1); c.root=root; c.W=R4.skeleton(root,c.pose);
+        if(c.rig){ const P2=c.pose; R4.charPose(c.rig,P2); c.rootR=M.mul(root,M.trs([P2.px||0,preview?0:(.47-c.rig.hipsY)+(P2.py||0),P2.pz||0],[0,0,0],1));
+          const hd=c.rig.W[c.rig.id.head_end!=null?c.rig.id.head_end:c.rig.head]; c.headTop=M.xf(c.rootR,[hd[12],hd[13]+.04,hd[14]]);
+          const hp=c.rig.W[c.rig.id.Hips]; c.hipsW=M.xf(c.rootR,[hp[12],hp[13],hp[14]]); }
       }
     }
     const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -195,19 +204,25 @@
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,SH.t); gl.uniform1i(u.uShadow,1);
       if(u.uFireSh){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_CUBE_MAP,FS.t); gl.uniform1i(u.uFireSh,2); gl.uniform1f(u.uFireShOn,S.fireShOn); }
       if(u.uGround) gl.uniform1f(u.uGround,theme==="winter"?0:1); if(u.uClr) gl.uniform1f(u.uClr,S.clr);
+      if(u.uAlb){ gl.uniform1i(u.uAlb,3); gl.uniform1i(u.uNrm,4); }
       gl.activeTexture(gl.TEXTURE0); }
     function drawM(p,m,Mx,opts){ const u=p.u; gl.uniformMatrix4fv(u.uM,false,Mx);
       if(u.uTint) gl.uniform3fv(u.uTint,(opts&&opts.tint)||[1,1,1]); if(u.uHi!=null) gl.uniform1f(u.uHi,(opts&&opts.hi)||0); if(u.uHiCol) gl.uniform3fv(u.uHiCol,(opts&&opts.hic)||[0,0,0]);
       if(u.uAlpha) gl.uniform1f(u.uAlpha,opts&&opts.alpha!=null?opts.alpha:1); if(u.uWin!=null) gl.uniform1f(u.uWin,S.win);
       gl.bindVertexArray(m.vao); gl.drawArrays(gl.TRIANGLES,0,m.n); }
     const I=M.id();
-    function drawChars(p,isMain,t){
+    function drawChars(p,isMain,t,sp){
       for(const id of order){ const c=chars[id]; if(!c||!c.W) continue;
         gl.uniformMatrix4fv(p.u.uM,false,c.root);
-        if(!preview){ drawM(p,logM,M.mul(c.root,M.trs([0,0,-.03],[0,0,0],1)),null); }
+        if(!preview){ drawM(p,logM,M.mul(c.root,M.trs([0,0,-.03],[0,0,0],c.rig?1.08:1)),null); }
         if(c.die<1){ const alpha=c.dying?clamp(1-(c.die-.45)/.55,0,1):1; const hi=isMain&&!c.dying?(id===hover?1:(c.click?.4+.25*Math.sin(t*4):0)):0;
           const o={tint:c.inact?[.55,.55,.62]:[1,1,1],hi,hic:id===hover?[1.2,.9,.4]:[.7,.5,1.4],alpha};
-          for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
+          const g=c.rig&&sp&&R4.charGPU(gl,c.rig.slug);
+          if(g){ gl.useProgram(sp.p); const u=sp.u; gl.uniformMatrix4fv(u.uM,false,c.rootR); gl.uniformMatrix4fv(u.uB,false,c.rig.mats);
+            if(u.uTint){ gl.uniform3fv(u.uTint,o.tint); gl.uniform1f(u.uHi,o.hi); gl.uniform3fv(u.uHiCol,o.hic); gl.uniform1f(u.uAlpha,o.alpha); gl.uniform1f(u.uWin,S.win);
+              gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); }
+            gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,g.type,0); gl.useProgram(p.p); }
+          else for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
             if(R4.PART_OFF[part]){ let sy=1; if(part==="eyes") sy=(c.sleep||c.die>.3)?.08:(c.blink<0?.1:1); if(part==="mouth") sy=c.talk>0?.5+Math.abs(Math.sin(t*11+c.seed))*1.8:1; Mx=M.mul(Mx,M.trs(R4.PART_OFF[part],[0,0,0],1,sy)); }
             drawM(p,m,Mx,o); } }
         if(c.die>.6&&!preview){ const r=clamp((c.die-.6)/.4,0,1); drawM(p,graveM,M.mul(c.root,M.trs([0,-(1-r)*1.1,-.75],[0,0,0],1)),null); }
@@ -233,8 +248,8 @@
       const meC=me&&chars[me]; let base=meC?Math.atan2(meC.x,meC.z):camYaw; if(preview) base=0;
       const R=meC?meC.R:(order.length?chars[order[0]]&&chars[order[0]].R||3:3);
       let eye,at;
-      if(preview&&cheer){ eye=[1.0,1.35,2.75]; at=[0,1.0,0]; }
-      else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.4,1.5,Math.cos(a)*3.4]; at=[0,.92,0]; }
+      if(preview&&cheer){ eye=[.7,1.45,2.3]; at=[0,1.12,0]; }
+      else if(preview){ const a=Math.sin(t*.35)*.4+drag+.2; eye=[Math.sin(a)*3.9,1.45,Math.cos(a)*3.9]; at=[0,.95,0]; }
       else { const a=base+drag; const dist=(R+3.4)*zoom+cine*2.2; const hgt=(2.9+R*.12)*zoom+cine*1.2+Math.sin(t*.3)*.05; eye=[Math.sin(a+Math.sin(t*.13)*.03)*dist,hgt,Math.cos(a+Math.sin(t*.13)*.03)*dist]; at=[0,.45+cine*1.6,0]; }
       camE=eye; const fov=preview?32:52;
       const proj=M.persp(fov*Math.PI/180,W/H,.08,600), view=M.lookAt(eye,at,[0,1,0]); VPm=M.mul(proj,view);
@@ -262,12 +277,15 @@
       if(S.shadowOn){ gl.bindFramebuffer(gl.FRAMEBUFFER,SH.f); gl.viewport(0,0,SH.size,SH.size); gl.clear(gl.DEPTH_BUFFER_BIT); gl.useProgram(dp.p);
         gl.uniformMatrix4fv(dp.u.uVP,false,S.lightVP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1); gl.uniform1f(dp.u.uCube,0);
         gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2,4);
-        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t); gl.disable(gl.POLYGON_OFFSET_FILL); }
+        { const k=P.skinD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,S.lightVP); gl.uniform1f(k.u.uCube,0); gl.useProgram(dp.p); }
+        if(world){ drawM(dp,world.near,I); drawM(dp,world.far,I); } drawChars(dp,false,t,P.skinD); gl.disable(gl.POLYGON_OFFSET_FILL); }
       // --- passe ombre du feu (6 faces)
       if(S.fireShOn){ gl.useProgram(dp.p); gl.uniform1f(dp.u.uCube,1); gl.uniform3fv(dp.u.uFireP,S.fireP); gl.uniform1f(dp.u.uTime,t); gl.uniform1f(dp.u.uWind,1);
         const dirs=[[[1,0,0],[0,-1,0]],[[-1,0,0],[0,-1,0]],[[0,1,0],[0,0,1]],[[0,-1,0],[0,0,-1]],[[0,0,1],[0,-1,0]],[[0,0,-1],[0,-1,0]]]; const pr=M.persp(Math.PI/2,1,.05,30);
         for(let i=0;i<6;i++){ gl.bindFramebuffer(gl.FRAMEBUFFER,FS.f[i]); gl.viewport(0,0,FS.size,FS.size); gl.clearColor(100,100,100,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-          gl.uniformMatrix4fv(dp.u.uVP,false,M.mul(pr,M.lookAt(S.fireP,add(S.fireP,dirs[i][0]),dirs[i][1]))); drawChars(dp,false,t); } }
+          const fvp=M.mul(pr,M.lookAt(S.fireP,add(S.fireP,dirs[i][0]),dirs[i][1])); gl.uniformMatrix4fv(dp.u.uVP,false,fvp);
+          { const k=P.skinD; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,fvp); gl.uniform1f(k.u.uCube,1); gl.uniform3fv(k.u.uFireP,S.fireP); gl.useProgram(dp.p); }
+          drawChars(dp,false,t,P.skinD); } }
       // --- passe principale
       gl.bindFramebuffer(gl.FRAMEBUFFER,RT.ms||RT.sceneF); gl.viewport(0,0,w,h); gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       // ciel
@@ -283,7 +301,8 @@
       const p=P.std; gl.useProgram(p.p); gl.uniformMatrix4fv(p.u.uVP,false,VPm); gl.uniform1f(p.u.uTime,t); gl.uniform1f(p.u.uWind,theme==="winter"?1.4:1); setLights(p,S,eye);
       if(world){ gl.disable(gl.CULL_FACE); drawM(p,world.far,I); drawM(p,world.near,I); gl.enable(gl.CULL_FACE); }
       else { /* aperçu : petit sol */ if(!prevGround){ const g=new R4.Geo(); g.cyl({t:[0,-.05,0]},1.4,1.5,.05,40,R4.lin([.22,.3,.14]),4); for(let i=0;i<9;i++){ const a=i/9*Math.PI*2; g.blob({t:[Math.sin(a)*1.45,.05,Math.cos(a)*1.45],s:[1,.6,1]},.14,1,.3,2,i,R4.lin([.4,.4,.4]),5); } prevGround=R4.mesh(gl,g); } drawM(p,prevGround,I); }
-      gl.disable(gl.CULL_FACE); drawChars(p,true,t);
+      { const k=P.skin; gl.useProgram(k.p); gl.uniformMatrix4fv(k.u.uVP,false,VPm); gl.uniform1f(k.u.uTime,t); setLights(k,S,eye); gl.useProgram(p.p); }
+      gl.disable(gl.CULL_FACE); drawChars(p,true,t,P.skin);
       // yeux de loups dans la forêt
       if(!preview&&S.night>.4){ gl.uniform1f(p.u.uFogD,0); const n=wolves?10:5;
         for(let i=0;i<n;i++){ const a=hash(i*13.3)*Math.PI*2, r=14+hash(i*4.1)*6; const x=Math.sin(a)*r,z=Math.cos(a)*r; const bl=Math.sin(t*.5+i*2.3); if(bl<-.3) continue; const open=clamp((Math.sin(t*2.7+i*5)+1)*4,0.05,1);
@@ -318,12 +337,12 @@
       if(labels){ for(const el of labels.children){ const a=anchor(el.dataset.id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(7/a.w,.6,1.15);
         el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
     }
-    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false;
+    let prevGround=null, raf=0, labels=opts.labels||null, cheer=false, onReady=null;
     const length3=a=>Math.hypot(a[0],a[1],a[2]);
     function project(p){ const m=VPm; if(!m) return {x:0,y:0,w:-1}; const x=m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12], y=m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13], w=m[3]*p[0]+m[7]*p[1]+m[11]*p[2]+m[15]; return {x:(x/w*.5+.5)*W,y:(1-(y/w*.5+.5))*H,w}; }
-    function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
+    function anchor(id){ const c=chars[id]; if(!c||!c.W) return null; const hp=c.die>=1?[c.x,1.25,c.z]:add(headPos(c),[0,c.rig?.22:.36,0]); const a=project(hp); return {x:a.x,y:a.y,w:a.w,vis:a.w>0}; }
     function hit(e){ const r=canvas.getBoundingClientRect(); const mx=e.clientX-r.left,my=e.clientY-r.top; let best=null,bd=1e9;
-      for(const id of order){ const c=chars[id]; if(!c||!c.W) continue; const pts=[M.xf(c.W.spine,[0,.25,0]),headPos(c)]; for(const pt of pts){ const a=project(pt); if(a.w<=0) continue; const rad=H*.42/a.w; const d=Math.hypot(mx-a.x,my-a.y); if(d<rad&&d<bd){ bd=d; best=id; } } }
+      for(const id of order){ const c=chars[id]; if(!c||!c.W) continue; const pts=c.rig&&c.hipsW?[c.hipsW,M.xf(c.rootR||c.root,[0,1.05,0]),headPos(c)]:[M.xf(c.W.spine,[0,.25,0]),headPos(c)]; for(const pt of pts){ const a=project(pt); if(a.w<=0) continue; const rad=H*.42/a.w; const d=Math.hypot(mx-a.x,my-a.y); if(d<rad&&d<bd){ bd=d; best=id; } } }
       return best; }
     canvas.addEventListener("pointermove",e=>{ if(dragging){ drag+=(e.clientX-dragX)*.005; dragX=e.clientX; moved++; return; } if(preview) return; const id=hit(e); hover=id&&canPick(id)?id:null; canvas.style.cursor=hover?"pointer":"grab"; });
     canvas.addEventListener("pointerdown",e=>{ dragging=true; dragX=e.clientX; moved=0; downId=preview?null:hit(e); });
@@ -335,10 +354,12 @@
       setPlayers, setVotes(v){ votes=v||{}; }, speak(id){ if(chars[id]) chars[id].talk=2.4; },
       setMood(m){ if(MOOD_TOD[m]==null) return; mood=m; todT=MOOD_TOD[m]; },
       setTheme(th){ if(th===theme||preview) return; parts.length=0; loadWorld(th); },
-      setQuality(k){ if(!QUAL[k]) return; q=Object.assign({},QUAL[k]); if(!hasFloat) q.msaa=0; applyQuality(); RT=null; },
+      onCharReady(f){ onReady=f; }, charReady(){ const c=chars.me; return !c||!c.slug||!!c.rig; },
+      setQuality(k){ if(!QUAL[k]) return; qk=k; q=Object.assign({},QUAL[k]); for(const id in chars){ chars[id].key=null; } if(!hasFloat) q.msaa=0; applyQuality(); RT=null; },
       setAvatar(av){ if(preview) setPlayers([{id:"me",av,alive:true}],"me"); },
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
       pause(b){ paused=!!b; }, anchor,
+      whenReady(){ const c=chars.me; return c&&c.ready?c.ready:Promise.resolve(); },
       snap(av,m,ch){ cheer=!!ch; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
     };
   };
@@ -367,6 +388,13 @@ const V3=(function(){
 })();
 
 /* portraits 3D (écran de fin) */
+R4.portraitAsync=function(av,mood,big){ const run=()=>R4._portraitAsync(av,mood,big); R4._pq=(R4._pq||Promise.resolve()).then(run,run); return R4._pq; };
+R4._portraitAsync=async function(av,mood,big){
+  const slug=R4.charSlug&&R4.charSlug(R4.avNorm(av)); if(slug){ try{ await R4.loadChar(slug); }catch(e){} }
+  if(R4._ps===undefined) R4.portrait(av,mood,big); if(!R4._ps) return null;
+  R4._ps.snap(av,mood,true); await R4._ps.whenReady(); R4._pc&&R4._pc.delete(JSON.stringify([av,mood,big]));
+  return R4.portrait(av,mood,big);
+};
 R4.portrait=function(av,mood,big){
   const k=JSON.stringify([av,mood,big]); R4._pc=R4._pc||new Map(); if(R4._pc.has(k)) return R4._pc.get(k);
   if(R4._ps===undefined){ const c=document.createElement("canvas"); c.width=240; c.height=320; try{ R4._ps=R4.create(c,{preview:true,quality:"med",mood:"dusk"}); if(R4._ps) R4._ps.pause(true); }catch(e){ R4._ps=null; } R4._pcv=c; }
