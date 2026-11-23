@@ -2322,7 +2322,7 @@ function parseHash(){
 }
 const IS_APP=location.protocol==="file:";
 function gameHash(){ const g=APP.game; return "g="+g.room+"."+g.key+(g.b!=null?"."+g.b:""); }
-function gameLink(){ if(IS_APP) return "Hurlune "+gameHash(); return location.href.split("#")[0].split("?")[0]+(USE_LOCAL?location.search:"")+"#"+gameHash(); }
+function gameLink(){ return "Hurlune "+gameHash(); }
 function addRecent(){ const g=APP.game; let r=lsGet("recent")||[]; r=r.filter(x=>x.room!==g.room); r.unshift({room:g.room,key:g.key,b:g.b,name:(APP.st&&APP.st.name)||g.name||"",t:Date.now()}); lsSet("recent",r.slice(0,6)); }
 
 async function createGame(cfg){
@@ -2525,7 +2525,7 @@ function bindStatic(){
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
     applyTheme();
-    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t(IS_APP?"codeCopied":"linkCopied")); };
+    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("codeCopied")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
     $("#trBtn").onclick=()=>{ APP.set.tr=!APP.set.tr; saveSettings(); renderComposer(); renderChat(); };
@@ -2817,7 +2817,7 @@ function renderCenter(){
   }
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
-  b("#copyInv",()=>{ copyText(gameLink()); toast(t(IS_APP?"codeCopied":"linkCopied")); });
+  b("#copyInv",()=>{ copyText(gameLink()); toast(t("codeCopied")); });
   b("#editG",()=>openCreate(true));
   b("#forceG",()=>send({t:"forceStart"}));
   el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));
