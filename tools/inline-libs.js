@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const file = process.argv[2];
-const lib = require.resolve("mqtt/dist/mqtt.min.js", { paths: [path.join(__dirname, "libs"), process.cwd()] });
+const lib = path.join(__dirname, "libs", "node_modules", "mqtt", "dist", "mqtt.min.js");
 const code = fs.readFileSync(lib, "utf8").replace(/<\/script/gi, "<\\/script");
 let html = fs.readFileSync(file, "utf8");
 const marker = '<script>\n"use strict";';
