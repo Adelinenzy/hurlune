@@ -377,6 +377,21 @@ body{background:radial-gradient(1200px 700px at 30% -10%,#2a2450,transparent 60%
 .reveal .rvt{width:100%;min-width:0;overflow:hidden}
 .reveal .rvt b,.reveal .rvt span{max-width:100%}
 .reveal .rvt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* settings */
+.mcard.settings{width:min(560px,100%)}
+.opt{display:flex;align-items:center;gap:12px;background:#1b1c2a;border:1px solid #2f3147;border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.opt-ic{font-size:20px;width:26px;text-align:center;flex:none}
+.opt-t{flex:1;min-width:0;display:flex;flex-direction:column} .opt-t b{font-size:14px} .opt-t small{color:var(--mute);font-size:12px;line-height:1.3}
+.opt.vol{cursor:default} .opt.vol input[type=range]{flex:1.4;accent-color:var(--pur)}
+.switch{position:relative;width:44px;height:24px;flex:none} .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.switch i{position:absolute;inset:0;background:#3a3c56;border-radius:20px;transition:.2s;pointer-events:none} .switch i:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.switch input:checked+i{background:var(--pur)} .switch input:checked+i:after{left:23px}
+.themes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.theme{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:#1b1c2a;border:2px solid #2f3147;border-radius:12px;padding:10px 12px;text-align:left}
+.theme:hover{border-color:#5a5c80} .theme.on{border-color:var(--pur2);background:#26244a}
+.th-ic{font-size:22px} .theme b{font-size:13.5px} .theme small{color:var(--mute);font-size:11.5px}
+.mcard .frm .opt{display:flex;font-size:inherit;color:inherit;font-weight:400;margin:0 0 8px}
+.mcard .frm .opt b{color:var(--ink)}
 
 </style>
 </head>
@@ -1394,6 +1409,7 @@ function cardBackHTML(){
 /* ===================== I18N ===================== */
 const I18N = {
 en:{
+ decor:"Game scenery",decorHelp:"This only changes your own screen: each player can pick their own.",th_village:"Village square",th_village_d:"3D · campfire",th_forest:"Haunted glade",th_forest_d:"3D · standing stones, forest",th_winter:"Winter hamlet",th_winter_d:"3D · snow",th_classic:"Classic",th_classic_d:"2D · lightweight",chatOpts:"Chat",optTr:"Automatic translation",optTrD:"Other players’ messages are shown translated into your language (same as the 🌐 button).",soundOpts:"Sound",optFx:"Sound effects",optFxD:"Deaths, votes, timer, turn changes.",optAmb:"Ambience",optAmbD:"Quiet background: wind, fire, night.",volume:"Volume",
  oaBuiltin:"Built-in translation key active: nothing to do.",oaOverride:"(optional) your own key",
  bn_night:"Night {n}",bn_day:"Day {n}",rv_title:"Your card has been dealt",rv_changed:"Your role has changed!",rv_click:"Click the card to turn it over",rv_ok:"Let’s go!",youWon:"You won!",youLost:"You lost…",
  oaKey:"OpenAI API key (optional)",oaModel:"OpenAI model",oaHelp:"When you host, this key translates every message of the game for everyone (your friends need nothing). The key is stored only on this device. Without a key: Google Translate.",oaErr:"OpenAI error ({e}): check the key or the model. Google Translate is used as a fallback.",
@@ -1450,6 +1466,7 @@ en:{
  d_heir:"On the first night, picks a player whose role he’ll inherit when they die.",d_plunderer:"Takes the role of the first player to die.",d_pyromancer:"Each night, douses a player in Greek fire or blows up every barrel."
 },
 fr:{
+ decor:"Décor du jeu",decorHelp:"Ce choix ne concerne que ton écran : chaque joueur peut choisir le sien.",th_village:"Place du village",th_village_d:"3D · feu de camp",th_forest:"Clairière hantée",th_forest_d:"3D · menhirs, forêt",th_winter:"Hameau d’hiver",th_winter_d:"3D · neige",th_classic:"Classique",th_classic_d:"2D · léger",chatOpts:"Chat",optTr:"Traduction automatique",optTrD:"Les messages des autres joueurs s’affichent traduits dans ta langue (même effet que le bouton 🌐).",soundOpts:"Sons",optFx:"Effets sonores",optFxD:"Morts, votes, minuteur, changements de tour.",optAmb:"Ambiance",optAmbD:"Fond sonore discret : vent, feu, nuit.",volume:"Volume",
  oaBuiltin:"Clé de traduction intégrée active : rien à faire.",oaOverride:"(optionnel) ta propre clé",
  bn_night:"Nuit {n}",bn_day:"Jour {n}",rv_title:"Ta carte a été distribuée",rv_changed:"Ton rôle a changé !",rv_click:"Clique sur la carte pour la retourner",rv_ok:"C’est parti !",youWon:"Tu as gagné !",youLost:"Tu as perdu…",
  oaKey:"Clé API OpenAI (optionnel)",oaModel:"Modèle OpenAI",oaHelp:"Si tu es l’hôte, ta clé traduit tous les messages de la partie pour tout le monde (tes amis n’ont besoin de rien). La clé reste enregistrée uniquement sur cet appareil. Sans clé : Google Traduction.",oaErr:"Erreur OpenAI ({e}) : vérifie ta clé ou le modèle. Google Traduction est utilisé en secours.",
@@ -1506,6 +1523,7 @@ fr:{
  d_heir:"La première nuit, choisit un joueur dont il héritera du rôle à sa mort.",d_plunderer:"Récupère le rôle du premier joueur mort de la partie.",d_pyromancer:"Chaque nuit, arrose un joueur de feu grégeois ou déclenche l’explosion de tous les tonneaux."
 },
 ru:{
+ decor:"Оформление",decorHelp:"Выбор влияет только на твой экран: каждый игрок выбирает своё.",th_village:"Деревенская площадь",th_village_d:"3D · костёр",th_forest:"Проклятая поляна",th_forest_d:"3D · менгиры, лес",th_winter:"Зимняя деревня",th_winter_d:"3D · снег",th_classic:"Классика",th_classic_d:"2D · лёгкое",chatOpts:"Чат",optTr:"Автоперевод",optTrD:"Сообщения других игроков показываются переведёнными на твой язык (как кнопка 🌐).",soundOpts:"Звук",optFx:"Звуковые эффекты",optFxD:"Смерти, голоса, таймер, смена хода.",optAmb:"Атмосфера",optAmbD:"Тихий фон: ветер, костёр, ночь.",volume:"Громкость",
  oaBuiltin:"Встроенный ключ перевода активен: ничего делать не нужно.",oaOverride:"(необязательно) свой ключ",
  bn_night:"Ночь {n}",bn_day:"День {n}",rv_title:"Тебе раздали карту",rv_changed:"Твоя роль изменилась!",rv_click:"Нажми на карту, чтобы перевернуть её",rv_ok:"Поехали!",youWon:"Ты победил(а)!",youLost:"Ты проиграл(а)…",
  oaKey:"Ключ API OpenAI (необязательно)",oaModel:"Модель OpenAI",oaHelp:"Если ты хост, твой ключ переводит все сообщения игры для всех (друзьям ничего не нужно). Ключ хранится только на этом устройстве. Без ключа используется Google Переводчик.",oaErr:"Ошибка OpenAI ({e}): проверь ключ или модель. Используется Google Переводчик.",
@@ -1565,7 +1583,9 @@ ru:{
 /* ===================== AUDIO (procedural, with reverb & ambiences) ===================== */
 const AUD = (function(){
   let c=null, master, comp, verb, verbIn, dry, amb={}, curMood=null, hbTimer=null, evTimer=null, started=false;
-  const vol=()=>{ const v=(APP&&APP.set&&APP.set.vol!=null)?APP.set.vol:.8; return (APP&&APP.set&&APP.set.sound===false)?0:v; };
+  const vol=()=>{ return (APP&&APP.set&&APP.set.vol!=null)?APP.set.vol:.7; };
+  const ambOn=()=>!(APP&&APP.set&&APP.set.amb===false);
+  let ambBus, ambVerb;
   function ctx(){
     if(c) return c;
     try{ c=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
@@ -1577,9 +1597,11 @@ const AUD = (function(){
     for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let i=0;i<len;i++){ const tt=i/len; d[i]=(Math.random()*2-1)*Math.pow(1-tt,3.2)*(i<c.sampleRate*.01?i/(c.sampleRate*.01):1); } }
     verb.buffer=ir; verbIn=c.createGain(); verbIn.gain.value=.55; verbIn.connect(verb); const vOut=c.createGain(); vOut.gain.value=.5; verb.connect(vOut).connect(master);
     dry=c.createGain(); dry.connect(master);
+    ambBus=c.createGain(); ambBus.gain.value=ambOn()?1:0; ambBus.connect(master); ambVerb=c.createGain(); ambVerb.gain.value=ambOn()?1:0; ambVerb.connect(verbIn);
     return c;
   }
-  function out(node,wet=.35){ const g1=c.createGain(); g1.gain.value=1-wet*.4; const g2=c.createGain(); g2.gain.value=wet; node.connect(g1).connect(dry); node.connect(g2).connect(verbIn); }
+  function out(node,wet=.35,amb=false){ const g1=c.createGain(); g1.gain.value=1-wet*.4; const g2=c.createGain(); g2.gain.value=wet; node.connect(g1).connect(amb?ambBus:dry); node.connect(g2).connect(amb?ambVerb:verbIn); }
+  let AMB=false; // routes helper sounds to the ambience bus while generating ambience events
   function noiseBuf(sec=2,color="white"){ const b=c.createBuffer(1,c.sampleRate*sec,c.sampleRate), d=b.getChannelData(0); let l=0;
     for(let i=0;i<d.length;i++){ const w=Math.random()*2-1; if(color==="brown"){ l=(l+.02*w)/1.02; d[i]=l*3.5; } else if(color==="pink"){ l=.97*l+.03*w; d[i]=(l*3+w*.15); } else d[i]=w; } return b; }
   function env(g,T,a,peak,d,sus=0){ g.gain.cancelScheduledValues(T); g.gain.setValueAtTime(.0001,T); g.gain.exponentialRampToValueAtTime(peak,T+a); g.gain.exponentialRampToValueAtTime(Math.max(sus,.0001),T+a+d); }
@@ -1587,10 +1609,10 @@ const AUD = (function(){
   function bell(T,f,{dur=3,v=.25,ratio=1.4,idx=3,wet=.6}={}){
     const car=c.createOscillator(), mod=c.createOscillator(), mg=c.createGain(), g=c.createGain();
     car.frequency.value=f; mod.frequency.value=f*ratio; mg.gain.setValueAtTime(f*idx,T); mg.gain.exponentialRampToValueAtTime(f*.05,T+dur);
-    mod.connect(mg).connect(car.frequency); car.connect(g); env(g,T,.005,v,dur); out(g,wet); car.start(T); mod.start(T); car.stop(T+dur+.1); mod.stop(T+dur+.1);
+    mod.connect(mg).connect(car.frequency); car.connect(g); env(g,T,.005,v,dur); out(g,wet,AMB); car.start(T); mod.start(T); car.stop(T+dur+.1); mod.stop(T+dur+.1);
   }
-  function pluck(T,f,{v=.2,dur=.6,type="triangle",wet=.3,cut=2500}={}){ const o=c.createOscillator(), g=c.createGain(), fl=c.createBiquadFilter(); o.type=type; o.frequency.value=f; fl.type="lowpass"; fl.frequency.setValueAtTime(cut,T); fl.frequency.exponentialRampToValueAtTime(300,T+dur); o.connect(fl).connect(g); env(g,T,.004,v,dur); out(g,wet); o.start(T); o.stop(T+dur+.05); }
-  function noiseHit(T,{f=1000,q=1,v=.3,dur=.08,type="bandpass",wet=.2}={}){ const s=c.createBufferSource(); s.buffer=noiseBuf(Math.max(.2,dur+.05)); const fl=c.createBiquadFilter(); fl.type=type; fl.frequency.value=f; fl.Q.value=q; const g=c.createGain(); s.connect(fl).connect(g); env(g,T,.002,v,dur); out(g,wet); s.start(T); s.stop(T+dur+.05); }
+  function pluck(T,f,{v=.2,dur=.6,type="triangle",wet=.3,cut=2500}={}){ const o=c.createOscillator(), g=c.createGain(), fl=c.createBiquadFilter(); o.type=type; o.frequency.value=f; fl.type="lowpass"; fl.frequency.setValueAtTime(cut,T); fl.frequency.exponentialRampToValueAtTime(300,T+dur); o.connect(fl).connect(g); env(g,T,.004,v,dur); out(g,wet,AMB); o.start(T); o.stop(T+dur+.05); }
+  function noiseHit(T,{f=1000,q=1,v=.3,dur=.08,type="bandpass",wet=.2}={}){ const s=c.createBufferSource(); s.buffer=noiseBuf(Math.max(.2,dur+.05)); const fl=c.createBiquadFilter(); fl.type=type; fl.frequency.value=f; fl.Q.value=q; const g=c.createGain(); s.connect(fl).connect(g); env(g,T,.002,v,dur); out(g,wet,AMB); s.start(T); s.stop(T+dur+.05); }
   function howl(T,{base=330,v=.22,dur=3.2,wet=.8}={}){
     for(const [det,vv] of [[0,v],[6,v*.5],[-4,v*.35]]){
       const o=c.createOscillator(); o.type="sawtooth"; const lfo=c.createOscillator(), lg=c.createGain(); lfo.frequency.value=5.2+Math.random(); lg.gain.value=7;
@@ -1602,7 +1624,7 @@ const AUD = (function(){
       f1.frequency.setValueAtTime(400,T); f1.frequency.linearRampToValueAtTime(650,T+dur*.3);
       o.connect(f1).connect(mix); o.connect(f2).connect(mix); mix.connect(g);
       g.gain.setValueAtTime(.0001,T); g.gain.exponentialRampToValueAtTime(vv,T+dur*.22); g.gain.setValueAtTime(vv,T+dur*.6); g.gain.exponentialRampToValueAtTime(.0001,T+dur);
-      out(g,wet); o.start(T); lfo.start(T); o.stop(T+dur+.1); lfo.stop(T+dur+.1);
+      out(g,wet,AMB); o.start(T); lfo.start(T); o.stop(T+dur+.1); lfo.stop(T+dur+.1);
     }
   }
   function thunder(T){
@@ -1612,7 +1634,7 @@ const AUD = (function(){
     noiseHit(T,{f:3000,q:.5,v:.5,dur:.15,type:"highpass",wet:.6});
     const o=c.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(70,T); o.frequency.exponentialRampToValueAtTime(30,T+1.5); const og=c.createGain(); o.connect(og); env(og,T,.01,.6,1.6); out(og,.3); o.start(T); o.stop(T+1.7);
   }
-  function heartbeat(T,v=.55){ for(const [dt,f,vv] of [[0,62,v],[.24,52,v*.75]]){ const o=c.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(f*1.6,T+dt); o.frequency.exponentialRampToValueAtTime(f,T+dt+.08); const g=c.createGain(); o.connect(g); env(g,T+dt,.008,vv,.28); out(g,.15); o.start(T+dt); o.stop(T+dt+.35); } }
+  function heartbeat(T,v=.55){ for(const [dt,f,vv] of [[0,62,v],[.24,52,v*.75]]){ const o=c.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(f*1.6,T+dt); o.frequency.exponentialRampToValueAtTime(f,T+dt+.08); const g=c.createGain(); o.connect(g); env(g,T+dt,.008,vv,.28); out(g,.15,true); o.start(T+dt); o.stop(T+dt+.35); } }
   function chord(T,fs,{type="sawtooth",v=.08,dur=1.2,cut=1800,wet=.5,stagger=0}={}){ fs.forEach((f,i)=>{ const o=c.createOscillator(); o.type=type; o.frequency.value=f; const fl=c.createBiquadFilter(); fl.type="lowpass"; fl.frequency.setValueAtTime(cut*.4,T); fl.frequency.linearRampToValueAtTime(cut,T+.15); const g=c.createGain(); o.connect(fl).connect(g); const t0=T+i*stagger; g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(v,t0+.06); g.gain.setValueAtTime(v,t0+dur*.6); g.gain.exponentialRampToValueAtTime(.0001,t0+dur); out(g,wet); o.start(t0); o.stop(t0+dur+.1); }); }
 
   /* ---- ambience beds ---- */
@@ -1622,46 +1644,47 @@ const AUD = (function(){
     // wind
     { const s=loop(noiseBuf(6,"pink")), f=c.createBiquadFilter(); f.type="bandpass"; f.frequency.value=380; f.Q.value=.7; const g=c.createGain(); g.gain.value=0;
       const lfo=c.createOscillator(), lg=c.createGain(); lfo.frequency.value=.07; lg.gain.value=260; lfo.connect(lg).connect(f.frequency);
-      s.connect(f).connect(g); out(g,.4); s.start(); lfo.start(); amb.wind=g; }
+      s.connect(f).connect(g); out(g,.4,true); s.start(); lfo.start(); amb.wind=g; }
     // night drone
     { const g=c.createGain(); g.gain.value=0; const f=c.createBiquadFilter(); f.type="lowpass"; f.frequency.value=260; f.Q.value=2;
       const lfo=c.createOscillator(), lg=c.createGain(); lfo.frequency.value=.05; lg.gain.value=120; lfo.connect(lg).connect(f.frequency); lfo.start();
       for(const fr of [55,55.4,82.4,110.3,130.8]){ const o=c.createOscillator(); o.type="sawtooth"; o.frequency.value=fr; o.connect(f); o.start(); }
-      f.connect(g); out(g,.7); amb.drone=g; }
+      f.connect(g); out(g,.7,true); amb.drone=g; }
     // fire crackle bed
-    { const s=loop(noiseBuf(4,"brown")), f=c.createBiquadFilter(); f.type="lowpass"; f.frequency.value=500; const g=c.createGain(); g.gain.value=0; s.connect(f).connect(g); out(g,.2); s.start(); amb.fire=g; }
+    { const s=loop(noiseBuf(4,"brown")), f=c.createBiquadFilter(); f.type="lowpass"; f.frequency.value=500; const g=c.createGain(); g.gain.value=0; s.connect(f).connect(g); out(g,.2,true); s.start(); amb.fire=g; }
     // day birds handled by events
     evTimer=setInterval(events,350);
   }
   function events(){
-    if(!c||!curMood) return; const T=c.currentTime+.02; const m=curMood;
-    if(Math.random()<.25) noiseHit(T,{f:1800+Math.random()*2500,q:4,v:.05+Math.random()*.08,dur:.02+Math.random()*.03,wet:.1}); // crackle
-    if(m==="day"&&Math.random()<.06){ const b=2400+Math.random()*1500; for(let i=0;i<3+Math.floor(Math.random()*4);i++){ const o=c.createOscillator(), g=c.createGain(); o.type="sine"; const t0=T+i*.11; o.frequency.setValueAtTime(b,t0); o.frequency.exponentialRampToValueAtTime(b*(1.2+Math.random()*.4),t0+.07); o.connect(g); env(g,t0,.005,.035,.09); out(g,.35); o.start(t0); o.stop(t0+.12); } }
-    if((m==="night"||m==="wolves")&&Math.random()<.012) howl(T,{base:240+Math.random()*120,v:.07,dur:3+Math.random()*1.5,wet:.95});
-    if(m==="night"&&Math.random()<.02){ for(const [dt,f] of [[0,390],[.45,330],[.62,330]]){ const o=c.createOscillator(), g=c.createGain(); o.type="sine"; o.frequency.setValueAtTime(f,T+dt); o.frequency.exponentialRampToValueAtTime(f*.92,T+dt+.25); o.connect(g); env(g,T+dt,.04,.05,.32); out(g,.8); o.start(T+dt); o.stop(T+dt+.4); } }
-    if(m==="dusk"&&Math.random()<.05){ for(let i=0;i<6;i++){ noiseHit(T+i*.045,{f:4800,q:12,v:.02,dur:.03,wet:.2}); } }
+    if(!c||!curMood||!ambOn()) return; const T=c.currentTime+.02; const m=curMood; AMB=true;
+    try{
+      if(Math.random()<.05) noiseHit(T,{f:1800+Math.random()*2500,q:4,v:.025+Math.random()*.03,dur:.02+Math.random()*.03,wet:.1});
+      if(m==="day"&&Math.random()<.012){ const b=2400+Math.random()*1500; for(let i=0;i<2+Math.floor(Math.random()*3);i++){ const o=c.createOscillator(), g=c.createGain(); o.type="sine"; const t0=T+i*.11; o.frequency.setValueAtTime(b,t0); o.frequency.exponentialRampToValueAtTime(b*(1.2+Math.random()*.4),t0+.07); o.connect(g); env(g,t0,.005,.018,.09); out(g,.35,true); o.start(t0); o.stop(t0+.12); } }
+      if((m==="night"||m==="wolves")&&Math.random()<.0035) howl(T,{base:240+Math.random()*120,v:.035,dur:3+Math.random()*1.5,wet:.95});
+      if(m==="night"&&Math.random()<.005){ for(const [dt,f] of [[0,390],[.45,330],[.62,330]]){ const o=c.createOscillator(), g=c.createGain(); o.type="sine"; o.frequency.setValueAtTime(f,T+dt); o.frequency.exponentialRampToValueAtTime(f*.92,T+dt+.25); o.connect(g); env(g,T+dt,.04,.025,.32); out(g,.8,true); o.start(T+dt); o.stop(T+dt+.4); } }
+    } finally { AMB=false; }
   }
   function setMood(m){
     const C=ctx(); if(!C||!started) { curMood=m; return; } makeBeds(); curMood=m;
     const T=C.currentTime, ramp=(g,v)=>{ g.gain.cancelScheduledValues(T); g.gain.setValueAtTime(g.gain.value,T); g.gain.linearRampToValueAtTime(v,T+2.5); };
-    const L={day:[.10,0,.10],dusk:[.10,.03,.14],night:[.2,.09,.12],wolves:[.26,.15,.08]}[m]||[.1,0,.1];
+    const L={day:[.035,0,.04],dusk:[.035,.012,.05],night:[.06,.035,.045],wolves:[.08,.06,.03]}[m]||[.03,0,.04];
     ramp(amb.wind,L[0]); ramp(amb.drone,L[1]); ramp(amb.fire,L[2]);
     clearInterval(hbTimer); hbTimer=null;
-    if(m==="wolves"){ hbTimer=setInterval(()=>{ if(c&&vol()>0) heartbeat(c.currentTime+.01,.5); },880); }
+    if(m==="wolves"){ hbTimer=setInterval(()=>{ if(c&&vol()>0&&ambOn()) heartbeat(c.currentTime+.01,.22); },950); }
   }
   function unlock(){ const C=ctx(); if(!C) return; if(C.state==="suspended") C.resume(); if(!started){ started=true; if(curMood) setMood(curMood); } }
   document.addEventListener("pointerdown",unlock); document.addEventListener("keydown",unlock);
-  function setVolume(){ if(master) master.gain.value=vol(); }
+  function setVolume(){ if(master) master.gain.value=vol(); if(ambBus){ const on=ambOn()?1:0; ambBus.gain.value=on; ambVerb.gain.value=on; } }
 
   function play(kind){
     const C=ctx(); if(!C||vol()<=0) return; if(C.state==="suspended") return; const T=C.currentTime+.01;
     switch(kind){
-      case "tick": { const tock=(Math.round(T*2)%2)===0; noiseHit(T,{f:tock?1900:2600,q:8,v:.18,dur:.035,wet:.15}); pluck(T,tock?880:1175,{v:.05,dur:.08,type:"sine",wet:.1}); break; }
+      case "tick": { const tock=(Math.round(T*2)%2)===0; noiseHit(T,{f:tock?1900:2600,q:8,v:.1,dur:.03,wet:.12}); break; }
       case "warn": bell(T,659,{dur:1.6,v:.16,ratio:2.01,idx:2.2}); bell(T+.22,523,{dur:2,v:.13,ratio:2.01,idx:2}); break;
-      case "step": [523.3,659.3,784,1046.5].forEach((f,i)=>bell(T+i*.09,f,{dur:1.4,v:.06,ratio:3.5,idx:1.2,wet:.75})); break;
+      case "step": [659.3,987.8].forEach((f,i)=>bell(T+i*.12,f,{dur:1.2,v:.035,ratio:3.5,idx:1,wet:.75})); break;
       case "night": howl(T,{base:300,v:.2,dur:3.6}); chord(T+.2,[55,82.4,110,130.8],{type:"sawtooth",v:.05,dur:4,cut:600,wet:.8}); bell(T,65.4,{dur:4.5,v:.25,ratio:1.41,idx:2,wet:.8}); break;
       case "day": [0,1,2].forEach(i=>bell(T+i*.9,196,{dur:3.5,v:.22,ratio:2.76,idx:2.5,wet:.75})); [392,494,587.3,784].forEach((f,i)=>pluck(T+.2+i*.12,f,{v:.08,dur:.9,wet:.5})); break;
-      case "vote": noiseHit(T,{f:700,q:3,v:.25,dur:.06,wet:.25}); pluck(T,196,{v:.12,dur:.18,type:"sine",wet:.2}); break;
+      case "vote": noiseHit(T,{f:700,q:3,v:.12,dur:.05,wet:.2}); break;
       case "flip": { const s=c.createBufferSource(); s.buffer=noiseBuf(.6); const f=c.createBiquadFilter(); f.type="bandpass"; f.Q.value=1.2; f.frequency.setValueAtTime(400,T); f.frequency.exponentialRampToValueAtTime(5000,T+.4); const g=c.createGain(); s.connect(f).connect(g); env(g,T,.12,.25,.35); out(g,.4); s.start(T); s.stop(T+.6);
         [784,988,1175,1568,1976].forEach((fr,i)=>bell(T+.35+i*.07,fr,{dur:1.2,v:.06,ratio:3,idx:1,wet:.7})); break; }
       case "start": chord(T,[196,293.7],{type:"sawtooth",v:.07,dur:.7,cut:1600,wet:.5}); chord(T+.55,[220,329.6],{type:"sawtooth",v:.07,dur:.7,cut:1700,wet:.5}); chord(T+1.1,[261.6,392,523.3],{type:"sawtooth",v:.08,dur:1.6,cut:2200,wet:.6}); break;
@@ -1746,7 +1769,7 @@ const V3 = (function(){
   const FS=`precision mediump float;varying vec3 vW,vN;varying vec4 vC;
   uniform vec3 uSunDir,uSunCol,uSkyAmb,uGndAmb,uFogCol,uCam,uFireP,uFireC,uLampC,uHiCol,uTint;uniform vec3 uLampP[6];
   uniform float uFogD,uEm,uHi,uAlpha,uNoFog,uWin,uTime;
-  void main(){vec3 n=normalize(vN);vec3 base=vC.rgb*uTint;
+  void main(){if(uNoFog<.5&&vW.y>.06&&length(uCam.xz-vW.xz)<3.4)discard;vec3 n=normalize(vN);vec3 base=vC.rgb*uTint;
    float ndl=max(dot(n,uSunDir),0.);float toon=ndl>.55?1.:ndl>.22?.62:ndl>.02?.32:0.;
    vec3 lit=mix(uGndAmb,uSkyAmb,n.y*.5+.5)+uSunCol*toon;
    vec3 L=uFireP-vW;float d=length(L);float fd=dot(n,L/d);float ft=fd>.35?1.:fd>0.?.6:.25;lit+=uFireC*ft/(1.+.11*d*d+.002*d*d*d*d);
@@ -1791,10 +1814,18 @@ const V3 = (function(){
   let gl,cv,P,SP,PP,stat,meshes={},chars={},players=[],votes={},mood="dusk",cur=clone(PAL.dusk),target=PAL.dusk,me=null,ok=false,raf=0,T0=performance.now(),labelsEl=null;
   let camAng=0,camDrag=0,dragging=false,dragX=0,zoom=1,hoverId=null,onPick=null,isClickable=()=>false,lastT=0;
   const parts=[],sparks=[]; let ptBuf=null,ptData=new Float32Array(0),eyes=[];
-  const LAMPS=[]; for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+.26; LAMPS.push([Math.sin(a)*11.2,2.35,Math.cos(a)*11.2]); }
+  let LAMPS=[], theme="village", paused=false;
+  function computeLamps(th){ LAMPS=[]; for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+.26; LAMPS.push(th==="forest"?[Math.sin(a)*10.6,2.75,Math.cos(a)*10.6]:[Math.sin(a)*11.2,2.35,Math.cos(a)*11.2]); } }
+  computeLamps("village");
+  function themed(m){ const p=clone(PAL[m]||PAL.dusk);
+    if(theme==="winter"){ const w=m==="day"?[.86,.9,.96]:null; if(w){ p.fog=w; p.hor=[.92,.94,1]; p.top=[.5,.66,.88]; p.sky=[.7,.74,.85]; p.gnd=[.5,.52,.58]; }
+      else { p.fog=lerp3(p.fog,[.12,.14,.2],.5); p.gnd=lerp3(p.gnd,[.05,.06,.1],.6); } }
+    if(theme==="forest"){ p.fog=lerp3(p.fog,[.05,.09,.06],m==="day"?.25:.55); p.fogD*=1.15; p.ff=Math.max(p.ff,m==="day"?.15:.9); if(m==="day"){ p.top=[.35,.55,.7]; p.sunCol=[.85,.9,.7]; } }
+    return p; }
 
-  function buildStatic(){
-    const g=new Geo();
+  function buildStatic(th){
+    const g=new Geo(); const W=th==="winter", FO=th==="forest";
+    const snowy=(c,k=.75)=>W?lerp3(c,[.9,.93,.98],k):c;
     // ground (grid)
     const N=90,S=120;
     for(let i=0;i<N;i++) for(let j=0;j<N;j++){
@@ -1803,18 +1834,19 @@ const V3 = (function(){
       const cx=(x0+x1)/2,cz=(z0+z1)/2,r=Math.hypot(cx,cz);
       const nz=(Math.sin(cx*1.7)*Math.cos(cz*1.3)+Math.sin(cx*.5+cz*.8))*.5;
       let c;
-      if(r<12.5){ const k=hash(i*131+j*17)*.035; c=[.37+nz*.03+k,.34+nz*.025+k,.31+nz*.02+k]; if(r<1.7) c=[.15,.12,.1]; }
-      else if(r<13.7) c=[.36,.31,.24];
-      else { const k=hash(i*97+j*41)*.03; c=[.2+nz*.03+k,.33+nz*.05+k,.17+nz*.02]; }
+      if(FO){ const bl=clamp((r-9.5)/3,0,1); c=lerp3([.29+nz*.03,.23+nz*.025,.16+nz*.02],[.13+nz*.03,.24+nz*.05,.12+nz*.02],bl); if(r<1.7) c=[.15,.12,.1]; }
+      else if(r<12.5){ const k=hash(i*131+j*17)*.035; c=[.37+nz*.03+k,.34+nz*.025+k,.31+nz*.02+k]; if(r<1.7) c=[.15,.12,.1]; if(W&&r>1.7) c=lerp3(c,[.88,.9,.96],.45+.3*hash(i*7+j)); }
+      else if(r<13.7) c=snowy([.36,.31,.24],.6);
+      else { c=snowy([.2+nz*.03,.33+nz*.05,.17+nz*.02],.92); }
       const p=[[x0,hgt(x0,z0),z0],[x1,hgt(x1,z0),z0],[x1,hgt(x1,z1),z1],[x0,hgt(x0,z1),z1]];
       const n=nrm(cross(sub(p[3],p[0]),sub(p[1],p[0])));
       const X={p:v=>v,n:v=>v};
       g.tri(X,p[0],p[3],p[2],n,n,n,c,0); g.tri(X,p[0],p[2],p[1],n,n,n,c,0);
     }
-    { let id=0; for(let r=2.1;r<12.2;r+=.62){ const n=Math.floor(2*Math.PI*r/.66); const off=hash(r)*6;
-        for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+off; const sh=.92+hash(id*1.3)*.16; g.box({t:[Math.sin(a)*r,.012,Math.cos(a)*r],r:[0,a,0],s:[.56,.04,.5]},[.4*sh,.37*sh,.33*sh],0); id++; } } }
+    if(!FO){ let id=0; for(let r=2.1;r<12.2;r+=.62){ const n=Math.floor(2*Math.PI*r/.66); const off=hash(r)*6;
+        for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+off; const sh=.92+hash(id*1.3)*.16; g.box({t:[Math.sin(a)*r,.012,Math.cos(a)*r],r:[0,a,0],s:[.56,.04,.5]},W?(hash(id*.7)>.25?[.88*sh,.9*sh,.95*sh]:[.6*sh,.6*sh,.63*sh]):[.4*sh,.37*sh,.33*sh],0); id++; } } }
     // path stones ring
-    for(let i=0;i<46;i++){ const a=i/46*Math.PI*2; g.cyl({t:[Math.sin(a)*12.6,0,Math.cos(a)*12.6]},.32,.36,.06,6,jit([.5,.46,.4],.08,i),0); }
+    if(!FO) for(let i=0;i<46;i++){ const a=i/46*Math.PI*2; g.cyl({t:[Math.sin(a)*12.6,0,Math.cos(a)*12.6]},.32,.36,.06,6,jit([.5,.46,.4],.08,i),0); }
     // campfire
     g.cyl({t:[0,0,0]},1.2,1.25,.03,16,[.12,.1,.09],0);
     for(let i=0;i<11;i++){ const a=i/11*Math.PI*2; g.sph({t:[Math.sin(a)*1.05,.12,Math.cos(a)*1.05],s:[1,.75,1]},.24,6,4,jit([.45,.43,.42],.1,i),0,true); }
@@ -1823,7 +1855,7 @@ const V3 = (function(){
     // houses
     const roofC=[[.55,.2,.15],[.38,.24,.18],[.3,.32,.4],[.5,.28,.15],[.45,.18,.2]], wallC=[[.86,.78,.62],[.8,.7,.52],[.88,.83,.72],[.74,.63,.48]];
     const houses=[0,1,2,3,4,6,7,8,9,10];
-    houses.forEach((k,idx)=>{
+    if(!FO) houses.forEach((k,idx)=>{
       const a=k/11*Math.PI*2+.1, r=17+hash(k)*2.5, x=Math.sin(a)*r, z=Math.cos(a)*r, ry=a+Math.PI;
       const w=3.2+hash(k+1)*1.4, d=3, hh=2.6+hash(k+2)*1.3, wc=wallC[k%4], rc=roofC[k%5], tc=[.24,.15,.1];
       const loc=(lx,ly,lz)=>{ const c=Math.cos(ry),s=Math.sin(ry); return [x+lx*c+lz*s,ly,z-lx*s+lz*c]; };
@@ -1838,35 +1870,50 @@ const V3 = (function(){
       if(hh>3.1) g.box({t:loc(-w*.22,hh*.78,d/2+.03),r:[0,ry,0],s:[.5,.45,.08]},[1,.7,.3],1);
       g.box({t:loc(w*.3,hh*.4,-d/2-.03),r:[0,ry,0],s:[.5,.45,.08]},[1,.7,.3],1);
       // roof
-      g.prism({t:loc(0,hh,0),r:[0,ry,0],s:[w+.6,1.6+hash(k)*.6,d+.7]},rc,0);
+      const rh=1.6+hash(k)*.6; g.prism({t:loc(0,hh,0),r:[0,ry,0],s:[w+.6,rh,d+.7]},rc,0);
+      if(W) g.prism({t:loc(0,hh+.06,0),r:[0,ry,0],s:[w+.7,rh+.08,d+.8]},[.93,.95,1],0);
       g.box({t:loc(w*.28,hh+1.2,-.4),r:[0,ry,0],s:[.45,1.3,.45]},[.45,.3,.25],0);
       // props
       if(hash(k+5)>.4) g.cyl({t:loc(w/2+.5,0,d/2+.4)},.35,.4,.85,8,[.45,.28,.14],0);
       if(hash(k+6)>.5) g.box({t:loc(-w/2-.4,.35,d/2+.3),r:[0,ry+.3,0],s:[.7,.7,.7]},[.55,.4,.22],0);
     });
     // church tower
-    { const a=5/11*Math.PI*2+.1, r=21, x=Math.sin(a)*r, z=Math.cos(a)*r, ry=a+Math.PI;
+    if(!FO){ const a=5/11*Math.PI*2+.1, r=21, x=Math.sin(a)*r, z=Math.cos(a)*r, ry=a+Math.PI;
       g.box({t:[x,3,z],r:[0,ry,0],s:[4,6,5]},[.7,.68,.64],0); g.prism({t:[x,6,z],r:[0,ry+Math.PI/2,0],s:[5.6,2.4,4.6]},[.3,.3,.36],0);
       g.box({t:[x,5,z],r:[0,ry,0],s:[2,10,2]},[.72,.7,.66],0); g.cyl({t:[x,10,z]},0,1.6,4,4,[.28,.28,.34],0);
       const fx=x-Math.sin(ry)*-1.02, fz=z-Math.cos(ry)*-1.02;
       g.box({t:[x+Math.sin(a+Math.PI)*1.02,8.2,z+Math.cos(a+Math.PI)*1.02],r:[0,ry,0],s:[.8,1.1,.1]},[1,.75,.35],1);
       g.cyl({t:[x,14,z]},.05,.05,1,4,[.8,.7,.3],0); g.box({t:[x,14.65,z],r:[0,ry,0],s:[.6,.08,.08]},[.8,.7,.3],0); }
     // well
-    g.cyl({t:[7.6,0,-6.2]},.95,1,.85,12,[.5,.48,.45],0); g.cyl({t:[7.6,.86,-6.2]},.7,.7,.02,12,[.08,.12,.18],0);
+    if(!FO){ g.cyl({t:[7.6,0,-6.2]},.95,1,.85,12,[.5,.48,.45],0); g.cyl({t:[7.6,.86,-6.2]},.7,.7,.02,12,[.08,.12,.18],0);
     for(const s of [-1,1]) g.box({t:[7.6+s*.85,1.4,-6.2],s:[.12,1.9,.12]},[.35,.22,.12],0);
-    g.prism({t:[7.6,2.3,-6.2],s:[2.2,.8,1.6]},[.4,.22,.15],0);
+    g.prism({t:[7.6,2.3,-6.2],s:[2.2,.8,1.6]},W?[.92,.94,1]:[.4,.22,.15],0); }
     // lantern posts
-    for(const L of LAMPS){ g.cyl({t:[L[0],0,L[2]]},.07,.09,2.2,6,[.15,.13,.12],0); g.box({t:[L[0],2.35,L[2]],s:[.3,.36,.3]},[1,.62,.25],2); g.cyl({t:[L[0],2.53,L[2]]},0,.24,.25,4,[.15,.13,.12],0); }
+    if(!FO) for(const L of LAMPS){ g.cyl({t:[L[0],0,L[2]]},.07,.09,2.2,6,[.15,.13,.12],0); g.box({t:[L[0],2.35,L[2]],s:[.3,.36,.3]},[1,.62,.25],2); g.cyl({t:[L[0],2.53,L[2]]},0,.24,.25,4,[.15,.13,.12],0); }
     // fences
-    for(let i=0;i<60;i++){ const a=i/60*Math.PI*2; if(Math.abs(Math.sin(a*5.5))>.92) continue; const r=25; g.box({t:[Math.sin(a)*r,.45,Math.cos(a)*r],r:[0,a,0],s:[.1,.9,.1]},[.36,.25,.15],0); g.box({t:[Math.sin(a)*r,.6,Math.cos(a)*r],r:[0,a+Math.PI/2,0],s:[.06,.08,2.7]},[.4,.28,.17],0); }
+    if(!FO) for(let i=0;i<60;i++){ const a=i/60*Math.PI*2; if(Math.abs(Math.sin(a*5.5))>.92) continue; const r=25; g.box({t:[Math.sin(a)*r,.45,Math.cos(a)*r],r:[0,a,0],s:[.1,.9,.1]},[.36,.25,.15],0); g.box({t:[Math.sin(a)*r,.6,Math.cos(a)*r],r:[0,a+Math.PI/2,0],s:[.06,.08,2.7]},[.4,.28,.17],0); }
     // trees
-    for(let i=0;i<130;i++){ const a=hash(i*3.7)*Math.PI*2, r=27+hash(i*5.1)*24, x=Math.sin(a)*r, z=Math.cos(a)*r, s=.9+hash(i*7.3)*1.2;
-      const gc=jit([.09,.2,.12],.05,i);
+    const NT=FO?240:130;
+    for(let i=0;i<NT;i++){ const a=hash(i*3.7)*Math.PI*2, r=(FO?13.5:27)+hash(i*5.1)*(FO?34:24), x=Math.sin(a)*r, z=Math.cos(a)*r, s=(FO?1.1:.9)+hash(i*7.3)*1.3;
+      const gc=W?lerp3(jit([.09,.2,.12],.05,i),[.85,.9,.95],.35):jit(FO?[.06,.16,.1]:[.09,.2,.12],.05,i);
       g.cyl({t:[x,0,z],s:[s,s,s]},.18,.26,1.2,6,[.22,.14,.09],0);
       g.cyl({t:[x,1,z],s:[s,s,s]},0,1.5,2.2,7,gc,0); g.cyl({t:[x,2,z],s:[s,s,s]},0,1.15,1.9,7,shade(gc,1.15),0); g.cyl({t:[x,2.9,z],s:[s,s,s]},0,.75,1.6,7,shade(gc,1.3),0); }
-    for(let i=0;i<40;i++){ const a=hash(i*9.1)*Math.PI*2, r=14.5+hash(i*2.3)*9; if(r<23&&r>13.5&&hash(i)>.5) g.sph({t:[Math.sin(a)*r,.2,Math.cos(a)*r],s:[1.3,.8,1.1]},.6,6,4,jit([.18,.32,.16],.06,i),0,true); }
+    for(let i=0;i<40;i++){ const a=hash(i*9.1)*Math.PI*2, r=14.5+hash(i*2.3)*9; if(r<23&&r>13.5&&hash(i)>.5) g.sph({t:[Math.sin(a)*r,.2,Math.cos(a)*r],s:[1.3,.8,1.1]},.6,6,4,W?[.85,.88,.95]:jit([.18,.32,.16],.06,i),0,true); }
+    if(FO){
+      // standing stones with torches
+      for(let i=0;i<10;i++){ const a=i/10*Math.PI*2+.1, r=10.6, h=2.2+hash(i*3)*1.4;
+        g.box({t:[Math.sin(a)*r,h/2,Math.cos(a)*r],r:[hash(i)*.12,a,hash(i*2)*.1],s:[.9,h,.6]},jit([.42,.43,.45],.05,i),0);
+        g.box({t:[Math.sin(a)*r,h*.35,Math.cos(a)*r],r:[0,a,0],s:[.94,.5,.64]},[.2,.32,.16],0); }
+      for(const L of LAMPS){ g.cyl({t:[L[0],0,L[2]]},.05,.07,2.6,5,[.25,.17,.1],0); g.sph({t:[L[0],2.72,L[2]],s:[1,1.4,1]},.13,6,4,[1,.6,.2],2); }
+      // fallen logs & glowing mushrooms
+      for(let i=0;i<7;i++){ const a=hash(i*11.1)*Math.PI*2, r=12.6+hash(i*4.4)*3; g.cyl({t:[Math.sin(a)*r,.22,Math.cos(a)*r],r:[Math.PI/2,a+1.2,0]},.24,.28,2.4,7,[.3,.2,.12],0); }
+      for(let i=0;i<70;i++){ const a=hash(i*5.9)*Math.PI*2, r=8+hash(i*1.9)*12; if(Math.abs(r-10.6)<.8) continue; const x=Math.sin(a)*r,z=Math.cos(a)*r, c=[[.95,.25,.3],[.45,.8,1],[.7,.5,1]][i%3];
+        g.cyl({t:[x,0,z]},.03,.04,.16,5,[.9,.88,.8],0); g.sph({t:[x,.17,z],s:[1,.55,1]},.09,6,4,c,1); }
+      // ruined arch
+      { const a=2.4, r=15, x=Math.sin(a)*r, z=Math.cos(a)*r; for(const s of [-1,1]) g.box({t:[x+Math.cos(a)*s*1.6,1.8,z-Math.sin(a)*s*1.6],r:[0,a,0],s:[.7,3.6,.7]},[.45,.45,.47],0); g.box({t:[x,3.8,z],r:[0,a,.08],s:[4,.6,.8]},[.45,.45,.47],0); }
+    }
     // mountains
-    for(let i=0;i<14;i++){ const a=i/14*Math.PI*2+hash(i)*.3, r=85+hash(i*2)*25; g.cyl({t:[Math.sin(a)*r*1.4,-2,Math.cos(a)*r*1.4]},0,30+hash(i*3)*18,30+hash(i*4)*26,7,[.16,.18,.24],0); }
+    for(let i=0;i<14;i++){ const a=i/14*Math.PI*2+hash(i)*.3, r=85+hash(i*2)*25; g.cyl({t:[Math.sin(a)*r*1.4,-2,Math.cos(a)*r*1.4]},0,30+hash(i*3)*18,30+hash(i*4)*26,7,W?[.7,.74,.82]:[.16,.18,.24],0); }
     return g.upload(gl);
   }
 
@@ -1923,6 +1970,7 @@ const V3 = (function(){
     else if(kind==="ember") parts.push({k:1,p:[(Math.random()-.5)*.5,.4,(Math.random()-.5)*.5],v:[(Math.random()-.5)*.6,1.4+Math.random()*1.6,(Math.random()-.5)*.6],life:0,max:1.6+Math.random()*1.6,s:.05+Math.random()*.05});
     else if(kind==="smoke") parts.push({k:2,p:[(Math.random()-.5)*.3,1.6,(Math.random()-.5)*.3],v:[.15+Math.random()*.15,.7,(Math.random()-.5)*.1],life:0,max:4+Math.random()*2,s:.9+Math.random()*.7});
     else if(kind==="mist"){ const a=Math.random()*Math.PI*2,r=3+Math.random()*20; parts.push({k:3,p:[Math.sin(a)*r,.15+Math.random()*.5,Math.cos(a)*r],v:[.25+Math.random()*.2,0,(Math.random()-.5)*.2],life:0,max:9+Math.random()*6,s:3.5+Math.random()*3}); }
+    else if(kind==="snow"){ const a=Math.random()*Math.PI*2,r=Math.random()*22; parts.push({k:5,p:[Math.sin(a)*r,9+Math.random()*3,Math.cos(a)*r],v:[(Math.random()-.5)*.3,-.7-Math.random()*.5,(Math.random()-.5)*.3],life:0,max:14,s:.06+Math.random()*.06,ph:Math.random()*9}); }
     else if(kind==="ff"){ const a=Math.random()*Math.PI*2,r=6+Math.random()*16; parts.push({k:4,p:[Math.sin(a)*r,.5+Math.random()*2,Math.cos(a)*r],v:[(Math.random()-.5)*.4,(Math.random()-.5)*.2,(Math.random()-.5)*.4],life:0,max:5+Math.random()*5,s:.09,ph:Math.random()*9}); }
   }
   function stepParts(dt,t){
@@ -1933,12 +1981,14 @@ const V3 = (function(){
     if(Math.random()<dt*2.2) spawn("smoke");
     if(Math.random()<dt*P.mist*3) spawn("mist");
     if(Math.random()<dt*P.ff*6) spawn("ff");
+    if(theme==="winter") for(let i=0;i<Math.round(dt*45+Math.random()*.6);i++) spawn("snow");
     for(let i=parts.length-1;i>=0;i--){ const q=parts[i]; q.life+=dt; if(q.life>q.max){ parts.splice(i,1); continue; }
       q.p[0]+=q.v[0]*dt; q.p[1]+=q.v[1]*dt; q.p[2]+=q.v[2]*dt;
       if(q.k===0){ q.v[0]+=(-q.p[0])*dt*2; q.v[2]+=(-q.p[2])*dt*2; }
       if(q.k===1){ q.v[0]+=Math.sin(t*3+i)*dt*.6; }
+      if(q.k===5){ q.v[0]=Math.sin(t*.8+q.ph)*.35; if(q.p[1]<.02){ parts.splice(i,1); continue; } }
       if(q.k===4){ q.v[0]+=Math.sin(t*1.3+q.ph)*dt*.3; q.v[2]+=Math.cos(t*1.1+q.ph)*dt*.3; q.v[1]+=Math.sin(t*2+q.ph)*dt*.2; } }
-    if(parts.length>900) parts.splice(0,parts.length-900);
+    if(parts.length>1400) parts.splice(0,parts.length-1400);
   }
   const length3=a=>Math.hypot(a[0],a[1],a[2]);
   function fillParts(add){
@@ -1950,6 +2000,7 @@ const V3 = (function(){
         else if(q.k===4){ const b=.5+.5*Math.sin(q.life*5+q.ph); arr.push(q.p[0],q.p[1],q.p[2],q.s,.95,1,.45,b*Math.sin(f*Math.PI)*P.ff*1.4); }
       } else {
         if(q.k===2){ const g=P.fog; arr.push(q.p[0],q.p[1],q.p[2],q.s*(.5+f*1.4),g[0]*.6+.12,g[1]*.6+.12,g[2]*.6+.13,(1-f)*.22*Math.min(1,f*3)); }
+        else if(q.k===5){ const br=Math.min(1,length3(P.sky)*1.8+.35); arr.push(q.p[0],q.p[1],q.p[2],q.s,br,br,br*1.03,.85); }
         else if(q.k===3){ const g=P.fog; arr.push(q.p[0],q.p[1],q.p[2],q.s,g[0]*1.6+.08,g[1]*1.6+.08,g[2]*1.6+.1,Math.sin(f*Math.PI)*.38*P.mist); }
       }
     }
@@ -1966,13 +2017,15 @@ const V3 = (function(){
   }
 
   /* ---------- public API ---------- */
-  function init(canvas,labels){
+  function setTheme(th){ if(!ok||th===theme) return; theme=th; computeLamps(th); gl.deleteBuffer(stat.b); stat=buildStatic(th); target=themed(mood); cur=clone(target); parts.length=0; }
+  function pause(b){ paused=!!b; }
+  function init(canvas,labels,th){
     try{
-      cv=canvas; labelsEl=labels;
+      cv=canvas; labelsEl=labels; theme=th&&th!=="classic"?th:"village"; computeLamps(theme);
       gl=cv.getContext("webgl",{antialias:true,alpha:false,powerPreference:"high-performance"})||cv.getContext("experimental-webgl");
       if(!gl) return false;
       P=prog(gl,VS,FS); SP=prog(gl,SKY_VS,SKY_FS); PP=prog(gl,PT_VS,PT_FS);
-      stat=buildStatic(); meshes.tomb=buildTomb();
+      stat=buildStatic(theme); meshes.tomb=buildTomb(); target=themed(mood); cur=clone(target);
       { const g=new Geo(); g.ring({},.55,.7,28,[1,.8,.3],2); meshes.sel=g.upload(gl); }
       { const g=new Geo(); g.ring({},0,.62,20,[0,0,0],0); meshes.blob=g.upload(gl); }
       { const g=new Geo(); for(const s of [-1,1]) g.sph({t:[s*.12,0,0],s:[1.3,.75,.5]},.05,6,4,[1,.85,.2],2); meshes.eyes=g.upload(gl); }
@@ -2002,7 +2055,7 @@ const V3 = (function(){
     players=list.map(p=>p.id);
   }
   function setVotes(v){ votes=v||{}; }
-  function setMood(m){ if(PAL[m]&&m!==mood){ mood=m; target=PAL[m]; } }
+  function setMood(m){ if(PAL[m]&&m!==mood){ mood=m; target=themed(m); } }
   function speak(id){ const c=chars[id]; if(c) c.talk=2.2; }
   function setPick(fn,can){ onPick=fn; isClickable=can; }
   function camPos(){
@@ -2027,7 +2080,7 @@ const V3 = (function(){
   /* ---------- render loop ---------- */
   function loop(){
     raf=requestAnimationFrame(loop);
-    if(document.hidden||!ok) return;
+    if(document.hidden||!ok||paused) return;
     const now=performance.now(), t=(now-T0)/1000; let dt=Math.min(.05,(now-(lastT||now))/1000); lastT=now;
     // palette lerp
     const k=1-Math.exp(-dt*1.2);
@@ -2114,7 +2167,7 @@ const V3 = (function(){
     if(labelsEl){ for(const el of labelsEl.children){ const id=el.dataset.id; const a=anchor(id); if(!a||!a.vis){ el.style.display="none"; continue; } el.style.display=""; const s=clamp(9/a.w,.62,1.15);
       el.style.transform=`translate(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px) translate(-50%,-100%) scale(${s.toFixed(3)})`; el.style.zIndex=String(1000-Math.round(a.w*10)); } }
   }
-  return {init,setPlayers,setVotes,setMood,speak,setPick,get ok(){return ok;}, anchor};
+  return {init,setPlayers,setVotes,setMood,setTheme,pause,speak,setPick,get ok(){return ok;}, anchor};
 })();
 
 /* ===================== CLIENT / UI ===================== */
@@ -2126,7 +2179,7 @@ const roleName=r=>t("r_"+r), roleDesc=r=>t("d_"+r);
 
 const APP = {
   me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), clockOff:0, view:"hub",
-  set:Object.assign({sound:true,tr:false},lsGet("settings")||{}),
+  set:Object.assign({sfx:true,amb:true,vol:.7,tr:false,theme:"village"},lsGet("settings")||{}),
   ui:{panel:"chat",lovers:false,sel:[],modal:null,toast:null,joinErr:null,connecting:false,netStatus:"online",lastPhaseSeq:-1},
   game:null // {room,key,b}
 };
@@ -2163,7 +2216,7 @@ function tone(c,T,{f=440,type="sine",d=.25,v=.18,glide=null,delay=0}){
   g.gain.setValueAtTime(.0001,T+delay); g.gain.exponentialRampToValueAtTime(v,T+delay+.015); g.gain.exponentialRampToValueAtTime(.0001,T+delay+d);
   o.connect(g).connect(c.destination); o.start(T+delay); o.stop(T+delay+d+.05);
 }
-function sfx(kind){ if(!APP.set.sound) return; AUD.play(kind==="howl"?"night":kind); }
+function sfx(kind){ if(APP.set.sfx===false||kind==="send") return; AUD.play(kind==="howl"?"night":kind); }
 function sfxOld(kind){
   if(!APP.set.sound) return; const c=ac(); if(!c) return;
   try{
@@ -2348,6 +2401,23 @@ function fireflies(){ let h=""; for(let i=0;i<16;i++){ h+=`<i style="left:${(Mat
 function showBanner(ic,txt,cls){ const b=$("#pbanner"); if(!b) return; b.className="pbanner "+(cls||""); b.innerHTML=`<div class="pb-ic">${ic}</div><div class="pb-t">${esc(txt)}</div>`; void b.offsetWidth; b.classList.add("show"); clearTimeout(APP._bnT); APP._bnT=setTimeout(()=>b.classList.remove("show"),2600); }
 function flash(){ const f=$("#flash"); if(!f) return; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); }
 
+function applyTheme(){
+  const th=APP.set.theme||"village", want3d=th!=="classic"&&!QS.get("no3d");
+  if(want3d){
+    if(!APP.v3cv){ APP.v3cv=document.createElement("canvas"); APP.v3cv.className="v3"; APP.v3lab=document.createElement("div"); APP.v3lab.className="v3labels"; }
+    const slot=$("#v3slot"); if(slot&&APP.v3cv.parentNode!==slot) slot.append(APP.v3cv,APP.v3lab);
+    if(!APP.v3init&&slot){ APP.v3init=true; APP.v3ok=V3.init(APP.v3cv,APP.v3lab,th); V3.setPick(id=>clickChar(id),id=>targetable(id)); }
+    else if(APP.v3ok) V3.setTheme(th);
+    APP.has3d=!!APP.v3ok;
+  } else APP.has3d=false;
+  if(APP.v3ok) V3.pause(!APP.has3d);
+  const st=$("#stage"); if(st) st.classList.toggle("has3d",!!APP.has3d);
+  if(APP.v3lab){ APP.v3lab._h=""; APP.v3lab.hidden=!APP.has3d; }
+  if(APP.v3cv) APP.v3cv.hidden=!APP.has3d;
+  const ch=$("#chars"); if(ch&&!APP.has3d) ch.innerHTML="";
+  if(APP.view==="game"&&APP.st) renderGame();
+}
+
 /* ---------- derived ---------- */
 const S=()=>APP.st||{players:[],ph:{k:"lobby"}};
 const V=()=>APP.v||{};
@@ -2450,8 +2520,7 @@ function bindStatic(){
     grid.innerHTML=ROLE_GROUPS.map(([g,rs])=>rs.map(r=>`<div class="role-tile">${roleCardHTML(r,{small:1})}<p>${esc(roleDesc(r))}</p></div>`).join("")).join("");
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
-    if(!APP.v3cv&&!QS.get("no3d")){ APP.v3cv=document.createElement("canvas"); APP.v3cv.className="v3"; APP.v3lab=document.createElement("div"); APP.v3lab.className="v3labels"; }
-    if(APP.v3cv){ $("#v3slot").append(APP.v3cv,APP.v3lab); if(!APP.v3init){ APP.v3init=true; APP.has3d=V3.init(APP.v3cv,APP.v3lab); V3.setPick(id=>clickChar(id),id=>targetable(id)); } $("#stage").classList.toggle("has3d",!!APP.has3d); }
+    applyTheme();
     $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("linkCopied")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
@@ -2889,17 +2958,26 @@ function renderModal(){
   if(!el){ el=document.createElement("div"); el.id="modal"; el.className="modal"; document.body.appendChild(el); el.onclick=e=>{ if(e.target===el&&APP.ui.modal&&APP.ui.modal.kind!=="create"){ APP.ui.modal=null; render(); } }; }
   if(m.kind==="create"){ el.innerHTML=createModal(m); bindCreate(m); return; }
   if(m.kind==="settings"){
-    el.innerHTML=`<div class="mcard"><h2>${esc(t("settings"))}</h2>
+    const sw=(id,on,ic,title,desc)=>`<label class="opt"><span class="opt-ic">${ic}</span><span class="opt-t"><b>${esc(title)}</b><small>${esc(desc)}</small></span><span class="switch"><input type="checkbox" id="${id}" ${on?"checked":""}><i></i></span></label>`;
+    const th=APP.set.theme||"village";
+    const themes=[["village","🔥",t("th_village"),t("th_village_d")],["forest","🌲",t("th_forest"),t("th_forest_d")],["winter","❄️",t("th_winter"),t("th_winter_d")],["classic","🖼️",t("th_classic"),t("th_classic_d")]];
+    el.innerHTML=`<div class="mcard settings"><h2>⚙︎ ${esc(t("settings"))}</h2>
       <div class="frm"><label>${esc(t("language"))}</label><div class="seg"><button data-l="fr" class="${LANG==="fr"?"on":""}">Français</button><button data-l="ru" class="${LANG==="ru"?"on":""}">Русский</button><button data-l="en" class="${LANG==="en"?"on":""}">English</button></div></div>
-      <div class="frm"><label class="chk"><input type="checkbox" id="sTr" ${APP.set.tr?"checked":""}> 🌐 ${esc(t("autoTr"))}</label><p class="muted sm">${esc(t("autoTrHelp"))}</p></div>
-      <div class="frm"><label class="chk"><input type="checkbox" id="sSnd" ${APP.set.sound?"checked":""}> 🔊 ${esc(t("sounds"))}</label><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.8}" style="width:100%;margin-top:8px;accent-color:var(--pur)"></div>
-      <div class="frm oa"><label>🤖 ${esc(t("oaKey"))}</label>${builtinKey()?`<p class="sm" style="color:var(--green);margin:0 0 6px">✔ ${esc(t("oaBuiltin"))}</p>`:""}<input id="sKey" type="password" placeholder="${builtinKey()?esc(t("oaOverride")):"sk-..."}" value="${esc((lsGet("oaKey")||""))}" autocomplete="off"><label style="margin-top:8px">${esc(t("oaModel"))}</label><input id="sModel" value="${esc(oaModel())}"><p class="muted sm">${esc(t("oaHelp"))}</p>${APP.oaErr?`<p class="sm" style="color:var(--red)">${esc(t("oaErr",{e:APP.oaErr}))}</p>`:""}</div>
+      <div class="frm"><label>${esc(t("decor"))}</label><div class="themes">${themes.map(([k,ic,n,d])=>`<button class="theme ${th===k?"on":""}" data-th="${k}"><span class="th-ic">${ic}</span><b>${esc(n)}</b><small>${esc(d)}</small></button>`).join("")}</div><p class="muted sm">${esc(t("decorHelp"))}</p></div>
+      <div class="frm"><label>${esc(t("chatOpts"))}</label>${sw("sTr",APP.set.tr,"🌐",t("optTr"),t("optTrD"))}</div>
+      <div class="frm"><label>${esc(t("soundOpts"))}</label>
+        ${sw("sFx",APP.set.sfx!==false,"🔔",t("optFx"),t("optFxD"))}
+        ${sw("sAmb",APP.set.amb!==false,"🌙",t("optAmb"),t("optAmbD"))}
+        <div class="opt vol"><span class="opt-ic">🔊</span><span class="opt-t"><b>${esc(t("volume"))}</b></span><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.7}"></div></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
+    el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
-    $("#sSnd").onchange=e=>{ APP.set.sound=e.target.checked; saveSettings(); AUD.setVolume(); };
-    $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); AUD.play("ping"); };
-    $("#sOk").onclick=()=>{ lsSet("oaKey",$("#sKey").value.trim()); lsSet("oaModel",$("#sModel").value.trim()||"gpt-5.6-luna"); if(APP.host){ APP.host.translator=hostTranslator(); APP.host.flush(true); } APP.ui.modal=null; render(); };
+    $("#sFx").onchange=e=>{ APP.set.sfx=e.target.checked; saveSettings(); if(e.target.checked) AUD.play("ping"); };
+    $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
+    $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); };
+    $("#sVol").onchange=()=>AUD.play("ping");
+    $("#sOk").onclick=()=>{ APP.ui.modal=null; render(); };
     return;
   }
   if(m.kind==="why"||m.kind==="cand"){

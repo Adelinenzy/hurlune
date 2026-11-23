@@ -3,8 +3,9 @@
 Jeu de Loups-Garous en ligne inspiré du fonctionnement de Wolfy, pensé pour jouer **entre amis français et russes** :
 
 - **Village en 3D** (moteur WebGL maison) : les joueurs sont assis en cercle autour du feu de camp, au milieu d'une place médiévale. Le jour, le soleil brille ; la nuit, l'ambiance est oppressante (brouillard, yeux de loups dans la forêt, battements de cœur).
+- **4 décors au choix** dans ⚙︎ : Place du village, Clairière hantée, Hameau d'hiver (3D) ou Classique (2D). Chacun choisit le sien sans gêner les autres.
 - **Sans compte** : un pseudo, un personnage, et c'est parti.
-- **Chat traduisible en un clic** (🌐). Si l'hôte a mis sa clé OpenAI dans les ⚙︎ paramètres, la traduction se fait par OpenAI pour tout le monde. Sinon, c'est Google Traduction.
+- **Chat traduisible en un clic** (🌐). La traduction passe par OpenAI grâce à la clé intégrée au moment de la publication (secret `OPENAI_API_KEY`), sinon par Google Traduction.
 - **Interface en français, russe et anglais.**
 - **29 rôles** :
   - Loups : Loup-Garou, Loup Noir, Loup Bavard, Loup Lettré, Chaperon Loup.

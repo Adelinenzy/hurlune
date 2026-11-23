@@ -1,6 +1,7 @@
 /* ===================== I18N ===================== */
 const I18N = {
 en:{
+ decor:"Game scenery",decorHelp:"This only changes your own screen: each player can pick their own.",th_village:"Village square",th_village_d:"3D · campfire",th_forest:"Haunted glade",th_forest_d:"3D · standing stones, forest",th_winter:"Winter hamlet",th_winter_d:"3D · snow",th_classic:"Classic",th_classic_d:"2D · lightweight",chatOpts:"Chat",optTr:"Automatic translation",optTrD:"Other players’ messages are shown translated into your language (same as the 🌐 button).",soundOpts:"Sound",optFx:"Sound effects",optFxD:"Deaths, votes, timer, turn changes.",optAmb:"Ambience",optAmbD:"Quiet background: wind, fire, night.",volume:"Volume",
  oaBuiltin:"Built-in translation key active: nothing to do.",oaOverride:"(optional) your own key",
  bn_night:"Night {n}",bn_day:"Day {n}",rv_title:"Your card has been dealt",rv_changed:"Your role has changed!",rv_click:"Click the card to turn it over",rv_ok:"Let’s go!",youWon:"You won!",youLost:"You lost…",
  oaKey:"OpenAI API key (optional)",oaModel:"OpenAI model",oaHelp:"When you host, this key translates every message of the game for everyone (your friends need nothing). The key is stored only on this device. Without a key: Google Translate.",oaErr:"OpenAI error ({e}): check the key or the model. Google Translate is used as a fallback.",
@@ -57,6 +58,7 @@ en:{
  d_heir:"On the first night, picks a player whose role he’ll inherit when they die.",d_plunderer:"Takes the role of the first player to die.",d_pyromancer:"Each night, douses a player in Greek fire or blows up every barrel."
 },
 fr:{
+ decor:"Décor du jeu",decorHelp:"Ce choix ne concerne que ton écran : chaque joueur peut choisir le sien.",th_village:"Place du village",th_village_d:"3D · feu de camp",th_forest:"Clairière hantée",th_forest_d:"3D · menhirs, forêt",th_winter:"Hameau d’hiver",th_winter_d:"3D · neige",th_classic:"Classique",th_classic_d:"2D · léger",chatOpts:"Chat",optTr:"Traduction automatique",optTrD:"Les messages des autres joueurs s’affichent traduits dans ta langue (même effet que le bouton 🌐).",soundOpts:"Sons",optFx:"Effets sonores",optFxD:"Morts, votes, minuteur, changements de tour.",optAmb:"Ambiance",optAmbD:"Fond sonore discret : vent, feu, nuit.",volume:"Volume",
  oaBuiltin:"Clé de traduction intégrée active : rien à faire.",oaOverride:"(optionnel) ta propre clé",
  bn_night:"Nuit {n}",bn_day:"Jour {n}",rv_title:"Ta carte a été distribuée",rv_changed:"Ton rôle a changé !",rv_click:"Clique sur la carte pour la retourner",rv_ok:"C’est parti !",youWon:"Tu as gagné !",youLost:"Tu as perdu…",
  oaKey:"Clé API OpenAI (optionnel)",oaModel:"Modèle OpenAI",oaHelp:"Si tu es l’hôte, ta clé traduit tous les messages de la partie pour tout le monde (tes amis n’ont besoin de rien). La clé reste enregistrée uniquement sur cet appareil. Sans clé : Google Traduction.",oaErr:"Erreur OpenAI ({e}) : vérifie ta clé ou le modèle. Google Traduction est utilisé en secours.",
@@ -113,6 +115,7 @@ fr:{
  d_heir:"La première nuit, choisit un joueur dont il héritera du rôle à sa mort.",d_plunderer:"Récupère le rôle du premier joueur mort de la partie.",d_pyromancer:"Chaque nuit, arrose un joueur de feu grégeois ou déclenche l’explosion de tous les tonneaux."
 },
 ru:{
+ decor:"Оформление",decorHelp:"Выбор влияет только на твой экран: каждый игрок выбирает своё.",th_village:"Деревенская площадь",th_village_d:"3D · костёр",th_forest:"Проклятая поляна",th_forest_d:"3D · менгиры, лес",th_winter:"Зимняя деревня",th_winter_d:"3D · снег",th_classic:"Классика",th_classic_d:"2D · лёгкое",chatOpts:"Чат",optTr:"Автоперевод",optTrD:"Сообщения других игроков показываются переведёнными на твой язык (как кнопка 🌐).",soundOpts:"Звук",optFx:"Звуковые эффекты",optFxD:"Смерти, голоса, таймер, смена хода.",optAmb:"Атмосфера",optAmbD:"Тихий фон: ветер, костёр, ночь.",volume:"Громкость",
  oaBuiltin:"Встроенный ключ перевода активен: ничего делать не нужно.",oaOverride:"(необязательно) свой ключ",
  bn_night:"Ночь {n}",bn_day:"День {n}",rv_title:"Тебе раздали карту",rv_changed:"Твоя роль изменилась!",rv_click:"Нажми на карту, чтобы перевернуть её",rv_ok:"Поехали!",youWon:"Ты победил(а)!",youLost:"Ты проиграл(а)…",
  oaKey:"Ключ API OpenAI (необязательно)",oaModel:"Модель OpenAI",oaHelp:"Если ты хост, твой ключ переводит все сообщения игры для всех (друзьям ничего не нужно). Ключ хранится только на этом устройстве. Без ключа используется Google Переводчик.",oaErr:"Ошибка OpenAI ({e}): проверь ключ или модель. Используется Google Переводчик.",

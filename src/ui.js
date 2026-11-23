@@ -7,7 +7,7 @@ const roleName=r=>t("r_"+r), roleDesc=r=>t("d_"+r);
 
 const APP = {
   me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), clockOff:0, view:"hub",
-  set:Object.assign({sound:true,tr:false},lsGet("settings")||{}),
+  set:Object.assign({sfx:true,amb:true,vol:.7,tr:false,theme:"village"},lsGet("settings")||{}),
   ui:{panel:"chat",lovers:false,sel:[],modal:null,toast:null,joinErr:null,connecting:false,netStatus:"online",lastPhaseSeq:-1},
   game:null // {room,key,b}
 };
@@ -44,7 +44,7 @@ function tone(c,T,{f=440,type="sine",d=.25,v=.18,glide=null,delay=0}){
   g.gain.setValueAtTime(.0001,T+delay); g.gain.exponentialRampToValueAtTime(v,T+delay+.015); g.gain.exponentialRampToValueAtTime(.0001,T+delay+d);
   o.connect(g).connect(c.destination); o.start(T+delay); o.stop(T+delay+d+.05);
 }
-function sfx(kind){ if(!APP.set.sound) return; AUD.play(kind==="howl"?"night":kind); }
+function sfx(kind){ if(APP.set.sfx===false||kind==="send") return; AUD.play(kind==="howl"?"night":kind); }
 function sfxOld(kind){
   if(!APP.set.sound) return; const c=ac(); if(!c) return;
   try{
@@ -229,6 +229,23 @@ function fireflies(){ let h=""; for(let i=0;i<16;i++){ h+=`<i style="left:${(Mat
 function showBanner(ic,txt,cls){ const b=$("#pbanner"); if(!b) return; b.className="pbanner "+(cls||""); b.innerHTML=`<div class="pb-ic">${ic}</div><div class="pb-t">${esc(txt)}</div>`; void b.offsetWidth; b.classList.add("show"); clearTimeout(APP._bnT); APP._bnT=setTimeout(()=>b.classList.remove("show"),2600); }
 function flash(){ const f=$("#flash"); if(!f) return; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); }
 
+function applyTheme(){
+  const th=APP.set.theme||"village", want3d=th!=="classic"&&!QS.get("no3d");
+  if(want3d){
+    if(!APP.v3cv){ APP.v3cv=document.createElement("canvas"); APP.v3cv.className="v3"; APP.v3lab=document.createElement("div"); APP.v3lab.className="v3labels"; }
+    const slot=$("#v3slot"); if(slot&&APP.v3cv.parentNode!==slot) slot.append(APP.v3cv,APP.v3lab);
+    if(!APP.v3init&&slot){ APP.v3init=true; APP.v3ok=V3.init(APP.v3cv,APP.v3lab,th); V3.setPick(id=>clickChar(id),id=>targetable(id)); }
+    else if(APP.v3ok) V3.setTheme(th);
+    APP.has3d=!!APP.v3ok;
+  } else APP.has3d=false;
+  if(APP.v3ok) V3.pause(!APP.has3d);
+  const st=$("#stage"); if(st) st.classList.toggle("has3d",!!APP.has3d);
+  if(APP.v3lab){ APP.v3lab._h=""; APP.v3lab.hidden=!APP.has3d; }
+  if(APP.v3cv) APP.v3cv.hidden=!APP.has3d;
+  const ch=$("#chars"); if(ch&&!APP.has3d) ch.innerHTML="";
+  if(APP.view==="game"&&APP.st) renderGame();
+}
+
 /* ---------- derived ---------- */
 const S=()=>APP.st||{players:[],ph:{k:"lobby"}};
 const V=()=>APP.v||{};
@@ -331,8 +348,7 @@ function bindStatic(){
     grid.innerHTML=ROLE_GROUPS.map(([g,rs])=>rs.map(r=>`<div class="role-tile">${roleCardHTML(r,{small:1})}<p>${esc(roleDesc(r))}</p></div>`).join("")).join("");
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
-    if(!APP.v3cv&&!QS.get("no3d")){ APP.v3cv=document.createElement("canvas"); APP.v3cv.className="v3"; APP.v3lab=document.createElement("div"); APP.v3lab.className="v3labels"; }
-    if(APP.v3cv){ $("#v3slot").append(APP.v3cv,APP.v3lab); if(!APP.v3init){ APP.v3init=true; APP.has3d=V3.init(APP.v3cv,APP.v3lab); V3.setPick(id=>clickChar(id),id=>targetable(id)); } $("#stage").classList.toggle("has3d",!!APP.has3d); }
+    applyTheme();
     $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("linkCopied")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
@@ -770,17 +786,26 @@ function renderModal(){
   if(!el){ el=document.createElement("div"); el.id="modal"; el.className="modal"; document.body.appendChild(el); el.onclick=e=>{ if(e.target===el&&APP.ui.modal&&APP.ui.modal.kind!=="create"){ APP.ui.modal=null; render(); } }; }
   if(m.kind==="create"){ el.innerHTML=createModal(m); bindCreate(m); return; }
   if(m.kind==="settings"){
-    el.innerHTML=`<div class="mcard"><h2>${esc(t("settings"))}</h2>
+    const sw=(id,on,ic,title,desc)=>`<label class="opt"><span class="opt-ic">${ic}</span><span class="opt-t"><b>${esc(title)}</b><small>${esc(desc)}</small></span><span class="switch"><input type="checkbox" id="${id}" ${on?"checked":""}><i></i></span></label>`;
+    const th=APP.set.theme||"village";
+    const themes=[["village","🔥",t("th_village"),t("th_village_d")],["forest","🌲",t("th_forest"),t("th_forest_d")],["winter","❄️",t("th_winter"),t("th_winter_d")],["classic","🖼️",t("th_classic"),t("th_classic_d")]];
+    el.innerHTML=`<div class="mcard settings"><h2>⚙︎ ${esc(t("settings"))}</h2>
       <div class="frm"><label>${esc(t("language"))}</label><div class="seg"><button data-l="fr" class="${LANG==="fr"?"on":""}">Français</button><button data-l="ru" class="${LANG==="ru"?"on":""}">Русский</button><button data-l="en" class="${LANG==="en"?"on":""}">English</button></div></div>
-      <div class="frm"><label class="chk"><input type="checkbox" id="sTr" ${APP.set.tr?"checked":""}> 🌐 ${esc(t("autoTr"))}</label><p class="muted sm">${esc(t("autoTrHelp"))}</p></div>
-      <div class="frm"><label class="chk"><input type="checkbox" id="sSnd" ${APP.set.sound?"checked":""}> 🔊 ${esc(t("sounds"))}</label><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.8}" style="width:100%;margin-top:8px;accent-color:var(--pur)"></div>
-      <div class="frm oa"><label>🤖 ${esc(t("oaKey"))}</label>${builtinKey()?`<p class="sm" style="color:var(--green);margin:0 0 6px">✔ ${esc(t("oaBuiltin"))}</p>`:""}<input id="sKey" type="password" placeholder="${builtinKey()?esc(t("oaOverride")):"sk-..."}" value="${esc((lsGet("oaKey")||""))}" autocomplete="off"><label style="margin-top:8px">${esc(t("oaModel"))}</label><input id="sModel" value="${esc(oaModel())}"><p class="muted sm">${esc(t("oaHelp"))}</p>${APP.oaErr?`<p class="sm" style="color:var(--red)">${esc(t("oaErr",{e:APP.oaErr}))}</p>`:""}</div>
+      <div class="frm"><label>${esc(t("decor"))}</label><div class="themes">${themes.map(([k,ic,n,d])=>`<button class="theme ${th===k?"on":""}" data-th="${k}"><span class="th-ic">${ic}</span><b>${esc(n)}</b><small>${esc(d)}</small></button>`).join("")}</div><p class="muted sm">${esc(t("decorHelp"))}</p></div>
+      <div class="frm"><label>${esc(t("chatOpts"))}</label>${sw("sTr",APP.set.tr,"🌐",t("optTr"),t("optTrD"))}</div>
+      <div class="frm"><label>${esc(t("soundOpts"))}</label>
+        ${sw("sFx",APP.set.sfx!==false,"🔔",t("optFx"),t("optFxD"))}
+        ${sw("sAmb",APP.set.amb!==false,"🌙",t("optAmb"),t("optAmbD"))}
+        <div class="opt vol"><span class="opt-ic">🔊</span><span class="opt-t"><b>${esc(t("volume"))}</b></span><input type="range" id="sVol" min="0" max="1" step="0.05" value="${APP.set.vol!=null?APP.set.vol:.7}"></div></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
+    el.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ APP.set.theme=b.dataset.th; saveSettings(); applyTheme(); renderModal(); });
     $("#sTr").onchange=e=>{ APP.set.tr=e.target.checked; saveSettings(); if(APP.view==="game"){ renderComposer(); renderChat(); } };
-    $("#sSnd").onchange=e=>{ APP.set.sound=e.target.checked; saveSettings(); AUD.setVolume(); };
-    $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); AUD.play("ping"); };
-    $("#sOk").onclick=()=>{ lsSet("oaKey",$("#sKey").value.trim()); lsSet("oaModel",$("#sModel").value.trim()||"gpt-5.6-luna"); if(APP.host){ APP.host.translator=hostTranslator(); APP.host.flush(true); } APP.ui.modal=null; render(); };
+    $("#sFx").onchange=e=>{ APP.set.sfx=e.target.checked; saveSettings(); if(e.target.checked) AUD.play("ping"); };
+    $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
+    $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); };
+    $("#sVol").onchange=()=>AUD.play("ping");
+    $("#sOk").onclick=()=>{ APP.ui.modal=null; render(); };
     return;
   }
   if(m.kind==="why"||m.kind==="cand"){
