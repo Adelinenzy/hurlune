@@ -10,6 +10,7 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: "#1b1c2a",
     title: "Hurlune",
+    icon: require("path").join(__dirname, "build", "icon.png"),
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
   });

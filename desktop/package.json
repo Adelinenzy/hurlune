@@ -1,7 +1,7 @@
 {
   "name": "hurlune",
   "productName": "Hurlune",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Loups-Garous entre amis — chat traduisible FR/RU",
   "main": "main.js",
   "author": "Adelinenzy",
@@ -19,7 +19,8 @@
     "productName": "Hurlune",
     "files": [
       "main.js",
-      "app/**/*"
+      "app/**/*",
+      "build/icon.png"
     ],
     "directories": {
       "output": "dist"
@@ -38,7 +39,8 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -59,6 +61,7 @@
       ],
       "category": "Game"
     },
-    "artifactName": "Hurlune-${version}-${os}-${arch}.${ext}"
+    "artifactName": "Hurlune-${version}-${os}-${arch}.${ext}",
+    "icon": "build/icon.png"
   }
 }
