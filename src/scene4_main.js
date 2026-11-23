@@ -90,14 +90,15 @@
     function loadWorld(th){ theme=th; if(world){ R4.free(gl,world.far); R4.free(gl,world.near); R4.freeKit(gl,world.kit); }
       const useKit=kitOK()&&!!R4.KITS.nature; world=R4.buildWorld(gl,th,useKit);
       if(useKit) world.kit=R4.buildKit(gl,R4.kitPlacements(th,world.hgt),th==="winter");
-      else if(kitOK()) R4.loadKit("nature").then(()=>{ if(theme===th&&world&&!world.kit) loadWorld(th); }).catch(e=>console.warn(e));
+      if(kitOK()){ const need=["nature"].concat(th==="village"?["village"]:[]).filter(k=>!R4.KITS[k]);
+        if(need.length) Promise.all(need.map(k=>R4.loadKit(k))).then(()=>{ if(theme===th&&world) loadWorld(th); }).catch(e=>console.warn(e)); }
       applyQuality(); }
     function drawKit(p,shadow){ if(!world||!world.kit) return; const u=p.u;
       for(const g of world.kit){ gl.uniform1f(u.uMat,g.cut?13:12);
         gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE0);
         if(shadow){ gl.uniform1f(u.uCut,g.cut); }
         else { if(g.nrm){ gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); } gl.uniform1f(u.uNrmOn,g.nrm?1:0);
-          gl.uniform3fv(u.uTint,g.tint); gl.uniform1f(u.uVcol,g.vc); gl.uniform1f(u.uRock,g.rock); gl.uniform1f(u.uHi,0); gl.uniform3fv(u.uHiCol,[0,0,0]); gl.uniform1f(u.uAlpha,1); gl.uniform1f(u.uWin,0); }
+          gl.uniform3fv(u.uTint,g.tint); gl.uniform1f(u.uVcol,g.vc); gl.uniform1f(u.uRock,g.rock); gl.uniform1f(u.uHi,0); gl.uniform3fv(u.uHiCol,[0,0,0]); gl.uniform1f(u.uAlpha,1); gl.uniform1f(u.uWin,S.win); gl.uniform1f(u.uEmisK,g.win||0); }
         gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,gl.UNSIGNED_INT,0); } }
     if(!preview) loadWorld(theme); else { world=null; makeShadow(q.shadow||1024); makeFireSh(8); }
 
@@ -106,7 +107,7 @@
     function setPlayers(list,meId){
       me=meId; const n=Math.max(list.length,1); const seen=new Set();
       list.forEach((p,i)=>{ seen.add(p.id); let c=chars[p.id]; const key=JSON.stringify(R4.avNorm(p.av));
-        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av),rig:null,slug:null});
+        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av)});
           useReal(c,p.av); }
         const s=seat(i,n); if(preview){ s.x=0; s.z=0; } c.tx=s.x; c.tz=s.z; c.sa=s.a; c.R=s.R; if(c.init){ c.x=s.x; c.z=s.z; c.init=false; if(p.alive===false){ c.die=1; } }
         if(c.alive!==false&&p.alive===false&&!c.init) c.dying=0.0001;
@@ -116,10 +117,13 @@
     }
     function headPos(c){ if(c.rig&&c.headTop) return c.headTop; return c.W?M.xf(c.W.head,[0,.21,0]):[c.x,1.25,c.z]; }
     function realOK(){ return opts.real!==false&&qk!=="low"; }
-    function useReal(c,av){ const slug=realOK()?R4.charSlug(R4.avNorm(av)):null; c.slug=slug; c.rig=null; if(!slug) return;
-      const setup=()=>{ if(c.slug!==slug) return; const base=R4.charRig(slug); if(!base) return; const g=R4.charGPU(gl,slug);
-        const inst=Object.create(base); inst.mats=new Float32Array(base.n*16); inst.W=[]; c.rig=inst; c.ready=g.ready; if(preview&&onReady) onReady(); };
-      if(R4.CHARS[slug]) setup(); else R4.loadChar(slug).then(setup).catch(e=>console.warn(e)); }
+    // on garde l'ancien personnage affiché tant que le nouveau (maillage + textures) n'est pas prêt : jamais de figurine provisoire
+    function useReal(c,av){ const slug=realOK()?R4.charSlug(R4.avNorm(av)):null; c.slug=slug; if(!slug){ c.rig=null; return; }
+      if(c.rig&&c.rig.slug===slug) return;
+      const setup=()=>{ if(c.slug!==slug) return; const base=R4.charRig(slug); if(!base){ c.slug=null; return; } const g=R4.charGPU(gl,slug);
+        const inst=Object.create(base); inst.mats=new Float32Array(base.n*16); inst.W=[]; c.ready=g.ready;
+        g.ready.then(()=>{ if(c.slug!==slug) return; c.rig=inst; if(preview&&onReady) onReady(); }); };
+      if(R4.CHARS[slug]) setup(); else R4.loadChar(slug).then(setup).catch(e=>{ console.warn(e); if(c.slug===slug){ c.slug=null; c.rig=null; } }); }
     function poseOf(c,t,dt){
       const T={}; const breath=Math.sin(t*1.7+c.seed)*.025;
       T.spine=[.06+breath,0,0]; T.neck=[0,0,0]; T.head=[0,0,0];
@@ -234,7 +238,7 @@
             if(u.uTint){ gl.uniform3fv(u.uTint,o.tint); gl.uniform1f(u.uHi,o.hi); gl.uniform3fv(u.uHiCol,o.hic); gl.uniform1f(u.uAlpha,o.alpha); gl.uniform1f(u.uWin,S.win);
               gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); }
             gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,g.type,0); gl.useProgram(p.p); }
-          else for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
+          else if(!c.slug) for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
             if(R4.PART_OFF[part]){ let sy=1; if(part==="eyes") sy=(c.sleep||c.die>.3)?.08:(c.blink<0?.1:1); if(part==="mouth") sy=c.talk>0?.5+Math.abs(Math.sin(t*11+c.seed))*1.8:1; Mx=M.mul(Mx,M.trs(R4.PART_OFF[part],[0,0,0],1,sy)); }
             drawM(p,m,Mx,o); } }
         if(c.die>.6&&!preview){ const r=clamp((c.die-.6)/.4,0,1); drawM(p,graveM,M.mul(c.root,M.trs([0,-(1-r)*1.1,-.75],[0,0,0],1)),null); }
@@ -374,7 +378,7 @@
       setAvatar(av){ if(preview) setPlayers([{id:"me",av,alive:true}],"me"); },
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
       pause(b){ paused=!!b; }, anchor,
-      whenReady(){ const c=chars.me; return c&&c.ready?c.ready:Promise.resolve(); },
+      whenReady(){ const c=chars.me; if(!c||!c.slug) return Promise.resolve(); return new Promise(r=>{ const k=()=>{ if(!chars.me||!chars.me.slug||(chars.me.rig&&chars.me.rig.slug===chars.me.slug)) r(); else setTimeout(k,30); }; k(); }); },
       snap(av,m,ch){ cheer=!!ch; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
     };
   };

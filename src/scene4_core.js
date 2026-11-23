@@ -114,7 +114,7 @@ const R4 = {};
   R4.STD_FS=`#version 300 es
   precision highp float; precision highp sampler2DShadow;
   in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; out vec4 o;
-  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn;
+  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn,uEmisK;
   uniform vec3 uCam,uKeyDir,uKeyCol,uSkyCol,uGndCol,uFogCol,uFogSun,uFireP,uFireC,uTint,uHiCol,uLampC; uniform vec3 uLamp[4];
   uniform float uFogD,uFogH,uTime,uWin,uHi,uAlpha,uFireR,uShadowOn,uFireShOn,uSnow,uGround,uClr;
   uniform sampler2DShadow uShadow; uniform mat4 uLightVP; uniform highp samplerCube uFireSh; uniform float uShTexel;
@@ -166,6 +166,7 @@ const R4 = {};
     col+=(alb*fd+spec*Df*fd)*uFireC*att*fsh;
     for(int i=0;i<4;i++){ vec3 Ll=uLamp[i]-vW; float dl=length(Ll); col+=alb*uLampC*(max(dot(n,Ll/dl),0.)*.7+.3)/(1.+dl*dl*.9); }
     if(m==1.) col+=vC.rgb*uWin*4.;
+    if(m>11.5&&uEmisK>.5) col+=vec3(1.,.6,.26)*uWin*3.2*(.6+.4*alb.r);
     if(m==2.) col+=vC.rgb*3.;
     float rim=pow(1.-max(dot(n,V),0.),3.);
     col+=uHiCol*uHi*(rim*2.5+.12);

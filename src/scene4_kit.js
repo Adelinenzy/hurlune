@@ -12,7 +12,7 @@
   };
   const dec=new Map();
   function model(name){
-    if(dec.has(name)) return dec.get(name); const K=R4.KITS.nature; const src=K&&K.models[name]; if(!src) return null;
+    if(dec.has(name)) return dec.get(name); let src=null; for(const k in R4.KITS){ if(R4.KITS[k].models[name]){ src=R4.KITS[k].models[name]; break; } } if(!src) return null;
     const out=src.map(p=>{ const b=Uint8Array.from(atob(p.b),c=>c.charCodeAt(0)); const nv=p.nv; let o=0;
       const u16=(n)=>{ const a=new Uint16Array(b.slice(o,o+n*2).buffer); o+=n*2; return a; };
       const qp=u16(nv*3), nr=new Int8Array(b.slice(o,o+nv*4).buffer); o+=nv*4; const qu=u16(nv*2); const cl=b.slice(o,o+nv*4); o+=nv*4;
@@ -27,7 +27,7 @@
     Grass:{tint:[.42,.62,.24],vc:1}, Flowers:{tint:[1,1,1]}, Bark_NormalTree:{vc:.5}, Bark_DeadTree:{vc:.5,tint:[.85,.82,.8]}, Bark_TwistedTree:{vc:.5}, Rocks:{tint:[.9,.9,.92]}, PathRocks:{}, Mushrooms:{} };
   // fusion de toutes les instances par matériau -> peu d'appels de dessin
   R4.buildKit=function(gl,list,snow){
-    const K=R4.KITS.nature; if(!K||!list||!list.length) return null;
+    if(!list||!list.length) return null; const findMat=m=>{ for(const k in R4.KITS){ const x=R4.KITS[k].mats[m]; if(x) return x; } return {}; };
     const groups={};
     for(const it of list){ const mdl=model(it.n); if(!mdl) continue; const c=Math.cos(it.ry||0), s=Math.sin(it.ry||0), sc=it.s||1;
       for(const p of mdl){ const g=groups[p.m]=groups[p.m]||{v:[],i:[],nv:0};
@@ -38,21 +38,21 @@
           V[o+6]=p.uv[k*2]; V[o+7]=p.uv[k*2+1]; V[o+8]=p.cl[k*4]/255; V[o+9]=p.cl[k*4+1]/255; V[o+10]=p.cl[k*4+2]/255; }
         g.v.push(V); const I=new Uint32Array(p.idx.length); for(let k=0;k<p.idx.length;k++) I[k]=p.idx[k]+base; g.i.push(I); g.nv+=p.nv; } }
     const out=[];
-    for(const m in groups){ const g=groups[m]; const meta=K.mats[m]||{}; const set=MAT[m]||{};
+    for(const m in groups){ const g=groups[m]; const meta=findMat(m); const set=MAT[m]||{};
       let n=0; for(const a of g.v) n+=a.length; const V=new Float32Array(n); let o=0; for(const a of g.v){ V.set(a,o); o+=a.length; }
       n=0; for(const a of g.i) n+=a.length; const I=new Uint32Array(n); o=0; for(const a of g.i){ I.set(a,o); o+=a.length; }
       const vao=gl.createVertexArray(); gl.bindVertexArray(vao); const vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb); gl.bufferData(gl.ARRAY_BUFFER,V,gl.STATIC_DRAW);
       gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,44,0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,44,12);
       gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.FLOAT,false,44,24); gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3,3,gl.FLOAT,false,44,32);
       const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,I,gl.STATIC_DRAW); gl.bindVertexArray(null);
-      out.push({m,vao,vb,ib,n:I.length,alb:tex(gl,meta.c,true),nrm:meta.n?tex(gl,meta.n,false):null,cut:meta.a?1:0,leaf:meta.leaf?1:0,rock:meta.rock?1:0,tint:set.tint||[1,1,1],vc:set.vc!=null?set.vc:0}); }
+      out.push({m,vao,vb,ib,n:I.length,alb:tex(gl,meta.c,true),nrm:meta.n?tex(gl,meta.n,false):null,cut:meta.a?1:0,leaf:meta.leaf?1:0,rock:meta.rock?1:0,win:meta.win?1:0,tint:set.tint||[1,1,1],vc:set.vc!=null?set.vc:0}); }
     return out;
   };
   R4.freeKit=function(gl,k){ if(!k) return; for(const g of k){ gl.deleteVertexArray(g.vao); gl.deleteBuffer(g.vb); gl.deleteBuffer(g.ib); } };
   const texCache=new WeakMap();
   function tex(gl,name,srgb){
     let C=texCache.get(gl); if(!C){ C={}; texCache.set(gl,C); } const key=name+(srgb?"s":"l"); if(C[key]) return C[key];
-    const T=R4.KITS.nature.tex[name]; const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+    let T=null; for(const k in R4.KITS){ if(R4.KITS[k].tex[name]){ T=R4.KITS[k].tex[name]; break; } } const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(srgb?[90,110,70,0]:[128,128,255,255]));
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
     if(T){ const bin=Uint8Array.from(atob(T.d),c=>c.charCodeAt(0)); createImageBitmap(new Blob([bin],{type:T.t}),{premultiplyAlpha:"none"}).then(img=>{
@@ -82,6 +82,10 @@
       put(PINES,11.5,42,.9,1.35,95); put(DEAD,13,40,.45,.65,16);
       put(["Rock_Medium_1","Rock_Medium_2","Rock_Medium_3"],7,13,.35,.8,12); put(["Bush_Common"],9,14,.4,.6,10);
     } else if(th==="village"){
+      if(R4.KITS.village){ const H=["House_A","House_B","House_C","House_D"];
+        [0,1,2,3,4,6,7,8,9,10].forEach((k,i)=>{ const a=k/11*Math.PI*2+.1, r=17.5+hash(k)*2; L.push({n:H[(k*7+3)%4],t:[Math.sin(a)*r,hgt?hgt(Math.sin(a)*r,Math.cos(a)*r)-.1:0,Math.cos(a)*r],ry:a+Math.PI,s:1}); });
+        { const a=5/11*Math.PI*2+.1, r=21; L.push({n:"Tower",t:[Math.sin(a)*r,0,Math.cos(a)*r],ry:a+Math.PI,s:1}); }
+        for(let i=0;i<10;i++){ const a=(i+.5)/11*Math.PI*2+.1+(rnd()-.5)*.1, r=14.2+rnd()*1.2; const n=["Prop_Crate","Prop_Crate","Prop_Fence","Prop_Wagon"][i%4]; L.push({n,t:[Math.sin(a)*r,0,Math.cos(a)*r],ry:a+Math.PI/2+(rnd()-.5)*.4,s:n==="Prop_Crate"?.8+rnd()*.3:1}); } }
       put(COMMON,28,50,.8,1.15,40); put(PINES,30,52,.9,1.3,40);
       put(["Bush_Common","Bush_Common_Flowers"],13,16.5,.4,.6,22,(x,z,a)=>true); put(["Flower_3_Group","Flower_4_Group"],13,16,.2,.3,20);
       put(["Grass_Common_Short","Grass_Wispy_Short"],13,24,.25,.38,40);

@@ -66,9 +66,9 @@
     near.blob({t:[0,.04,0],s:[1,.25,1]},.6,2,.3,3,4,lin([1,.32,.06]),EMIS);
     // décor par thème
     if(th==="village"){
-      for(let r=2.3;r<12.6;r+=.58){ const n=Math.floor(2*Math.PI*r/.62); for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+r; const sh=.85+hash(r*7+k)*.25; far.box({t:[Math.sin(a)*r,.01,Math.cos(a)*r],r:[0,a,0],s:[.54,.04,.48]},lin([.44*sh,.41*sh,.37*sh]),ROCK); } }
-      [0,1,2,3,4,6,7,8,9,10].forEach(k=>house(far,k,k/11*Math.PI*2+.1,17+hash(k)*2));
-      { const a=5/11*Math.PI*2+.1,r=21,x=Math.sin(a)*r,z=Math.cos(a)*r; far.box({t:[x,3,z],r:[0,a,0],s:[4,6,5]},lin([.7,.68,.64]),ROCK); far.box({t:[x,5.5,z],r:[0,a,0],s:[2.2,11,2.2]},lin([.72,.7,.66]),ROCK); far.cyl({t:[x,11,z]},0,1.7,4.5,4,lin([.28,.28,.34]),CLOTH); far.box({t:[x+Math.sin(a+Math.PI)*1.12,8.4,z+Math.cos(a+Math.PI)*1.12],r:[0,a,0],s:[.8,1.1,.1]},lin([1,.72,.32]),WIN); }
+      for(let r=2.3;r<12.6;r+=.58){ const n=Math.floor(2*Math.PI*r/.62); for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+r; const sh=.85+hash(r*7+k)*.25; far.box({t:[Math.sin(a)*r,.01,Math.cos(a)*r],r:[0,a,0],s:[.54,.04,.48]},lin([.4*sh,.39*sh,.38*sh]),CLOTH); } }
+      if(!(kit&&R4.KITS.village)) [0,1,2,3,4,6,7,8,9,10].forEach(k=>house(far,k,k/11*Math.PI*2+.1,17+hash(k)*2));
+      if(!(kit&&R4.KITS.village)) { const a=5/11*Math.PI*2+.1,r=21,x=Math.sin(a)*r,z=Math.cos(a)*r; far.box({t:[x,3,z],r:[0,a,0],s:[4,6,5]},lin([.7,.68,.64]),ROCK); far.box({t:[x,5.5,z],r:[0,a,0],s:[2.2,11,2.2]},lin([.72,.7,.66]),ROCK); far.cyl({t:[x,11,z]},0,1.7,4.5,4,lin([.28,.28,.34]),CLOTH); far.box({t:[x+Math.sin(a+Math.PI)*1.12,8.4,z+Math.cos(a+Math.PI)*1.12],r:[0,a,0],s:[.8,1.1,.1]},lin([1,.72,.32]),WIN); }
       if(!kit) for(let i=0;i<70;i++){ const a=hash(i*3.7)*Math.PI*2,r=28+hash(i*5.1)*22; (i%3?conifer:leafy)(far,Math.sin(a)*r,hgt(Math.sin(a)*r,Math.cos(a)*r),Math.cos(a)*r,.9+hash(i*7.3)*.7,i,false); }
     } else {
       const ring=th==="camp"?16:11.5;

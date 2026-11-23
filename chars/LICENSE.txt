@@ -1,3 +1,4 @@
 Personnages 3D : Grab3D (https://grab3d.com), licence CC0 1.0 (domaine public).
 Allégés pour Hurlune avec tools/chars/convert.mjs (meshoptimizer, licence MIT).
 Décors (arbres, rochers, plantes) : Quaternius « Stylized Nature MegaKit » (https://quaternius.com), licence CC0 1.0.
+Maisons et accessoires du village : Quaternius « Medieval Village MegaKit » (https://quaternius.com), licence CC0 1.0.

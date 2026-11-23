@@ -2489,7 +2489,7 @@ const R4 = {};
   R4.STD_FS=`#version 300 es
   precision highp float; precision highp sampler2DShadow;
   in vec3 vW; in vec3 vN; in vec4 vC; in vec2 vUV; out vec4 o;
-  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn;
+  uniform sampler2D uAlb,uNrm; uniform float uVcol,uRock,uNrmOn,uEmisK;
   uniform vec3 uCam,uKeyDir,uKeyCol,uSkyCol,uGndCol,uFogCol,uFogSun,uFireP,uFireC,uTint,uHiCol,uLampC; uniform vec3 uLamp[4];
   uniform float uFogD,uFogH,uTime,uWin,uHi,uAlpha,uFireR,uShadowOn,uFireShOn,uSnow,uGround,uClr;
   uniform sampler2DShadow uShadow; uniform mat4 uLightVP; uniform highp samplerCube uFireSh; uniform float uShTexel;
@@ -2541,6 +2541,7 @@ const R4 = {};
     col+=(alb*fd+spec*Df*fd)*uFireC*att*fsh;
     for(int i=0;i<4;i++){ vec3 Ll=uLamp[i]-vW; float dl=length(Ll); col+=alb*uLampC*(max(dot(n,Ll/dl),0.)*.7+.3)/(1.+dl*dl*.9); }
     if(m==1.) col+=vC.rgb*uWin*4.;
+    if(m>11.5&&uEmisK>.5) col+=vec3(1.,.6,.26)*uWin*3.2*(.6+.4*alb.r);
     if(m==2.) col+=vC.rgb*3.;
     float rim=pow(1.-max(dot(n,V),0.),3.);
     col+=uHiCol*uHi*(rim*2.5+.12);
@@ -2844,9 +2845,9 @@ const R4 = {};
     near.blob({t:[0,.04,0],s:[1,.25,1]},.6,2,.3,3,4,lin([1,.32,.06]),EMIS);
     // décor par thème
     if(th==="village"){
-      for(let r=2.3;r<12.6;r+=.58){ const n=Math.floor(2*Math.PI*r/.62); for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+r; const sh=.85+hash(r*7+k)*.25; far.box({t:[Math.sin(a)*r,.01,Math.cos(a)*r],r:[0,a,0],s:[.54,.04,.48]},lin([.44*sh,.41*sh,.37*sh]),ROCK); } }
-      [0,1,2,3,4,6,7,8,9,10].forEach(k=>house(far,k,k/11*Math.PI*2+.1,17+hash(k)*2));
-      { const a=5/11*Math.PI*2+.1,r=21,x=Math.sin(a)*r,z=Math.cos(a)*r; far.box({t:[x,3,z],r:[0,a,0],s:[4,6,5]},lin([.7,.68,.64]),ROCK); far.box({t:[x,5.5,z],r:[0,a,0],s:[2.2,11,2.2]},lin([.72,.7,.66]),ROCK); far.cyl({t:[x,11,z]},0,1.7,4.5,4,lin([.28,.28,.34]),CLOTH); far.box({t:[x+Math.sin(a+Math.PI)*1.12,8.4,z+Math.cos(a+Math.PI)*1.12],r:[0,a,0],s:[.8,1.1,.1]},lin([1,.72,.32]),WIN); }
+      for(let r=2.3;r<12.6;r+=.58){ const n=Math.floor(2*Math.PI*r/.62); for(let k=0;k<n;k++){ const a=k/n*Math.PI*2+r; const sh=.85+hash(r*7+k)*.25; far.box({t:[Math.sin(a)*r,.01,Math.cos(a)*r],r:[0,a,0],s:[.54,.04,.48]},lin([.4*sh,.39*sh,.38*sh]),CLOTH); } }
+      if(!(kit&&R4.KITS.village)) [0,1,2,3,4,6,7,8,9,10].forEach(k=>house(far,k,k/11*Math.PI*2+.1,17+hash(k)*2));
+      if(!(kit&&R4.KITS.village)) { const a=5/11*Math.PI*2+.1,r=21,x=Math.sin(a)*r,z=Math.cos(a)*r; far.box({t:[x,3,z],r:[0,a,0],s:[4,6,5]},lin([.7,.68,.64]),ROCK); far.box({t:[x,5.5,z],r:[0,a,0],s:[2.2,11,2.2]},lin([.72,.7,.66]),ROCK); far.cyl({t:[x,11,z]},0,1.7,4.5,4,lin([.28,.28,.34]),CLOTH); far.box({t:[x+Math.sin(a+Math.PI)*1.12,8.4,z+Math.cos(a+Math.PI)*1.12],r:[0,a,0],s:[.8,1.1,.1]},lin([1,.72,.32]),WIN); }
       if(!kit) for(let i=0;i<70;i++){ const a=hash(i*3.7)*Math.PI*2,r=28+hash(i*5.1)*22; (i%3?conifer:leafy)(far,Math.sin(a)*r,hgt(Math.sin(a)*r,Math.cos(a)*r),Math.cos(a)*r,.9+hash(i*7.3)*.7,i,false); }
     } else {
       const ring=th==="camp"?16:11.5;
@@ -3021,7 +3022,7 @@ const R4 = {};
   };
   const dec=new Map();
   function model(name){
-    if(dec.has(name)) return dec.get(name); const K=R4.KITS.nature; const src=K&&K.models[name]; if(!src) return null;
+    if(dec.has(name)) return dec.get(name); let src=null; for(const k in R4.KITS){ if(R4.KITS[k].models[name]){ src=R4.KITS[k].models[name]; break; } } if(!src) return null;
     const out=src.map(p=>{ const b=Uint8Array.from(atob(p.b),c=>c.charCodeAt(0)); const nv=p.nv; let o=0;
       const u16=(n)=>{ const a=new Uint16Array(b.slice(o,o+n*2).buffer); o+=n*2; return a; };
       const qp=u16(nv*3), nr=new Int8Array(b.slice(o,o+nv*4).buffer); o+=nv*4; const qu=u16(nv*2); const cl=b.slice(o,o+nv*4); o+=nv*4;
@@ -3036,7 +3037,7 @@ const R4 = {};
     Grass:{tint:[.42,.62,.24],vc:1}, Flowers:{tint:[1,1,1]}, Bark_NormalTree:{vc:.5}, Bark_DeadTree:{vc:.5,tint:[.85,.82,.8]}, Bark_TwistedTree:{vc:.5}, Rocks:{tint:[.9,.9,.92]}, PathRocks:{}, Mushrooms:{} };
   // fusion de toutes les instances par matériau -> peu d'appels de dessin
   R4.buildKit=function(gl,list,snow){
-    const K=R4.KITS.nature; if(!K||!list||!list.length) return null;
+    if(!list||!list.length) return null; const findMat=m=>{ for(const k in R4.KITS){ const x=R4.KITS[k].mats[m]; if(x) return x; } return {}; };
     const groups={};
     for(const it of list){ const mdl=model(it.n); if(!mdl) continue; const c=Math.cos(it.ry||0), s=Math.sin(it.ry||0), sc=it.s||1;
       for(const p of mdl){ const g=groups[p.m]=groups[p.m]||{v:[],i:[],nv:0};
@@ -3047,21 +3048,21 @@ const R4 = {};
           V[o+6]=p.uv[k*2]; V[o+7]=p.uv[k*2+1]; V[o+8]=p.cl[k*4]/255; V[o+9]=p.cl[k*4+1]/255; V[o+10]=p.cl[k*4+2]/255; }
         g.v.push(V); const I=new Uint32Array(p.idx.length); for(let k=0;k<p.idx.length;k++) I[k]=p.idx[k]+base; g.i.push(I); g.nv+=p.nv; } }
     const out=[];
-    for(const m in groups){ const g=groups[m]; const meta=K.mats[m]||{}; const set=MAT[m]||{};
+    for(const m in groups){ const g=groups[m]; const meta=findMat(m); const set=MAT[m]||{};
       let n=0; for(const a of g.v) n+=a.length; const V=new Float32Array(n); let o=0; for(const a of g.v){ V.set(a,o); o+=a.length; }
       n=0; for(const a of g.i) n+=a.length; const I=new Uint32Array(n); o=0; for(const a of g.i){ I.set(a,o); o+=a.length; }
       const vao=gl.createVertexArray(); gl.bindVertexArray(vao); const vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb); gl.bufferData(gl.ARRAY_BUFFER,V,gl.STATIC_DRAW);
       gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,44,0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,44,12);
       gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.FLOAT,false,44,24); gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3,3,gl.FLOAT,false,44,32);
       const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,I,gl.STATIC_DRAW); gl.bindVertexArray(null);
-      out.push({m,vao,vb,ib,n:I.length,alb:tex(gl,meta.c,true),nrm:meta.n?tex(gl,meta.n,false):null,cut:meta.a?1:0,leaf:meta.leaf?1:0,rock:meta.rock?1:0,tint:set.tint||[1,1,1],vc:set.vc!=null?set.vc:0}); }
+      out.push({m,vao,vb,ib,n:I.length,alb:tex(gl,meta.c,true),nrm:meta.n?tex(gl,meta.n,false):null,cut:meta.a?1:0,leaf:meta.leaf?1:0,rock:meta.rock?1:0,win:meta.win?1:0,tint:set.tint||[1,1,1],vc:set.vc!=null?set.vc:0}); }
     return out;
   };
   R4.freeKit=function(gl,k){ if(!k) return; for(const g of k){ gl.deleteVertexArray(g.vao); gl.deleteBuffer(g.vb); gl.deleteBuffer(g.ib); } };
   const texCache=new WeakMap();
   function tex(gl,name,srgb){
     let C=texCache.get(gl); if(!C){ C={}; texCache.set(gl,C); } const key=name+(srgb?"s":"l"); if(C[key]) return C[key];
-    const T=R4.KITS.nature.tex[name]; const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+    let T=null; for(const k in R4.KITS){ if(R4.KITS[k].tex[name]){ T=R4.KITS[k].tex[name]; break; } } const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(srgb?[90,110,70,0]:[128,128,255,255]));
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
     if(T){ const bin=Uint8Array.from(atob(T.d),c=>c.charCodeAt(0)); createImageBitmap(new Blob([bin],{type:T.t}),{premultiplyAlpha:"none"}).then(img=>{
@@ -3091,6 +3092,10 @@ const R4 = {};
       put(PINES,11.5,42,.9,1.35,95); put(DEAD,13,40,.45,.65,16);
       put(["Rock_Medium_1","Rock_Medium_2","Rock_Medium_3"],7,13,.35,.8,12); put(["Bush_Common"],9,14,.4,.6,10);
     } else if(th==="village"){
+      if(R4.KITS.village){ const H=["House_A","House_B","House_C","House_D"];
+        [0,1,2,3,4,6,7,8,9,10].forEach((k,i)=>{ const a=k/11*Math.PI*2+.1, r=17.5+hash(k)*2; L.push({n:H[(k*7+3)%4],t:[Math.sin(a)*r,hgt?hgt(Math.sin(a)*r,Math.cos(a)*r)-.1:0,Math.cos(a)*r],ry:a+Math.PI,s:1}); });
+        { const a=5/11*Math.PI*2+.1, r=21; L.push({n:"Tower",t:[Math.sin(a)*r,0,Math.cos(a)*r],ry:a+Math.PI,s:1}); }
+        for(let i=0;i<10;i++){ const a=(i+.5)/11*Math.PI*2+.1+(rnd()-.5)*.1, r=14.2+rnd()*1.2; const n=["Prop_Crate","Prop_Crate","Prop_Fence","Prop_Wagon"][i%4]; L.push({n,t:[Math.sin(a)*r,0,Math.cos(a)*r],ry:a+Math.PI/2+(rnd()-.5)*.4,s:n==="Prop_Crate"?.8+rnd()*.3:1}); } }
       put(COMMON,28,50,.8,1.15,40); put(PINES,30,52,.9,1.3,40);
       put(["Bush_Common","Bush_Common_Flowers"],13,16.5,.4,.6,22,(x,z,a)=>true); put(["Flower_3_Group","Flower_4_Group"],13,16,.2,.3,20);
       put(["Grass_Common_Short","Grass_Wispy_Short"],13,24,.25,.38,40);
@@ -3198,14 +3203,15 @@ const R4 = {};
     function loadWorld(th){ theme=th; if(world){ R4.free(gl,world.far); R4.free(gl,world.near); R4.freeKit(gl,world.kit); }
       const useKit=kitOK()&&!!R4.KITS.nature; world=R4.buildWorld(gl,th,useKit);
       if(useKit) world.kit=R4.buildKit(gl,R4.kitPlacements(th,world.hgt),th==="winter");
-      else if(kitOK()) R4.loadKit("nature").then(()=>{ if(theme===th&&world&&!world.kit) loadWorld(th); }).catch(e=>console.warn(e));
+      if(kitOK()){ const need=["nature"].concat(th==="village"?["village"]:[]).filter(k=>!R4.KITS[k]);
+        if(need.length) Promise.all(need.map(k=>R4.loadKit(k))).then(()=>{ if(theme===th&&world) loadWorld(th); }).catch(e=>console.warn(e)); }
       applyQuality(); }
     function drawKit(p,shadow){ if(!world||!world.kit) return; const u=p.u;
       for(const g of world.kit){ gl.uniform1f(u.uMat,g.cut?13:12);
         gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE0);
         if(shadow){ gl.uniform1f(u.uCut,g.cut); }
         else { if(g.nrm){ gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); } gl.uniform1f(u.uNrmOn,g.nrm?1:0);
-          gl.uniform3fv(u.uTint,g.tint); gl.uniform1f(u.uVcol,g.vc); gl.uniform1f(u.uRock,g.rock); gl.uniform1f(u.uHi,0); gl.uniform3fv(u.uHiCol,[0,0,0]); gl.uniform1f(u.uAlpha,1); gl.uniform1f(u.uWin,0); }
+          gl.uniform3fv(u.uTint,g.tint); gl.uniform1f(u.uVcol,g.vc); gl.uniform1f(u.uRock,g.rock); gl.uniform1f(u.uHi,0); gl.uniform3fv(u.uHiCol,[0,0,0]); gl.uniform1f(u.uAlpha,1); gl.uniform1f(u.uWin,S.win); gl.uniform1f(u.uEmisK,g.win||0); }
         gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,gl.UNSIGNED_INT,0); } }
     if(!preview) loadWorld(theme); else { world=null; makeShadow(q.shadow||1024); makeFireSh(8); }
 
@@ -3214,7 +3220,7 @@ const R4 = {};
     function setPlayers(list,meId){
       me=meId; const n=Math.max(list.length,1); const seen=new Set();
       list.forEach((p,i)=>{ seen.add(p.id); let c=chars[p.id]; const key=JSON.stringify(R4.avNorm(p.av));
-        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av),rig:null,slug:null});
+        if(!c||c.key!==key){ if(c) R4.freeChar(gl,c.m); c=chars[p.id]=Object.assign(c||{id:p.id,pose:{},die:0,dying:0,talk:0,blink:2+Math.random()*3,lookT:0,look:[0,.8,0],seed:Math.random()*10,warm:Math.random()<.5,init:true},{key,m:R4.buildChar(gl,p.av)});
           useReal(c,p.av); }
         const s=seat(i,n); if(preview){ s.x=0; s.z=0; } c.tx=s.x; c.tz=s.z; c.sa=s.a; c.R=s.R; if(c.init){ c.x=s.x; c.z=s.z; c.init=false; if(p.alive===false){ c.die=1; } }
         if(c.alive!==false&&p.alive===false&&!c.init) c.dying=0.0001;
@@ -3224,10 +3230,13 @@ const R4 = {};
     }
     function headPos(c){ if(c.rig&&c.headTop) return c.headTop; return c.W?M.xf(c.W.head,[0,.21,0]):[c.x,1.25,c.z]; }
     function realOK(){ return opts.real!==false&&qk!=="low"; }
-    function useReal(c,av){ const slug=realOK()?R4.charSlug(R4.avNorm(av)):null; c.slug=slug; c.rig=null; if(!slug) return;
-      const setup=()=>{ if(c.slug!==slug) return; const base=R4.charRig(slug); if(!base) return; const g=R4.charGPU(gl,slug);
-        const inst=Object.create(base); inst.mats=new Float32Array(base.n*16); inst.W=[]; c.rig=inst; c.ready=g.ready; if(preview&&onReady) onReady(); };
-      if(R4.CHARS[slug]) setup(); else R4.loadChar(slug).then(setup).catch(e=>console.warn(e)); }
+    // on garde l'ancien personnage affiché tant que le nouveau (maillage + textures) n'est pas prêt : jamais de figurine provisoire
+    function useReal(c,av){ const slug=realOK()?R4.charSlug(R4.avNorm(av)):null; c.slug=slug; if(!slug){ c.rig=null; return; }
+      if(c.rig&&c.rig.slug===slug) return;
+      const setup=()=>{ if(c.slug!==slug) return; const base=R4.charRig(slug); if(!base){ c.slug=null; return; } const g=R4.charGPU(gl,slug);
+        const inst=Object.create(base); inst.mats=new Float32Array(base.n*16); inst.W=[]; c.ready=g.ready;
+        g.ready.then(()=>{ if(c.slug!==slug) return; c.rig=inst; if(preview&&onReady) onReady(); }); };
+      if(R4.CHARS[slug]) setup(); else R4.loadChar(slug).then(setup).catch(e=>{ console.warn(e); if(c.slug===slug){ c.slug=null; c.rig=null; } }); }
     function poseOf(c,t,dt){
       const T={}; const breath=Math.sin(t*1.7+c.seed)*.025;
       T.spine=[.06+breath,0,0]; T.neck=[0,0,0]; T.head=[0,0,0];
@@ -3342,7 +3351,7 @@ const R4 = {};
             if(u.uTint){ gl.uniform3fv(u.uTint,o.tint); gl.uniform1f(u.uHi,o.hi); gl.uniform3fv(u.uHiCol,o.hic); gl.uniform1f(u.uAlpha,o.alpha); gl.uniform1f(u.uWin,S.win);
               gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,g.alb); gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,g.nrm); gl.activeTexture(gl.TEXTURE0); }
             gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES,g.n,g.type,0); gl.useProgram(p.p); }
-          else for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
+          else if(!c.slug) for(const part in R4.PARTS){ const m=c.m[part]; if(!m) continue; let Mx=c.W[R4.PARTS[part]];
             if(R4.PART_OFF[part]){ let sy=1; if(part==="eyes") sy=(c.sleep||c.die>.3)?.08:(c.blink<0?.1:1); if(part==="mouth") sy=c.talk>0?.5+Math.abs(Math.sin(t*11+c.seed))*1.8:1; Mx=M.mul(Mx,M.trs(R4.PART_OFF[part],[0,0,0],1,sy)); }
             drawM(p,m,Mx,o); } }
         if(c.die>.6&&!preview){ const r=clamp((c.die-.6)/.4,0,1); drawM(p,graveM,M.mul(c.root,M.trs([0,-(1-r)*1.1,-.75],[0,0,0],1)),null); }
@@ -3482,7 +3491,7 @@ const R4 = {};
       setAvatar(av){ if(preview) setPlayers([{id:"me",av,alive:true}],"me"); },
       setPick(fn,can){ onPick=fn; canPick=can; }, setLabels(el){ labels=el; },
       pause(b){ paused=!!b; }, anchor,
-      whenReady(){ const c=chars.me; return c&&c.ready?c.ready:Promise.resolve(); },
+      whenReady(){ const c=chars.me; if(!c||!c.slug) return Promise.resolve(); return new Promise(r=>{ const k=()=>{ if(!chars.me||!chars.me.slug||(chars.me.rig&&chars.me.rig.slug===chars.me.slug)) r(); else setTimeout(k,30); }; k(); }); },
       snap(av,m,ch){ cheer=!!ch; if(m&&MOOD_TOD[m]!=null){ mood=m; tod=todT=MOOD_TOD[m]; } setPlayers([{id:"me",av,alive:true}],"me"); chars.me.pose={}; last=0; render(); return canvas.toDataURL("image/jpeg",.88); }, destroy(){ cancelAnimationFrame(raf); }
     };
   };
