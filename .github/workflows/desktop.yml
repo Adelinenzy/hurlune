@@ -30,6 +30,13 @@ jobs:
           npm install --prefix tools/libs mqtt@5.10.1 --no-save --no-audit --no-fund
           node tools/inline-libs.js desktop/app/index.html
           node tools/inject-key.js desktop/app/index.html
+      - name: Proxy intégré (identifiants depuis les secrets)
+        shell: bash
+        env:
+          PU: ${{ secrets.HURLUNE_PROXY_USER }}
+          PP: ${{ secrets.HURLUNE_PROXY_PASS }}
+        run: |
+          if [ -n "$PU" ]; then node -e 'require("fs").writeFileSync("desktop/proxy.json",JSON.stringify({user:process.env.PU,password:process.env.PP}))'; echo "proxy intégré"; else echo "pas de proxy (secrets absents)"; fi
       - name: Construire
         working-directory: desktop
         env:

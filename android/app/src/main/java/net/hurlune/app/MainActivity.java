@@ -18,7 +18,6 @@ import android.webkit.WebViewClient;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.webkit.HttpAuthHandler;
 import android.webkit.JavascriptInterface;
 import androidx.webkit.ProxyConfig;
@@ -69,32 +68,27 @@ public class MainActivity extends Activity {
             }
         });
         web.addJavascriptInterface(new Bridge(), "HurluneNative");
-        applyProxy(prefs().getString("proxy", ""));
+        applyProxy();
         setContentView(web);
         hideBars();
         if (b != null) web.restoreState(b); else web.loadUrl(HOME);
     }
-    /* ---- proxy (http://, https://, socks5://) pour tout le trafic du jeu ---- */
+    /* ---- proxy intégré (le même que Nepotify) : seuls les services du jeu passent par lui ---- */
+    private static final String PROXY_HOST = "proxy.nepotify.devs.surf";
+    private static final String[] ROUTED = {"emqx.io", "hivemq.com", "mosquitto.org", "openai.com", "translate.googleapis.com", "mymemory.translated.net"};
     private String proxyHost, proxyUser, proxyPass;
-    private SharedPreferences prefs() { return getSharedPreferences("hurlune", Context.MODE_PRIVATE); }
-    private boolean applyProxy(String url) {
-        if (!WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) return url == null || url.isEmpty();
-        proxyHost = null; proxyUser = null; proxyPass = null;
-        if (url == null || url.trim().isEmpty()) {
-            ProxyController.getInstance().clearProxyOverride(Runnable::run, () -> {});
-            return true;
-        }
+    private void applyProxy() {
+        if (BuildConfig.PROXY_USER.isEmpty() || !WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) return;
         try {
-            Uri u = Uri.parse(url.trim());
-            String scheme = u.getScheme() == null ? "http" : u.getScheme().toLowerCase();
-            String info = u.getUserInfo();
-            if (info != null) { int i = info.indexOf(':'); proxyUser = Uri.decode(i < 0 ? info : info.substring(0, i)); proxyPass = i < 0 ? "" : Uri.decode(info.substring(i + 1)); }
-            proxyHost = u.getHost();
-            String rule = scheme + "://" + u.getHost() + (u.getPort() > 0 ? ":" + u.getPort() : "");
-            ProxyConfig cfg = new ProxyConfig.Builder().addProxyRule(rule).addBypassRule("appassets.androidplatform.net").build();
-            ProxyController.getInstance().setProxyOverride(cfg, Runnable::run, () -> {});
-            return true;
-        } catch (Exception e) { return false; }
+            proxyHost = PROXY_HOST; proxyUser = BuildConfig.PROXY_USER; proxyPass = BuildConfig.PROXY_PASS;
+            ProxyConfig.Builder cfg = new ProxyConfig.Builder().addProxyRule("https://" + PROXY_HOST + ":443").addDirect();
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE_REVERSE_BYPASS)) {
+                // liste inversée : seuls ces domaines passent par le proxy, le reste en direct
+                for (String d : ROUTED) { cfg.addBypassRule(d); cfg.addBypassRule("*." + d); }
+                cfg.setReverseBypassEnabled(true);
+            } else cfg.addBypassRule("appassets.androidplatform.net");
+            ProxyController.getInstance().setProxyOverride(cfg.build(), Runnable::run, () -> {});
+        } catch (Exception e) {}
     }
     private class Bridge {
         @JavascriptInterface public String platform() { return "android"; }
@@ -113,11 +107,6 @@ public class MainActivity extends Activity {
                 Intent i = new Intent(Intent.ACTION_SEND); i.setType("text/plain"); i.putExtra(Intent.EXTRA_TEXT, s);
                 try { startActivity(Intent.createChooser(i, "Hurlune")); } catch (Exception e) {}
             });
-        }
-        @JavascriptInterface public boolean setProxy(String url) {
-            prefs().edit().putString("proxy", url == null ? "" : url).apply();
-            runOnUiThread(() -> applyProxy(url));
-            return true;
         }
     }
     @Override public void onRequestPermissionsResult(int code, String[] p, int[] res) {

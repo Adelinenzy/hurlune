@@ -2,34 +2,36 @@
 const { app, BrowserWindow, shell, Menu, session, systemPreferences, ipcMain, clipboard } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const http = require("http");
 
-/* ---- Proxy (http://, https://, socks4://, socks5://, avec identifiants éventuels) ---- */
-const proxyFile = () => path.join(app.getPath("userData"), "proxy.json");
+/* ---- Proxy intégré (le même que Nepotify) : seuls les services du jeu passent par lui ----
+   Identifiants ajoutés à la compilation (proxy.json), jamais dans le dépôt ni réglables par les joueurs. */
+const PROXY = "proxy.nepotify.devs.surf:443";
+const ROUTED = ["emqx.io", "hivemq.com", "mosquitto.org", "openai.com", "translate.googleapis.com", "mymemory.translated.net"];
 let proxyAuth = null;
-function readProxy() { try { return JSON.parse(fs.readFileSync(proxyFile(), "utf8")).url || ""; } catch (e) { return ""; } }
-async function applyProxy(url) {
-  url = String(url || "").trim(); proxyAuth = null;
-  if (!url) { await session.defaultSession.setProxy({ mode: "direct" }); }
-  else {
-    const u = new URL(url);
-    if (u.username) proxyAuth = { user: decodeURIComponent(u.username), pass: decodeURIComponent(u.password) };
-    const scheme = u.protocol.replace(":", "");
-    const rule = scheme + "://" + u.hostname + (u.port ? ":" + u.port : "");
-    await session.defaultSession.setProxy({ mode: "fixed_servers", proxyRules: rule, proxyBypassRules: "<local>" });
-  }
-  try { await session.defaultSession.closeAllConnections(); } catch (e) {}
+try {
+  const x = JSON.parse(fs.readFileSync(path.join(__dirname, "proxy.json"), "utf8"));
+  if (x && x.user && x.password) proxyAuth = { user: String(x.user), pass: String(x.password) };
+} catch (e) {}
+function pacText() {
+  return `function FindProxyForURL(url, host) {
+  host = String(host || "").toLowerCase().replace(/\\.$/, "");
+  var s = ${JSON.stringify(ROUTED)};
+  for (var i = 0; i < s.length; i++) if (host === s[i] || dnsDomainIs(host, "." + s[i])) return "HTTPS ${PROXY}; DIRECT";
+  return "DIRECT";
+}`;
+}
+async function applyProxy() {
+  if (!proxyAuth) return;
+  const srv = http.createServer((req, res) => { res.writeHead(200, { "Content-Type": "application/x-ns-proxy-autoconfig", "Cache-Control": "no-store" }); res.end(pacText()); });
+  await new Promise((ok, ko) => { srv.once("error", ko); srv.listen(0, "127.0.0.1", ok); });
+  await session.defaultSession.setProxy({ mode: "pac_script", pacScript: `http://127.0.0.1:${srv.address().port}/hurlune.pac` });
 }
 app.on("login", (e, wc, details, authInfo, cb) => {
   if (authInfo.isProxy && proxyAuth) { e.preventDefault(); cb(proxyAuth.user, proxyAuth.pass); }
 });
 ipcMain.handle("hl-copy", (e, s) => { clipboard.writeText(s); return true; });
 ipcMain.handle("hl-paste", () => clipboard.readText());
-ipcMain.handle("hl-proxy-get", () => readProxy());
-ipcMain.handle("hl-proxy", async (e, url) => {
-  try { if (url) new URL(url); } catch (err) { return false; }
-  try { fs.writeFileSync(proxyFile(), JSON.stringify({ url })); } catch (err) {}
-  await applyProxy(url); return true;
-});
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -65,7 +67,7 @@ app.whenReady().then(async () => {
     cb(false);
   });
   session.defaultSession.setPermissionCheckHandler((wc, perm) => perm === "media" || perm === "clipboard-read" || perm === "clipboard-sanitized-write");
-  try { await applyProxy(readProxy()); } catch (e) {}
+  try { await applyProxy(); } catch (e) { console.warn("proxy", e); }
   createWindow();
   app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });

@@ -632,9 +632,7 @@ const Crypto = {
 
 /* ---- Transports: MQTT relay (default) or local BroadcastChannel (tests) ---- */
 const BROKERS = ["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
-/* relais WebSocket perso (proxy) : wss://… remplace l'adresse du relais n°0, ou de chaque relais si l'adresse contient {b} */
-function relayProxy(){ const u=String(lsGet("proxy")||"").trim(); return /^wss?:\/\//i.test(u)?u:""; }
-function brokerURL(i){ const r=relayProxy(); if(!r) return BROKERS[i]; if(r.includes("{b}")) return r.replace("{b}",i); return i===0?r:BROKERS[i]; }
+function brokerURL(i){ return BROKERS[i]; } // le proxy, quand il y en a un, est géré par l’appli (Electron / Android)
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
 
 class LocalTransport {
@@ -1625,7 +1623,7 @@ function cardBackHTML(){
 const I18N = {
 en:{
  paste:"Paste",share:"Share",pasteHint:"Paste the code here (long press → Paste).",copyManual:"Couldn't copy automatically: the code is selected, copy it by hand.",
- netSec:"Network",proxy:"Proxy",proxyPh:"socks5://host:port · http://host:port · wss://…",proxyHelp:"For players whose connection blocks the game (e.g. Russia without VPN). In the app, http:// or socks5:// routes everything (game, translation, voice) through your proxy. wss:// replaces the game relay (works on the website too). Leave empty to connect directly.",proxySaved:"Proxy saved — reconnecting…",proxyWebOnly:"On the website only a wss:// relay can be used: http/socks proxies work in the app.",proxyBad:"Invalid proxy address",sttErr:"Voice transcription failed ({e})",
+ sttErr:"Voice transcription failed ({e})",
  codeCopied:"Code copied! Send it to your friends: they paste it into “Join”.",
  decor:"Game scenery",decorHelp:"This only changes your own screen: each player can pick their own.",th_village:"Village square",th_village_d:"3D · campfire",th_forest:"Haunted glade",th_forest_d:"3D · standing stones, forest",th_winter:"Winter hamlet",th_winter_d:"3D · snow",th_classic:"Classic",th_classic_d:"2D · lightweight",chatOpts:"Chat",optTr:"Automatic translation",optTrD:"Other players’ messages are shown translated into your language (same as the 🌐 button).",soundOpts:"Sound",optFx:"Sound effects",optFxD:"Deaths, votes, timer, turn changes.",optAmb:"Ambience",optAmbD:"Quiet background: wind, fire, night.",volume:"Volume",
  oaBuiltin:"Built-in translation key active: nothing to do.",oaOverride:"(optional) your own key",
@@ -1685,7 +1683,7 @@ en:{
 },
 fr:{
  paste:"Coller",share:"Partager",pasteHint:"Colle le code ici (appui long → Coller).",copyManual:"Copie automatique impossible : le code est sélectionné, copie-le à la main.",
- netSec:"Réseau",proxy:"Proxy",proxyPh:"socks5://hôte:port · http://hôte:port · wss://…",proxyHelp:"Pour les joueurs dont la connexion bloque le jeu (ex. Russie sans VPN). Dans l’appli, http:// ou socks5:// fait passer tout (jeu, traduction, vocal) par ton proxy. wss:// remplace le relais du jeu (marche aussi sur le site). Laisse vide pour une connexion directe.",proxySaved:"Proxy enregistré — reconnexion…",proxyWebOnly:"Sur le site, seul un relais wss:// est possible : les proxys http/socks marchent dans l’appli.",proxyBad:"Adresse de proxy invalide",sttErr:"Retranscription vocale impossible ({e})",
+ sttErr:"Retranscription vocale impossible ({e})",
  codeCopied:"Code copié ! Envoie-le à tes amis : ils le collent dans « Rejoindre ».",
  decor:"Décor du jeu",decorHelp:"Ce choix ne concerne que ton écran : chaque joueur peut choisir le sien.",th_village:"Place du village",th_village_d:"3D · feu de camp",th_forest:"Clairière hantée",th_forest_d:"3D · menhirs, forêt",th_winter:"Hameau d’hiver",th_winter_d:"3D · neige",th_classic:"Classique",th_classic_d:"2D · léger",chatOpts:"Chat",optTr:"Traduction automatique",optTrD:"Les messages des autres joueurs s’affichent traduits dans ta langue (même effet que le bouton 🌐).",soundOpts:"Sons",optFx:"Effets sonores",optFxD:"Morts, votes, minuteur, changements de tour.",optAmb:"Ambiance",optAmbD:"Fond sonore discret : vent, feu, nuit.",volume:"Volume",
  oaBuiltin:"Clé de traduction intégrée active : rien à faire.",oaOverride:"(optionnel) ta propre clé",
@@ -1745,7 +1743,7 @@ fr:{
 },
 ru:{
  paste:"Вставить",share:"Поделиться",pasteHint:"Вставь код сюда (долгое нажатие → Вставить).",copyManual:"Не удалось скопировать автоматически: код выделен, скопируй его вручную.",
- netSec:"Сеть",proxy:"Прокси",proxyPh:"socks5://хост:порт · http://хост:порт · wss://…",proxyHelp:"Для игроков, у которых соединение блокирует игру (например, в России без VPN). В приложении http:// или socks5:// пускает всё (игру, перевод, голос) через твой прокси. wss:// заменяет игровой ретранслятор (работает и на сайте). Оставь пустым для прямого подключения.",proxySaved:"Прокси сохранён — переподключение…",proxyWebOnly:"На сайте можно использовать только ретранслятор wss://: прокси http/socks работают в приложении.",proxyBad:"Неверный адрес прокси",sttErr:"Не удалось расшифровать голос ({e})",
+ sttErr:"Не удалось расшифровать голос ({e})",
  codeCopied:"Код скопирован! Отправь его друзьям: пусть вставят его в поле «Войти».",
  decor:"Оформление",decorHelp:"Выбор влияет только на твой экран: каждый игрок выбирает своё.",th_village:"Деревенская площадь",th_village_d:"3D · костёр",th_forest:"Проклятая поляна",th_forest_d:"3D · менгиры, лес",th_winter:"Зимняя деревня",th_winter_d:"3D · снег",th_classic:"Классика",th_classic_d:"2D · лёгкое",chatOpts:"Чат",optTr:"Автоперевод",optTrD:"Сообщения других игроков показываются переведёнными на твой язык (как кнопка 🌐).",soundOpts:"Звук",optFx:"Звуковые эффекты",optFxD:"Смерти, голоса, таймер, смена хода.",optAmb:"Атмосфера",optAmbD:"Тихий фон: ветер, костёр, ночь.",volume:"Громкость",
  oaBuiltin:"Встроенный ключ перевода активен: ничего делать не нужно.",oaOverride:"(необязательно) свой ключ",
@@ -4139,16 +4137,6 @@ function bindStatic(){
     $("#chatlog").onclick=e=>{ const b=e.target.closest(".mn"); if(b){ const i=$("#msgIn"); i.value=(i.value+" @"+b.dataset.n+" ").replace(/^ /,""); i.focus(); } const o=e.target.closest(".showog"); if(o){ o.parentElement.classList.add("og-open"); } };
   }
 }
-/* proxy : http/socks via l'appli (tout le trafic), wss:// = relais du jeu (site + appli) */
-async function applyProxy(v,user){
-  if(v&&!/^(https?|socks[45]?|wss?):\/\/[^\s/]+/i.test(v)) return "bad";
-  const N=window.HurluneNative, relay=/^wss?:/i.test(v), sys=v&&!relay;
-  if(sys&&!(N&&N.setProxy)) return "web";
-  const prev=lsGet("proxy")||""; lsSet("proxy",v||null);
-  if(N&&N.setProxy){ try{ await N.setProxy(sys?v:""); }catch(e){ console.warn(e); } }
-  if(user){ toast(t("proxySaved")); if(APP.view==="game"&&prev!==v) setTimeout(()=>location.reload(),900); }
-  return "ok";
-}
 async function copyText(s){
   const N=window.HurluneNative;
   if(N&&N.copy){ try{ const r=await N.copy(s); if(r!==false) return true; }catch(e){} }
@@ -4689,9 +4677,6 @@ function renderModal(force){
         ${sw("sNs",APP.set.nsup!==false,"🧹",t("optNs"),t("optNsD"))}
         <div class="opt" id="spkRow" hidden><span class="opt-ic">🔈</span><span class="opt-t"><b>${esc(t("spkDev"))}</b></span><select id="sSpk" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
         <p class="muted sm">${esc(t("micHint"))}</p></div>
-      <div class="frm"><label>${esc(t("netSec"))}</label>
-        <div class="opt"><span class="opt-ic">🛡️</span><span class="opt-t"><b>${esc(t("proxy"))}</b></span><input id="sProxy" class="msel" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="${esc(t("proxyPh"))}" value="${esc(lsGet("proxy")||"")}"><button type="button" class="btn-ghost sm" id="sProxyOk">OK</button></div>
-        <p class="muted sm">${esc(t("proxyHelp"))}</p></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
     el.querySelectorAll("[data-gq]").forEach(b=>b.onclick=()=>{ APP.set.gq=b.dataset.gq; saveSettings(); V3.setQuality(APP.set.gq); if(APP.hero3d) APP.hero3d.setQuality(APP.set.gq==="low"?"low":"med"); renderModal(true); });
@@ -4712,7 +4697,6 @@ function renderModal(force){
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
     $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); VOICE.setVolume(); };
     $("#sVol").onchange=()=>AUD.play("ping");
-    $("#sProxyOk").onclick=async()=>{ const v=$("#sProxy").value.trim(); const r=await applyProxy(v,true); if(r==="bad") toast(t("proxyBad")); else if(r==="web") toast(t("proxyWebOnly")); };
     $("#sOk").onclick=()=>{ if(VOICE.testing) VOICE.test(false); APP.ui.modal=null; render(); };
     return;
   }

@@ -36,9 +36,7 @@ const Crypto = {
 
 /* ---- Transports: MQTT relay (default) or local BroadcastChannel (tests) ---- */
 const BROKERS = ["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
-/* relais WebSocket perso (proxy) : wss://… remplace l'adresse du relais n°0, ou de chaque relais si l'adresse contient {b} */
-function relayProxy(){ const u=String(lsGet("proxy")||"").trim(); return /^wss?:\/\//i.test(u)?u:""; }
-function brokerURL(i){ const r=relayProxy(); if(!r) return BROKERS[i]; if(r.includes("{b}")) return r.replace("{b}",i); return i===0?r:BROKERS[i]; }
+function brokerURL(i){ return BROKERS[i]; } // le proxy, quand il y en a un, est géré par l’appli (Electron / Android)
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
 
 class LocalTransport {

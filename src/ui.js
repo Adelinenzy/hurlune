@@ -413,16 +413,6 @@ function bindStatic(){
     $("#chatlog").onclick=e=>{ const b=e.target.closest(".mn"); if(b){ const i=$("#msgIn"); i.value=(i.value+" @"+b.dataset.n+" ").replace(/^ /,""); i.focus(); } const o=e.target.closest(".showog"); if(o){ o.parentElement.classList.add("og-open"); } };
   }
 }
-/* proxy : http/socks via l'appli (tout le trafic), wss:// = relais du jeu (site + appli) */
-async function applyProxy(v,user){
-  if(v&&!/^(https?|socks[45]?|wss?):\/\/[^\s/]+/i.test(v)) return "bad";
-  const N=window.HurluneNative, relay=/^wss?:/i.test(v), sys=v&&!relay;
-  if(sys&&!(N&&N.setProxy)) return "web";
-  const prev=lsGet("proxy")||""; lsSet("proxy",v||null);
-  if(N&&N.setProxy){ try{ await N.setProxy(sys?v:""); }catch(e){ console.warn(e); } }
-  if(user){ toast(t("proxySaved")); if(APP.view==="game"&&prev!==v) setTimeout(()=>location.reload(),900); }
-  return "ok";
-}
 async function copyText(s){
   const N=window.HurluneNative;
   if(N&&N.copy){ try{ const r=await N.copy(s); if(r!==false) return true; }catch(e){} }
@@ -963,9 +953,6 @@ function renderModal(force){
         ${sw("sNs",APP.set.nsup!==false,"🧹",t("optNs"),t("optNsD"))}
         <div class="opt" id="spkRow" hidden><span class="opt-ic">🔈</span><span class="opt-t"><b>${esc(t("spkDev"))}</b></span><select id="sSpk" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
         <p class="muted sm">${esc(t("micHint"))}</p></div>
-      <div class="frm"><label>${esc(t("netSec"))}</label>
-        <div class="opt"><span class="opt-ic">🛡️</span><span class="opt-t"><b>${esc(t("proxy"))}</b></span><input id="sProxy" class="msel" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="${esc(t("proxyPh"))}" value="${esc(lsGet("proxy")||"")}"><button type="button" class="btn-ghost sm" id="sProxyOk">OK</button></div>
-        <p class="muted sm">${esc(t("proxyHelp"))}</p></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
     el.querySelectorAll("[data-gq]").forEach(b=>b.onclick=()=>{ APP.set.gq=b.dataset.gq; saveSettings(); V3.setQuality(APP.set.gq); if(APP.hero3d) APP.hero3d.setQuality(APP.set.gq==="low"?"low":"med"); renderModal(true); });
@@ -986,7 +973,6 @@ function renderModal(force){
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
     $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); VOICE.setVolume(); };
     $("#sVol").onchange=()=>AUD.play("ping");
-    $("#sProxyOk").onclick=async()=>{ const v=$("#sProxy").value.trim(); const r=await applyProxy(v,true); if(r==="bad") toast(t("proxyBad")); else if(r==="web") toast(t("proxyWebOnly")); };
     $("#sOk").onclick=()=>{ if(VOICE.testing) VOICE.test(false); APP.ui.modal=null; render(); };
     return;
   }

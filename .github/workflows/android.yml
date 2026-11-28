@@ -39,6 +39,8 @@ jobs:
         working-directory: android
         env:
           KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          HURLUNE_PROXY_USER: ${{ secrets.HURLUNE_PROXY_USER }}
+          HURLUNE_PROXY_PASS: ${{ secrets.HURLUNE_PROXY_PASS }}
           VERSION_CODE: ${{ github.run_number }}
         run: |
           gradle --no-daemon assembleRelease
