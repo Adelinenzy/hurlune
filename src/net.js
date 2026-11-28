@@ -36,6 +36,9 @@ const Crypto = {
 
 /* ---- Transports: MQTT relay (default) or local BroadcastChannel (tests) ---- */
 const BROKERS = ["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
+/* relais WebSocket perso (proxy) : wss://… remplace l'adresse du relais n°0, ou de chaque relais si l'adresse contient {b} */
+function relayProxy(){ const u=String(lsGet("proxy")||"").trim(); return /^wss?:\/\//i.test(u)?u:""; }
+function brokerURL(i){ const r=relayProxy(); if(!r) return BROKERS[i]; if(r.includes("{b}")) return r.replace("{b}",i); return i===0?r:BROKERS[i]; }
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
 
 class LocalTransport {
@@ -62,15 +65,15 @@ class MqttTransport {
     const order = pref!=null ? [pref, ...BROKERS.map((_,i)=>i).filter(i=>i!==pref)] : BROKERS.map((_,i)=>i);
     for(const i of order){
       const ok = await new Promise(res=>{
-        const c = mqtt.connect(BROKERS[i],{clientId:"hl_"+rid(12),clean:true,keepalive:30,reconnectPeriod:2500,connectTimeout:7000});
-        const to=setTimeout(()=>{ c.end(true); res(null); },8000);
+        const c = mqtt.connect(brokerURL(i),{clientId:"hl_"+rid(12),clean:true,keepalive:20,reconnectPeriod:2000,connectTimeout:12000,resubscribe:false});
+        const to=setTimeout(()=>{ c.end(true); res(null); },13000);
         c.once("connect",()=>{ clearTimeout(to); res(c); });
         c.once("error",()=>{});
       });
       if(ok){
         this.c=ok; this.idx=i;
         ok.on("message",(t,m)=>{ if(this.h) this.h(t,m.toString()); });
-        ok.on("connect",()=>{ this.statusH("online"); for(const s of this.subs) ok.subscribe(s,{qos:0}); });
+        ok.on("connect",()=>{ this.statusH("online"); for(const s of this.subs) ok.subscribe(s,{qos:1}); });
         ok.on("offline",()=>this.statusH("offline"));
         ok.on("reconnect",()=>this.statusH("reconnecting"));
         return i;
@@ -79,11 +82,13 @@ class MqttTransport {
     }
     throw new Error("relay");
   }
-  sub(t){ this.subs.add(t); this.c.subscribe(t,{qos:0}); }
-  pub(t,p,retain){ this.c.publish(t,p,{qos:0,retain:!!retain}); }
+  sub(t){ this.subs.add(t); this.c.subscribe(t,{qos:1}); }
+  // QoS 1 : le relais accuse réception et renvoie si besoin (sauf la voix, en temps réel)
+  pub(t,p,retain,q){ this.c.publish(t,p,{qos:q==null?1:q,retain:!!retain}); }
   onMessage(h){ this.h=h; }
   onStatus(h){ this.statusH=h; }
 }
+function rtQ(m){ return m&&(m.t==="va"||m.t==="vc"||m.t==="hb"||m.t==="ping")?0:1; }
 const USE_LOCAL = QS.get("local")==="1";
 
 /* ---- Room connection: encrypted pub/sub ---- */
@@ -119,10 +124,10 @@ class Room {
     const k = await Crypto.pairKey(this.me.keys.priv, this.hostPub);
     const inner = await Crypto.seal(k,msg);
     const outer = await Crypto.seal(this.rk,{from:this.me.pid,pub:this.me.keys.pub,box:inner});
-    this.T.pub(this.base+"/h", JSON.stringify(outer));
+    this.T.pub(this.base+"/h", JSON.stringify(outer), false, rtQ(msg));
   }
   // host -> all
   async publishState(st){ this.T.pub(this.base+"/s", JSON.stringify(await Crypto.seal(this.rk,st)), true); }
-  async broadcast(m){ this.T.pub(this.base+"/b", JSON.stringify(await Crypto.seal(this.rk,m))); }
-  async sendTo(pid,pub,m){ const k=await Crypto.pairKey(this.hostKeys.priv,pub); this.T.pub(this.base+"/p/"+pid, JSON.stringify(await Crypto.seal(k,m))); }
+  async broadcast(m){ this.T.pub(this.base+"/b", JSON.stringify(await Crypto.seal(this.rk,m)), false, rtQ(m)); }
+  async sendTo(pid,pub,m){ const k=await Crypto.pairKey(this.hostKeys.priv,pub); this.T.pub(this.base+"/p/"+pid, JSON.stringify(await Crypto.seal(k,m)), false, rtQ(m)); }
 }

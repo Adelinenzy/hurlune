@@ -9,6 +9,13 @@ const ANON = ["Ombre","Croc","Griffe","Brume","Cendre","Nuit","Hurle","Givre"];
 const norm = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ё/g,"е");
 const NIGHT_ORDER = ["cupid","heir","seer","guard","rat","pyro","wolves","witch","white"];
 
+function bgEvery(ms,fn){
+  try{
+    const w=new Worker(URL.createObjectURL(new Blob(["setInterval(()=>postMessage(0),"+ms+")"],{type:"text/javascript"})));
+    let h=null; w.onmessage=()=>fn(); w.onerror=()=>{ w.terminate(); if(!h) h=setInterval(fn,ms); };
+    return {stop:()=>{ w.terminate(); if(h) clearInterval(h); }};
+  }catch(e){ const h=setInterval(fn,ms); return {stop:()=>clearInterval(h)}; }
+}
 class Host {
   constructor(cfg){
     Object.assign(this,{players:{},order:[],msgs:[],status:"lobby",ph:{k:"lobby",seq:0},acts:{},sec:null,mseq:0,lastViews:{},cands:[],votes:{},mayor:null,winner:null,winners:[],round:1},cfg);
@@ -19,16 +26,16 @@ class Host {
   attach(room){
     this.room=room;
     room.on("toHost",(from,pub,msg)=>this.onMsg(from,pub,msg));
-    if(this._tick) clearInterval(this._tick);
-    this._tick=setInterval(()=>this.tick(),400);
-    if(this._hb) clearInterval(this._hb);
-    this._hb=setInterval(()=>{ if(this.room) this.room.broadcast({t:"hb",s:this.status}).catch(()=>{}); },5000);
+    if(this._tick) this._tick.stop();
+    this._tick=bgEvery(400,()=>this.tick()); // minuterie dans un worker : continue même si la fenêtre de l'hôte est en arrière-plan
+    if(this._hb) this._hb.stop();
+    this._hb=bgEvery(5000,()=>{ if(this.room) this.room.broadcast({t:"hb",s:this.status}).catch(()=>{}); });
     this.flush(true);
   }
   close(){ // l'hôte quitte : la partie s'arrête pour tout le monde
     this.status="closed"; this.ph={k:"closed",seq:this.ph.seq+1}; this.flush(true);
     if(this.room) this.room.broadcast({t:"closed"}).catch(()=>{});
-    clearInterval(this._tick); clearInterval(this._hb); this._tick=this._hb=null;
+    if(this._tick) this._tick.stop(); if(this._hb) this._hb.stop(); this._tick=this._hb=null;
   }
   get S(){ return this.settings; }
   dur(k){ const sp=(window.TEST_SPEED)||SPEEDS[this.S.speed]||SPEEDS.normal; return (sp[k]||20)*1000; }
@@ -64,8 +71,10 @@ class Host {
     this.save();
   }
   deliver(o,aud){
-    if(aud==="all"){ if(this.room) this.room.broadcast(o); if(this.localSink) this.localSink.priv(o); }
-    else for(const pid of this.order) if(this.visible(pid,aud)) this.sendPriv(pid,o);
+    // compteur par joueur : le client compare avec sa vue et redemande ce qui s'est perdu en route
+    const mc=this.mc||(this.mc={}), k=o.t==="tr"?1:0;
+    if(aud==="all"){ for(const pid of this.order){ const c=mc[pid]||(mc[pid]=[0,0]); c[k]++; } if(this.room) this.room.broadcast(o).catch(e=>console.warn(e)); if(this.localSink) this.localSink.priv(o); }
+    else for(const pid of this.order) if(this.visible(pid,aud)){ const c=mc[pid]||(mc[pid]=[0,0]); c[k]++; this.sendPriv(pid,o); }
   }
   sys(k,p,cls,aud){ this.msg({ch:aud&&aud!=="all"?"ps":"s",k,p:p||{},cls:cls||"info"},aud||"all"); }
   priv(pid,k,p,cls){ this.msg({ch:"ps",k,p:p||{},cls:cls||"priv"},{ids:[pid]}); }
@@ -73,7 +82,12 @@ class Host {
     if(pid===this.hostId){ if(this.localSink) this.localSink.priv(obj); return; }
     const P=this.P(pid); if(P&&P.pub&&this.room) this.room.sendTo(pid,P.pub,obj).catch(e=>console.warn(e));
   }
-  resync(pid){ const msgs=this.msgs.filter(x=>this.visible(pid,x.aud)).slice(-400).map(x=>x.m); this.lastViews[pid]=null; this.sendPriv(pid,{t:"sync",msgs,v:this.view(pid)}); }
+  resync(pid){
+    const now=Date.now(); this._rs=this._rs||{}; if(now-(this._rs[pid]||0)<1500) return; this._rs[pid]=now;
+    const msgs=this.msgs.filter(x=>this.visible(pid,x.aud)).slice(-400).map(x=>x.m); this.lastViews[pid]=null;
+    const v=this.view(pid); this.lastViews[pid]=JSON.stringify(v); (this._vAt||(this._vAt={}))[pid]=now;
+    this.sendPriv(pid,{t:"sync",msgs,v,mc:(this.mc&&this.mc[pid]||[0,0]).slice()});
+  }
   // ---------- public state ----------
   buildState(){
     const now=Date.now();
@@ -101,7 +115,8 @@ class Host {
     }
     for(const pid of this.order){
       const v=this.view(pid); const vj=JSON.stringify(v);
-      if(vj!==this.lastViews[pid]){ this.lastViews[pid]=vj; this.sendPriv(pid,{t:"v",v}); }
+      const va=this._vAt||(this._vAt={});
+      if(vj!==this.lastViews[pid]||now-(va[pid]||0)>5000){ this.lastViews[pid]=vj; va[pid]=now; this.sendPriv(pid,{t:"v",v,mc:(this.mc&&this.mc[pid]||[0,0]).slice()}); } // renvoyée régulièrement : une vue perdue ne bloque plus rien
     }
     this.save();
   }
@@ -198,6 +213,7 @@ class Host {
     const P=this.P(pid); P.seen=Date.now();
     switch(msg.t){
       case "ping": break;
+      case "resync": this.resync(pid); break;
       case "chat": this.chat(pid,msg); break;
       case "vc": this.vcAudio(pid,msg); break;
       case "vreq": this.vcReq(pid,!!msg.on); break;

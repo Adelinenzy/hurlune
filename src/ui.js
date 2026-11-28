@@ -6,7 +6,7 @@ function t(k,p){ let s=(I18N[LANG]&&I18N[LANG][k])||I18N.fr[k]||k; if(p) for(con
 const roleName=r=>t("r_"+r), roleDesc=r=>t("d_"+r);
 
 const APP = {
-  me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), clockOff:0, view:"hub",
+  me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), mc:[0,0], clockOff:0, view:"hub",
   set:Object.assign({sfx:true,amb:true,vol:.7,tr:false,theme:"forest",gq:"med"},lsGet("settings")||{}),
   ui:{panel:"chat",lovers:false,sel:[],modal:null,toast:null,joinErr:null,connecting:false,netStatus:"online",lastPhaseSeq:-1},
   game:null // {room,key,b}
@@ -122,7 +122,7 @@ async function trOne(x,L){
 const BUILTIN_OA="__HURLUNE_OA__";
 function builtinKey(){ try{ if(BUILTIN_OA.startsWith("__")) return ""; return atob(BUILTIN_OA).split("").reverse().join(""); }catch(e){ return ""; } }
 function oaKey(){ return (lsGet("oaKey")||"").trim()||builtinKey(); }
-function oaModel(){ return (lsGet("oaModel")||"gpt-5.6-luna").trim(); }
+function oaModel(){ return (lsGet("oaModel")||"").trim(); }
 async function openaiTranslate(x,langs){
   const key=oaKey(); if(!key||!langs.length) return null;
   const names={fr:"French",ru:"Russian",en:"English"};
@@ -131,9 +131,11 @@ async function openaiTranslate(x,langs){
     {role:"user",content:JSON.stringify({languages:langs.map(l=>l+" ("+names[l]+")"),message:x})}]});
   const call=async m=>{ const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body(m))});
     if(!r.ok){ const e=new Error("openai "+r.status); e.status=r.status; e.txt=await r.text().catch(()=>""); throw e; } const j=await r.json(); return JSON.parse(j.choices[0].message.content); };
-  let out;
-  try{ out=await call(oaModel()); }
-  catch(e){ if(e.status===404||e.status===400){ out=await call("gpt-4.1-nano"); } else { APP.oaErr=e.status||"net"; throw e; } }
+  // modèles rapides sans raisonnement d'abord ; on retient celui qui marche
+  const list=[...new Set([oaModel(),APP._oaM,"gpt-4.1-mini","gpt-4o-mini","gpt-4.1-nano"].filter(Boolean))];
+  let out,err;
+  for(const m of list){ try{ out=await call(m); APP._oaM=m; break; }catch(e){ err=e; if(e.status!==404&&e.status!==400) break; } }
+  if(!out){ APP.oaErr=err&&err.status||"net"; throw err||new Error("openai"); }
   APP.oaErr=null;
   const res={}; for(const l of langs) if(typeof out[l]==="string") res[l]=out[l];
   return res;
@@ -146,7 +148,9 @@ async function openaiTranscribe(pk){
     fd.append("prompt","Conversation in a Werewolf party game (Loup-Garou / Оборотни) between French and Russian friends.");
     const r=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{"Authorization":"Bearer "+key},body:fd});
     if(!r.ok){ const e=new Error("stt "+r.status); e.status=r.status; throw e; } const j=await r.json(); return j.text||""; };
-  for(const m of ["gpt-transcribe","gpt-4o-mini-transcribe","whisper-1"]){ try{ return await call(m); }catch(e){ if(e.status!==400&&e.status!==404) throw e; } }
+  let last=null;
+  for(const m of ["gpt-4o-mini-transcribe","whisper-1","gpt-4o-transcribe"]){ try{ const x=await call(m); APP.sttErr=null; return x; }catch(e){ last=e; if(e.status!==400&&e.status!==404&&e.status!==403) break; } }
+  const k=String(last&&last.status||"net"); if(APP.sttErr!==k){ APP.sttErr=k; toast(t("sttErr",{e:k})); }
   return null;
 }
 
@@ -183,7 +187,7 @@ async function joinGame(g){
   const saved=lsGet("host."+g.room);
   APP.game=g;
   if(saved&&saved.hostId===APP.me.pid){ await startHostSession(new Host(saved)); return; }
-  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP._joinedAt=Date.now(); APP._hostSeen=0; APP.ui.hostLost=false; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); render();
+  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP._joinedAt=Date.now(); APP._hostSeen=0; APP.ui.hostLost=false; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); APP.mc=[0,0]; APP._synced=false; render();
   const room=new Room({room:g.room,key:g.key,broker:g.b,me:{pid:APP.me.pid,keys:APP.me.keys},isHost:false});
   APP.room=room;
   room.on("state",st=>{ const first=!APP.st; onState(st); if(first||!APP._synced) sendHello(); });
@@ -220,9 +224,9 @@ function onState(st){
   addRecent(); render();
 }
 function onPriv(o){
-  if(o.t==="sync"){ APP._synced=true; APP.msgs=o.msgs; APP.msgIds=new Set(o.msgs.map(m=>m.id)); APP.v=o.v||{}; render(); scrollChat(true); return; }
-  if(o.t==="v"){ APP.v=o.v||{}; render(); return; }
-  if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift();
+  if(o.t==="sync"){ APP._synced=true; APP.msgs=o.msgs; APP.msgIds=new Set(o.msgs.map(m=>m.id)); APP.v=o.v||{}; APP.mc=(o.mc||[0,0]).slice(); APP._vmc=null; APP._gapAt=0; render(); scrollChat(true); return; }
+  if(o.t==="v"){ APP.v=o.v||{}; if(o.mc){ APP._vmc=o.mc; gapCheck(); } render(); return; }
+  if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift(); APP.mc[0]++; if(m.x&&!m.tr&&needTr(m)) setTimeout(scheduleChat,2700);
     if(m.a&&m.x&&(m.ch==="v")&&!m.cls){ APP.ui.bubbles=APP.ui.bubbles||{}; APP.ui.bubbles[m.a]={m,until:Date.now()+5500}; if(APP.has3d) V3.speak(m.a); if(APP.view==="game") renderChars(); setTimeout(()=>{ if(APP.view==="game") renderChars(); },5700); }
     if(m.cls==="death"){
       const vic=m.p&&m.p.t&&m.p.t.pid, cause=m.p&&m.p.c, fresh=!(APP._killed&&APP._killed.has(m.id))&&APP.st&&APP.st.status==="running"; // le message de mort arrive avant l’état « aube »
@@ -236,9 +240,16 @@ function onPriv(o){
   if(o.t==="hb"){ APP._hostSeen=Date.now(); if(APP.ui.hostLost){ APP.ui.hostLost=false; render(); } return; }
   if(o.t==="closed"){ APP.ui.joinErr="hostLeft"; render(); return; }
   if(o.t==="va"){ if(o.a!==APP.me.pid){ if(!APP.set.vmute) VOICE.rx(o.a,o.s,o.d); APP.ui.vSpk={id:o.a,until:Date.now()+700}; if(APP.has3d) V3.speak(o.a); } return; }
-  if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
+  if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ if(!m.tr) APP.mc[1]++; m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
   if(o.t==="err"){ if(o.k==="started"||o.k==="full"||o.k==="kicked"||o.k==="notInGame"){ APP.ui.joinErr=o.k; } else toast(t("e_"+o.k)); render(); }
 }
+/* messages perdus en route (réseau instable) : la vue de l'hôte dit combien on aurait dû en recevoir */
+function gapCheck(){
+  if(APP.host||!APP._synced||!APP._vmc) return; const a=APP._vmc, b=APP.mc||[0,0];
+  if(a[0]>b[0]||a[1]>b[1]){ const n=Date.now(); if(!APP._gapAt) APP._gapAt=n; else if(n-APP._gapAt>2500){ APP._gapAt=0; APP._vmc=null; send({t:"resync"}); } }
+  else APP._gapAt=0;
+}
+setInterval(gapCheck,1000);
 function toast(s){ APP.ui.toast=s; renderToast(); clearTimeout(APP._tt); APP._tt=setTimeout(()=>{ APP.ui.toast=null; renderToast(); },3500); }
 function leaveToHub(){
   if(APP.st&&(APP.st.status==="lobby"||APP.st.status==="starting")&&!APP.host) send({t:"leave"});
@@ -344,7 +355,7 @@ function hubSkeleton(){
       <div id="joinBox"></div>
       <button class="btn-primary big" id="createBtn">▶ ${esc(t("createGame"))}</button>
       <div class="or"><span>${esc(t("orJoin"))}</span></div>
-      <div class="row"><input id="joinCode" placeholder="${esc(t("joinPh"))}"><button class="btn-ghost" id="joinBtn">${esc(t("join"))}</button></div>
+      <div class="row"><input id="joinCode" placeholder="${esc(t("joinPh"))}" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn-ghost icon" id="pasteBtn" title="${esc(t("paste"))}">📋</button><button class="btn-ghost" id="joinBtn">${esc(t("join"))}</button></div>
       <div id="recent"></div>
     </div>
   </div>
@@ -380,6 +391,8 @@ function bindStatic(){
     $("#createBtn").onclick=()=>{ if(!APP.me.name){ ps.focus(); toast(t("needPseudo")); return; } openCreate(); };
     $("#navPlay").onclick=$("#createBtn").onclick;
     $("#gearHub").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
+    $("#pasteBtn").onclick=async()=>{ const x=await pasteText(); if(x){ $("#joinCode").value=x.trim(); if(/g=[a-z0-9]+\.[A-Za-z0-9_-]+/.test(x)) $("#joinBtn").click(); } else { $("#joinCode").focus(); toast(t("pasteHint")); } };
+    $("#joinCode").addEventListener("paste",()=>setTimeout(()=>{ const x=$("#joinCode").value; if(/g=[a-z0-9]+\.[A-Za-z0-9_-]{10,}/.test(x)&&APP.me.name) $("#joinBtn").click(); },30));
     $("#joinBtn").onclick=()=>{
       if(!APP.me.name){ ps.focus(); toast(t("needPseudo")); return; }
       const v=$("#joinCode").value.trim(); const m=v.match(/g=([a-z0-9]+)\.([A-Za-z0-9_-]+)(?:\.(\d))?/);
@@ -391,7 +404,7 @@ function bindStatic(){
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
     applyTheme();
-    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("codeCopied")); };
+    $("#inviteBtn").onclick=async()=>{ toast(t(await copyText(gameLink())?"codeCopied":"copyManual")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
     $("#trBtn").onclick=()=>{ APP.set.tr=!APP.set.tr; saveSettings(); renderComposer(); renderChat(); };
@@ -400,7 +413,29 @@ function bindStatic(){
     $("#chatlog").onclick=e=>{ const b=e.target.closest(".mn"); if(b){ const i=$("#msgIn"); i.value=(i.value+" @"+b.dataset.n+" ").replace(/^ /,""); i.focus(); } const o=e.target.closest(".showog"); if(o){ o.parentElement.classList.add("og-open"); } };
   }
 }
-function copyText(s){ try{ navigator.clipboard.writeText(s); }catch(e){ const ta=document.createElement("textarea"); ta.value=s; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(_){} ta.remove(); } }
+/* proxy : http/socks via l'appli (tout le trafic), wss:// = relais du jeu (site + appli) */
+async function applyProxy(v,user){
+  if(v&&!/^(https?|socks[45]?|wss?):\/\/[^\s/]+/i.test(v)) return "bad";
+  const N=window.HurluneNative, relay=/^wss?:/i.test(v), sys=v&&!relay;
+  if(sys&&!(N&&N.setProxy)) return "web";
+  const prev=lsGet("proxy")||""; lsSet("proxy",v||null);
+  if(N&&N.setProxy){ try{ await N.setProxy(sys?v:""); }catch(e){ console.warn(e); } }
+  if(user){ toast(t("proxySaved")); if(APP.view==="game"&&prev!==v) setTimeout(()=>location.reload(),900); }
+  return "ok";
+}
+async function copyText(s){
+  const N=window.HurluneNative;
+  if(N&&N.copy){ try{ const r=await N.copy(s); if(r!==false) return true; }catch(e){} }
+  try{ if(navigator.clipboard&&window.isSecureContext!==false){ await navigator.clipboard.writeText(s); return true; } }catch(e){}
+  const ta=document.createElement("textarea"); ta.value=s; ta.setAttribute("readonly",""); ta.style.cssText="position:fixed;left:0;top:0;opacity:0;pointer-events:none";
+  document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,s.length); let ok=false; try{ ok=document.execCommand("copy"); }catch(_){} ta.remove(); return ok;
+}
+async function pasteText(){
+  const N=window.HurluneNative;
+  if(N&&N.paste){ try{ const r=await N.paste(); if(r) return String(r); }catch(e){} }
+  try{ if(navigator.clipboard&&navigator.clipboard.readText) return await navigator.clipboard.readText(); }catch(e){}
+  return "";
+}
 function setLang(l){ LANG=l; lsSet("lang",l); const app=$("#app"); app.dataset.view=""; render(); renderModal(true); if(APP.room&&APP._synced) send({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG}); }
 
 /* ---------- HUB ---------- */
@@ -526,7 +561,7 @@ function updTimer(){
 setInterval(updTimer,500);
 
 /* ---------- chat vocal ---------- */
-function vcState(){ const v=V(); return v&&v.vc||null; }
+function vcState(){ const v=V(), vc=v&&v.vc||null; if(vc&&vc.cur&&now()>vc.cur.until+1200) return {...vc,cur:null}; return vc; } // tour fini même si la mise à jour de l'hôte tarde
 function voiceSync(){
   const vc=vcState(), me=APP.me.pid; if(!vc||APP.view!=="game"){ if(VOICE.sending) VOICE.stopTx(); return; }
   const mine=vc.cur&&vc.cur.pid===me, queued=(vc.q||[]).includes(me);
@@ -553,7 +588,7 @@ function renderVoice(){
   h+=`</div>`;
   if(q.length) h+=`<div class="vb-q"><span class="muted">${esc(t("vQueue"))}</span>${q.map((id,i)=>`<span class="vb-qi ${id===me?"me":""}">${i+1}. ${esc(pname(id))}</span>`).join("")}</div>`;
   if(el._h!==h){ el._h=h; el.innerHTML=h;
-    const r=$("#vReq"); if(r) r.onclick=async()=>{ VOICE.unlock(); const on=pos<0; if(on){ const ok=await VOICE.openMic(); if(!ok){ toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); return; } } send({t:"vreq",on}); };
+    const r=$("#vReq"); if(r) r.onclick=async()=>{ VOICE.unlock(); const on=pos<0; if(on){ const ok=await VOICE.openMic(); if(!ok){ toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); return; } } send({t:"vreq",on}); APP._vReqAt=Date.now(); setTimeout(()=>{ const v2=vcState(); if(v2&&on&&!(v2.q||[]).includes(APP.me.pid)&&!(v2.cur&&v2.cur.pid===APP.me.pid)) send({t:"vreq",on}); },2500); };
     const d=$("#vDone"); if(d) d.onclick=()=>{ VOICE.stopTx(); send({t:"vend"}); };
   } else if(mine){ const l=el.querySelector(".vb-lvl i"); if(l) l.style.transform=`scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})`; }
 }
@@ -715,7 +750,7 @@ function renderCenter(){
   if(st.status==="lobby"||st.status==="starting"){
     const n=st.players.length;
     h=`<div class="card-c lobby"><div class="lb-top">${logoSVG()}<div><h3>${esc(st.name||"")}</h3><div class="muted">${esc(t("waitingPlayers",{n,m:st.seats}))} · ${esc(t(st.mode==="serious"?"serious":"fun"))} · ${esc(t(st.speed==="fast"?"fast":"normal"))}</div></div></div>
-      <div class="invite"><input readonly value="${esc(gameLink())}" id="invIn"><button class="btn-primary sm" id="copyInv">${esc(t("copy"))}</button></div>
+      <div class="invite"><input readonly value="${esc(gameLink())}" id="invIn"><button class="btn-primary sm" id="copyInv">${esc(t("copy"))}</button>${window.HurluneNative&&window.HurluneNative.share?`<button class="btn-ghost sm" id="shareInv">${esc(t("share"))}</button>`:""}</div>
       <div class="compline ${APP.host?"editable":""}" ${APP.host?`id="compEdit" title="${esc(t("editGame"))}"`:""}>${Object.entries(st.comp||{}).filter(([r,c])=>c).map(([r,c])=>`<span class="cpill c-${ROLES[r].camp}" title="${esc(roleDesc(r))}"><span class="re">${emb(r)}</span>${esc(roleName(r))}${c>1?" ×"+c:""}</span>`).join("")}</div>
       ${st.status==="starting"?`<div class="launch">${esc(t("launchingSoon"))}</div>`:""}
       ${APP.host?`<div class="row c"><button class="btn-primary sm" id="editG">✏️ ${esc(t("editGame"))}</button>${n>=3&&n<st.seats?`<button class="btn-ghost sm" id="forceG">▶ ${esc(t("startNow",{n}))}</button>`:""}</div><p class="muted sm">${esc(t("hostNote"))}</p>`:""}
@@ -750,7 +785,9 @@ function renderCenter(){
   if(el._h===h) return; el._h=h;
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
-  b("#copyInv",()=>{ copyText(gameLink()); toast(t("codeCopied")); });
+  b("#copyInv",async()=>{ const ok=await copyText(gameLink()); if(ok) toast(t("codeCopied")); else { const i=$("#invIn"); if(i){ i.focus(); i.select(); } toast(t("copyManual")); } });
+  b("#shareInv",()=>{ try{ window.HurluneNative.share(gameLink()); }catch(e){} });
+  const ii=$("#invIn"); if(ii) ii.onclick=()=>ii.select();
   b("#editG",()=>openCreate(true)); b("#compEdit",()=>openCreate(true));
   b("#forceG",()=>send({t:"forceStart"}));
   el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));
@@ -808,7 +845,7 @@ function renderChat(){
     }
     let body=esc(m.x||"").replace(/@([^\s@]{1,18})/g,(a,n)=>`<b class="mn" data-n="${esc(n)}">@${n}</b>`);
     let trH="";
-    if(m.x&&needTr(m)){ const r=trGet(m); if(!r&&!(S().oa&&Date.now()+APP.clockOff-(m.t||0)<15000)) trRequest(m);
+    if(m.x&&needTr(m)){ const r=trGet(m); if(!r&&!(S().oa&&Date.now()+APP.clockOff-(m.t||0)<2500)) trRequest(m);
       if(r&&r.x){ body=`<div class="trx">${esc(r.x)}</div><div class="ogx">${body}</div><button class="showog">${esc(t("original"))}</button>`; }
       else if(!r){ trH=`<div class="trwait">…</div>`; } }
     const mention=m.x&&myn&&m.a!==me&&norm(m.x).includes("@"+myn);
@@ -926,6 +963,9 @@ function renderModal(force){
         ${sw("sNs",APP.set.nsup!==false,"🧹",t("optNs"),t("optNsD"))}
         <div class="opt" id="spkRow" hidden><span class="opt-ic">🔈</span><span class="opt-t"><b>${esc(t("spkDev"))}</b></span><select id="sSpk" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
         <p class="muted sm">${esc(t("micHint"))}</p></div>
+      <div class="frm"><label>${esc(t("netSec"))}</label>
+        <div class="opt"><span class="opt-ic">🛡️</span><span class="opt-t"><b>${esc(t("proxy"))}</b></span><input id="sProxy" class="msel" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="${esc(t("proxyPh"))}" value="${esc(lsGet("proxy")||"")}"><button type="button" class="btn-ghost sm" id="sProxyOk">OK</button></div>
+        <p class="muted sm">${esc(t("proxyHelp"))}</p></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
     el.querySelectorAll("[data-gq]").forEach(b=>b.onclick=()=>{ APP.set.gq=b.dataset.gq; saveSettings(); V3.setQuality(APP.set.gq); if(APP.hero3d) APP.hero3d.setQuality(APP.set.gq==="low"?"low":"med"); renderModal(true); });
@@ -946,6 +986,7 @@ function renderModal(force){
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
     $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); VOICE.setVolume(); };
     $("#sVol").onchange=()=>AUD.play("ping");
+    $("#sProxyOk").onclick=async()=>{ const v=$("#sProxy").value.trim(); const r=await applyProxy(v,true); if(r==="bad") toast(t("proxyBad")); else if(r==="web") toast(t("proxyWebOnly")); };
     $("#sOk").onclick=()=>{ if(VOICE.testing) VOICE.test(false); APP.ui.modal=null; render(); };
     return;
   }

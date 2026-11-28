@@ -513,6 +513,9 @@ html{background:var(--bg)}
   .side{width:42%;flex:none;height:100%}
   .card-c{max-height:calc(100dvh - 70px)}
 }
+#pasteBtn{padding:0 .75em;font-size:1.05em;flex:0 0 auto}
+#sProxy{flex:1 1 220px;min-width:0;font-family:ui-monospace,monospace;font-size:.85em}
+#invIn{user-select:all;-webkit-user-select:all}
 
 </style>
 </head>
@@ -629,6 +632,9 @@ const Crypto = {
 
 /* ---- Transports: MQTT relay (default) or local BroadcastChannel (tests) ---- */
 const BROKERS = ["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
+/* relais WebSocket perso (proxy) : wss://… remplace l'adresse du relais n°0, ou de chaque relais si l'adresse contient {b} */
+function relayProxy(){ const u=String(lsGet("proxy")||"").trim(); return /^wss?:\/\//i.test(u)?u:""; }
+function brokerURL(i){ const r=relayProxy(); if(!r) return BROKERS[i]; if(r.includes("{b}")) return r.replace("{b}",i); return i===0?r:BROKERS[i]; }
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
 
 class LocalTransport {
@@ -655,15 +661,15 @@ class MqttTransport {
     const order = pref!=null ? [pref, ...BROKERS.map((_,i)=>i).filter(i=>i!==pref)] : BROKERS.map((_,i)=>i);
     for(const i of order){
       const ok = await new Promise(res=>{
-        const c = mqtt.connect(BROKERS[i],{clientId:"hl_"+rid(12),clean:true,keepalive:30,reconnectPeriod:2500,connectTimeout:7000});
-        const to=setTimeout(()=>{ c.end(true); res(null); },8000);
+        const c = mqtt.connect(brokerURL(i),{clientId:"hl_"+rid(12),clean:true,keepalive:20,reconnectPeriod:2000,connectTimeout:12000,resubscribe:false});
+        const to=setTimeout(()=>{ c.end(true); res(null); },13000);
         c.once("connect",()=>{ clearTimeout(to); res(c); });
         c.once("error",()=>{});
       });
       if(ok){
         this.c=ok; this.idx=i;
         ok.on("message",(t,m)=>{ if(this.h) this.h(t,m.toString()); });
-        ok.on("connect",()=>{ this.statusH("online"); for(const s of this.subs) ok.subscribe(s,{qos:0}); });
+        ok.on("connect",()=>{ this.statusH("online"); for(const s of this.subs) ok.subscribe(s,{qos:1}); });
         ok.on("offline",()=>this.statusH("offline"));
         ok.on("reconnect",()=>this.statusH("reconnecting"));
         return i;
@@ -672,11 +678,13 @@ class MqttTransport {
     }
     throw new Error("relay");
   }
-  sub(t){ this.subs.add(t); this.c.subscribe(t,{qos:0}); }
-  pub(t,p,retain){ this.c.publish(t,p,{qos:0,retain:!!retain}); }
+  sub(t){ this.subs.add(t); this.c.subscribe(t,{qos:1}); }
+  // QoS 1 : le relais accuse réception et renvoie si besoin (sauf la voix, en temps réel)
+  pub(t,p,retain,q){ this.c.publish(t,p,{qos:q==null?1:q,retain:!!retain}); }
   onMessage(h){ this.h=h; }
   onStatus(h){ this.statusH=h; }
 }
+function rtQ(m){ return m&&(m.t==="va"||m.t==="vc"||m.t==="hb"||m.t==="ping")?0:1; }
 const USE_LOCAL = QS.get("local")==="1";
 
 /* ---- Room connection: encrypted pub/sub ---- */
@@ -712,12 +720,12 @@ class Room {
     const k = await Crypto.pairKey(this.me.keys.priv, this.hostPub);
     const inner = await Crypto.seal(k,msg);
     const outer = await Crypto.seal(this.rk,{from:this.me.pid,pub:this.me.keys.pub,box:inner});
-    this.T.pub(this.base+"/h", JSON.stringify(outer));
+    this.T.pub(this.base+"/h", JSON.stringify(outer), false, rtQ(msg));
   }
   // host -> all
   async publishState(st){ this.T.pub(this.base+"/s", JSON.stringify(await Crypto.seal(this.rk,st)), true); }
-  async broadcast(m){ this.T.pub(this.base+"/b", JSON.stringify(await Crypto.seal(this.rk,m))); }
-  async sendTo(pid,pub,m){ const k=await Crypto.pairKey(this.hostKeys.priv,pub); this.T.pub(this.base+"/p/"+pid, JSON.stringify(await Crypto.seal(k,m))); }
+  async broadcast(m){ this.T.pub(this.base+"/b", JSON.stringify(await Crypto.seal(this.rk,m)), false, rtQ(m)); }
+  async sendTo(pid,pub,m){ const k=await Crypto.pairKey(this.hostKeys.priv,pub); this.T.pub(this.base+"/p/"+pid, JSON.stringify(await Crypto.seal(k,m)), false, rtQ(m)); }
 }
 
 /* ===================== HOST ENGINE ===================== */
@@ -731,6 +739,13 @@ const ANON = ["Ombre","Croc","Griffe","Brume","Cendre","Nuit","Hurle","Givre"];
 const norm = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ё/g,"е");
 const NIGHT_ORDER = ["cupid","heir","seer","guard","rat","pyro","wolves","witch","white"];
 
+function bgEvery(ms,fn){
+  try{
+    const w=new Worker(URL.createObjectURL(new Blob(["setInterval(()=>postMessage(0),"+ms+")"],{type:"text/javascript"})));
+    let h=null; w.onmessage=()=>fn(); w.onerror=()=>{ w.terminate(); if(!h) h=setInterval(fn,ms); };
+    return {stop:()=>{ w.terminate(); if(h) clearInterval(h); }};
+  }catch(e){ const h=setInterval(fn,ms); return {stop:()=>clearInterval(h)}; }
+}
 class Host {
   constructor(cfg){
     Object.assign(this,{players:{},order:[],msgs:[],status:"lobby",ph:{k:"lobby",seq:0},acts:{},sec:null,mseq:0,lastViews:{},cands:[],votes:{},mayor:null,winner:null,winners:[],round:1},cfg);
@@ -741,16 +756,16 @@ class Host {
   attach(room){
     this.room=room;
     room.on("toHost",(from,pub,msg)=>this.onMsg(from,pub,msg));
-    if(this._tick) clearInterval(this._tick);
-    this._tick=setInterval(()=>this.tick(),400);
-    if(this._hb) clearInterval(this._hb);
-    this._hb=setInterval(()=>{ if(this.room) this.room.broadcast({t:"hb",s:this.status}).catch(()=>{}); },5000);
+    if(this._tick) this._tick.stop();
+    this._tick=bgEvery(400,()=>this.tick()); // minuterie dans un worker : continue même si la fenêtre de l'hôte est en arrière-plan
+    if(this._hb) this._hb.stop();
+    this._hb=bgEvery(5000,()=>{ if(this.room) this.room.broadcast({t:"hb",s:this.status}).catch(()=>{}); });
     this.flush(true);
   }
   close(){ // l'hôte quitte : la partie s'arrête pour tout le monde
     this.status="closed"; this.ph={k:"closed",seq:this.ph.seq+1}; this.flush(true);
     if(this.room) this.room.broadcast({t:"closed"}).catch(()=>{});
-    clearInterval(this._tick); clearInterval(this._hb); this._tick=this._hb=null;
+    if(this._tick) this._tick.stop(); if(this._hb) this._hb.stop(); this._tick=this._hb=null;
   }
   get S(){ return this.settings; }
   dur(k){ const sp=(window.TEST_SPEED)||SPEEDS[this.S.speed]||SPEEDS.normal; return (sp[k]||20)*1000; }
@@ -786,8 +801,10 @@ class Host {
     this.save();
   }
   deliver(o,aud){
-    if(aud==="all"){ if(this.room) this.room.broadcast(o); if(this.localSink) this.localSink.priv(o); }
-    else for(const pid of this.order) if(this.visible(pid,aud)) this.sendPriv(pid,o);
+    // compteur par joueur : le client compare avec sa vue et redemande ce qui s'est perdu en route
+    const mc=this.mc||(this.mc={}), k=o.t==="tr"?1:0;
+    if(aud==="all"){ for(const pid of this.order){ const c=mc[pid]||(mc[pid]=[0,0]); c[k]++; } if(this.room) this.room.broadcast(o).catch(e=>console.warn(e)); if(this.localSink) this.localSink.priv(o); }
+    else for(const pid of this.order) if(this.visible(pid,aud)){ const c=mc[pid]||(mc[pid]=[0,0]); c[k]++; this.sendPriv(pid,o); }
   }
   sys(k,p,cls,aud){ this.msg({ch:aud&&aud!=="all"?"ps":"s",k,p:p||{},cls:cls||"info"},aud||"all"); }
   priv(pid,k,p,cls){ this.msg({ch:"ps",k,p:p||{},cls:cls||"priv"},{ids:[pid]}); }
@@ -795,7 +812,12 @@ class Host {
     if(pid===this.hostId){ if(this.localSink) this.localSink.priv(obj); return; }
     const P=this.P(pid); if(P&&P.pub&&this.room) this.room.sendTo(pid,P.pub,obj).catch(e=>console.warn(e));
   }
-  resync(pid){ const msgs=this.msgs.filter(x=>this.visible(pid,x.aud)).slice(-400).map(x=>x.m); this.lastViews[pid]=null; this.sendPriv(pid,{t:"sync",msgs,v:this.view(pid)}); }
+  resync(pid){
+    const now=Date.now(); this._rs=this._rs||{}; if(now-(this._rs[pid]||0)<1500) return; this._rs[pid]=now;
+    const msgs=this.msgs.filter(x=>this.visible(pid,x.aud)).slice(-400).map(x=>x.m); this.lastViews[pid]=null;
+    const v=this.view(pid); this.lastViews[pid]=JSON.stringify(v); (this._vAt||(this._vAt={}))[pid]=now;
+    this.sendPriv(pid,{t:"sync",msgs,v,mc:(this.mc&&this.mc[pid]||[0,0]).slice()});
+  }
   // ---------- public state ----------
   buildState(){
     const now=Date.now();
@@ -823,7 +845,8 @@ class Host {
     }
     for(const pid of this.order){
       const v=this.view(pid); const vj=JSON.stringify(v);
-      if(vj!==this.lastViews[pid]){ this.lastViews[pid]=vj; this.sendPriv(pid,{t:"v",v}); }
+      const va=this._vAt||(this._vAt={});
+      if(vj!==this.lastViews[pid]||now-(va[pid]||0)>5000){ this.lastViews[pid]=vj; va[pid]=now; this.sendPriv(pid,{t:"v",v,mc:(this.mc&&this.mc[pid]||[0,0]).slice()}); } // renvoyée régulièrement : une vue perdue ne bloque plus rien
     }
     this.save();
   }
@@ -920,6 +943,7 @@ class Host {
     const P=this.P(pid); P.seen=Date.now();
     switch(msg.t){
       case "ping": break;
+      case "resync": this.resync(pid); break;
       case "chat": this.chat(pid,msg); break;
       case "vc": this.vcAudio(pid,msg); break;
       case "vreq": this.vcReq(pid,!!msg.on); break;
@@ -1600,6 +1624,8 @@ function cardBackHTML(){
 /* ===================== I18N ===================== */
 const I18N = {
 en:{
+ paste:"Paste",share:"Share",pasteHint:"Paste the code here (long press → Paste).",copyManual:"Couldn't copy automatically: the code is selected, copy it by hand.",
+ netSec:"Network",proxy:"Proxy",proxyPh:"socks5://host:port · http://host:port · wss://…",proxyHelp:"For players whose connection blocks the game (e.g. Russia without VPN). In the app, http:// or socks5:// routes everything (game, translation, voice) through your proxy. wss:// replaces the game relay (works on the website too). Leave empty to connect directly.",proxySaved:"Proxy saved — reconnecting…",proxyWebOnly:"On the website only a wss:// relay can be used: http/socks proxies work in the app.",proxyBad:"Invalid proxy address",sttErr:"Voice transcription failed ({e})",
  codeCopied:"Code copied! Send it to your friends: they paste it into “Join”.",
  decor:"Game scenery",decorHelp:"This only changes your own screen: each player can pick their own.",th_village:"Village square",th_village_d:"3D · campfire",th_forest:"Haunted glade",th_forest_d:"3D · standing stones, forest",th_winter:"Winter hamlet",th_winter_d:"3D · snow",th_classic:"Classic",th_classic_d:"2D · lightweight",chatOpts:"Chat",optTr:"Automatic translation",optTrD:"Other players’ messages are shown translated into your language (same as the 🌐 button).",soundOpts:"Sound",optFx:"Sound effects",optFxD:"Deaths, votes, timer, turn changes.",optAmb:"Ambience",optAmbD:"Quiet background: wind, fire, night.",volume:"Volume",
  oaBuiltin:"Built-in translation key active: nothing to do.",oaOverride:"(optional) your own key",
@@ -1658,6 +1684,8 @@ en:{
  d_heir:"On the first night, picks a player whose role he’ll inherit when they die.",d_plunderer:"Takes the role of the first player to die.",d_pyromancer:"Each night, douses a player in Greek fire or blows up every barrel."
 },
 fr:{
+ paste:"Coller",share:"Partager",pasteHint:"Colle le code ici (appui long → Coller).",copyManual:"Copie automatique impossible : le code est sélectionné, copie-le à la main.",
+ netSec:"Réseau",proxy:"Proxy",proxyPh:"socks5://hôte:port · http://hôte:port · wss://…",proxyHelp:"Pour les joueurs dont la connexion bloque le jeu (ex. Russie sans VPN). Dans l’appli, http:// ou socks5:// fait passer tout (jeu, traduction, vocal) par ton proxy. wss:// remplace le relais du jeu (marche aussi sur le site). Laisse vide pour une connexion directe.",proxySaved:"Proxy enregistré — reconnexion…",proxyWebOnly:"Sur le site, seul un relais wss:// est possible : les proxys http/socks marchent dans l’appli.",proxyBad:"Adresse de proxy invalide",sttErr:"Retranscription vocale impossible ({e})",
  codeCopied:"Code copié ! Envoie-le à tes amis : ils le collent dans « Rejoindre ».",
  decor:"Décor du jeu",decorHelp:"Ce choix ne concerne que ton écran : chaque joueur peut choisir le sien.",th_village:"Place du village",th_village_d:"3D · feu de camp",th_forest:"Clairière hantée",th_forest_d:"3D · menhirs, forêt",th_winter:"Hameau d’hiver",th_winter_d:"3D · neige",th_classic:"Classique",th_classic_d:"2D · léger",chatOpts:"Chat",optTr:"Traduction automatique",optTrD:"Les messages des autres joueurs s’affichent traduits dans ta langue (même effet que le bouton 🌐).",soundOpts:"Sons",optFx:"Effets sonores",optFxD:"Morts, votes, minuteur, changements de tour.",optAmb:"Ambiance",optAmbD:"Fond sonore discret : vent, feu, nuit.",volume:"Volume",
  oaBuiltin:"Clé de traduction intégrée active : rien à faire.",oaOverride:"(optionnel) ta propre clé",
@@ -1716,6 +1744,8 @@ fr:{
  d_heir:"La première nuit, choisit un joueur dont il héritera du rôle à sa mort.",d_plunderer:"Récupère le rôle du premier joueur mort de la partie.",d_pyromancer:"Chaque nuit, arrose un joueur de feu grégeois ou déclenche l’explosion de tous les tonneaux."
 },
 ru:{
+ paste:"Вставить",share:"Поделиться",pasteHint:"Вставь код сюда (долгое нажатие → Вставить).",copyManual:"Не удалось скопировать автоматически: код выделен, скопируй его вручную.",
+ netSec:"Сеть",proxy:"Прокси",proxyPh:"socks5://хост:порт · http://хост:порт · wss://…",proxyHelp:"Для игроков, у которых соединение блокирует игру (например, в России без VPN). В приложении http:// или socks5:// пускает всё (игру, перевод, голос) через твой прокси. wss:// заменяет игровой ретранслятор (работает и на сайте). Оставь пустым для прямого подключения.",proxySaved:"Прокси сохранён — переподключение…",proxyWebOnly:"На сайте можно использовать только ретранслятор wss://: прокси http/socks работают в приложении.",proxyBad:"Неверный адрес прокси",sttErr:"Не удалось расшифровать голос ({e})",
  codeCopied:"Код скопирован! Отправь его друзьям: пусть вставят его в поле «Войти».",
  decor:"Оформление",decorHelp:"Выбор влияет только на твой экран: каждый игрок выбирает своё.",th_village:"Деревенская площадь",th_village_d:"3D · костёр",th_forest:"Проклятая поляна",th_forest_d:"3D · менгиры, лес",th_winter:"Зимняя деревня",th_winter_d:"3D · снег",th_classic:"Классика",th_classic_d:"2D · лёгкое",chatOpts:"Чат",optTr:"Автоперевод",optTrD:"Сообщения других игроков показываются переведёнными на твой язык (как кнопка 🌐).",soundOpts:"Звук",optFx:"Звуковые эффекты",optFxD:"Смерти, голоса, таймер, смена хода.",optAmb:"Атмосфера",optAmbD:"Тихий фон: ветер, костёр, ночь.",volume:"Громкость",
  oaBuiltin:"Встроенный ключ перевода активен: ничего делать не нужно.",oaOverride:"(необязательно) свой ключ",
@@ -3702,7 +3732,7 @@ function t(k,p){ let s=(I18N[LANG]&&I18N[LANG][k])||I18N.fr[k]||k; if(p) for(con
 const roleName=r=>t("r_"+r), roleDesc=r=>t("d_"+r);
 
 const APP = {
-  me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), clockOff:0, view:"hub",
+  me:null, room:null, host:null, st:null, v:{}, msgs:[], msgIds:new Set(), mc:[0,0], clockOff:0, view:"hub",
   set:Object.assign({sfx:true,amb:true,vol:.7,tr:false,theme:"forest",gq:"med"},lsGet("settings")||{}),
   ui:{panel:"chat",lovers:false,sel:[],modal:null,toast:null,joinErr:null,connecting:false,netStatus:"online",lastPhaseSeq:-1},
   game:null // {room,key,b}
@@ -3818,7 +3848,7 @@ async function trOne(x,L){
 const BUILTIN_OA="__HURLUNE_OA__";
 function builtinKey(){ try{ if(BUILTIN_OA.startsWith("__")) return ""; return atob(BUILTIN_OA).split("").reverse().join(""); }catch(e){ return ""; } }
 function oaKey(){ return (lsGet("oaKey")||"").trim()||builtinKey(); }
-function oaModel(){ return (lsGet("oaModel")||"gpt-5.6-luna").trim(); }
+function oaModel(){ return (lsGet("oaModel")||"").trim(); }
 async function openaiTranslate(x,langs){
   const key=oaKey(); if(!key||!langs.length) return null;
   const names={fr:"French",ru:"Russian",en:"English"};
@@ -3827,9 +3857,11 @@ async function openaiTranslate(x,langs){
     {role:"user",content:JSON.stringify({languages:langs.map(l=>l+" ("+names[l]+")"),message:x})}]});
   const call=async m=>{ const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(body(m))});
     if(!r.ok){ const e=new Error("openai "+r.status); e.status=r.status; e.txt=await r.text().catch(()=>""); throw e; } const j=await r.json(); return JSON.parse(j.choices[0].message.content); };
-  let out;
-  try{ out=await call(oaModel()); }
-  catch(e){ if(e.status===404||e.status===400){ out=await call("gpt-4.1-nano"); } else { APP.oaErr=e.status||"net"; throw e; } }
+  // modèles rapides sans raisonnement d'abord ; on retient celui qui marche
+  const list=[...new Set([oaModel(),APP._oaM,"gpt-4.1-mini","gpt-4o-mini","gpt-4.1-nano"].filter(Boolean))];
+  let out,err;
+  for(const m of list){ try{ out=await call(m); APP._oaM=m; break; }catch(e){ err=e; if(e.status!==404&&e.status!==400) break; } }
+  if(!out){ APP.oaErr=err&&err.status||"net"; throw err||new Error("openai"); }
   APP.oaErr=null;
   const res={}; for(const l of langs) if(typeof out[l]==="string") res[l]=out[l];
   return res;
@@ -3842,7 +3874,9 @@ async function openaiTranscribe(pk){
     fd.append("prompt","Conversation in a Werewolf party game (Loup-Garou / Оборотни) between French and Russian friends.");
     const r=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{"Authorization":"Bearer "+key},body:fd});
     if(!r.ok){ const e=new Error("stt "+r.status); e.status=r.status; throw e; } const j=await r.json(); return j.text||""; };
-  for(const m of ["gpt-transcribe","gpt-4o-mini-transcribe","whisper-1"]){ try{ return await call(m); }catch(e){ if(e.status!==400&&e.status!==404) throw e; } }
+  let last=null;
+  for(const m of ["gpt-4o-mini-transcribe","whisper-1","gpt-4o-transcribe"]){ try{ const x=await call(m); APP.sttErr=null; return x; }catch(e){ last=e; if(e.status!==400&&e.status!==404&&e.status!==403) break; } }
+  const k=String(last&&last.status||"net"); if(APP.sttErr!==k){ APP.sttErr=k; toast(t("sttErr",{e:k})); }
   return null;
 }
 
@@ -3879,7 +3913,7 @@ async function joinGame(g){
   const saved=lsGet("host."+g.room);
   APP.game=g;
   if(saved&&saved.hostId===APP.me.pid){ await startHostSession(new Host(saved)); return; }
-  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP._joinedAt=Date.now(); APP._hostSeen=0; APP.ui.hostLost=false; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); render();
+  APP.view="game"; APP.ui.connecting=true; APP.ui.joinErr=null; APP._joinedAt=Date.now(); APP._hostSeen=0; APP.ui.hostLost=false; APP.st=null; APP.v={}; APP.msgs=[]; APP.msgIds=new Set(); APP.mc=[0,0]; APP._synced=false; render();
   const room=new Room({room:g.room,key:g.key,broker:g.b,me:{pid:APP.me.pid,keys:APP.me.keys},isHost:false});
   APP.room=room;
   room.on("state",st=>{ const first=!APP.st; onState(st); if(first||!APP._synced) sendHello(); });
@@ -3916,9 +3950,9 @@ function onState(st){
   addRecent(); render();
 }
 function onPriv(o){
-  if(o.t==="sync"){ APP._synced=true; APP.msgs=o.msgs; APP.msgIds=new Set(o.msgs.map(m=>m.id)); APP.v=o.v||{}; render(); scrollChat(true); return; }
-  if(o.t==="v"){ APP.v=o.v||{}; render(); return; }
-  if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift();
+  if(o.t==="sync"){ APP._synced=true; APP.msgs=o.msgs; APP.msgIds=new Set(o.msgs.map(m=>m.id)); APP.v=o.v||{}; APP.mc=(o.mc||[0,0]).slice(); APP._vmc=null; APP._gapAt=0; render(); scrollChat(true); return; }
+  if(o.t==="v"){ APP.v=o.v||{}; if(o.mc){ APP._vmc=o.mc; gapCheck(); } render(); return; }
+  if(o.t==="m"){ const m=o.m; if(APP.msgIds.has(m.id)) return; APP.msgIds.add(m.id); APP.msgs.push(m); if(APP.msgs.length>600) APP.msgs.shift(); APP.mc[0]++; if(m.x&&!m.tr&&needTr(m)) setTimeout(scheduleChat,2700);
     if(m.a&&m.x&&(m.ch==="v")&&!m.cls){ APP.ui.bubbles=APP.ui.bubbles||{}; APP.ui.bubbles[m.a]={m,until:Date.now()+5500}; if(APP.has3d) V3.speak(m.a); if(APP.view==="game") renderChars(); setTimeout(()=>{ if(APP.view==="game") renderChars(); },5700); }
     if(m.cls==="death"){
       const vic=m.p&&m.p.t&&m.p.t.pid, cause=m.p&&m.p.c, fresh=!(APP._killed&&APP._killed.has(m.id))&&APP.st&&APP.st.status==="running"; // le message de mort arrive avant l’état « aube »
@@ -3932,9 +3966,16 @@ function onPriv(o){
   if(o.t==="hb"){ APP._hostSeen=Date.now(); if(APP.ui.hostLost){ APP.ui.hostLost=false; render(); } return; }
   if(o.t==="closed"){ APP.ui.joinErr="hostLeft"; render(); return; }
   if(o.t==="va"){ if(o.a!==APP.me.pid){ if(!APP.set.vmute) VOICE.rx(o.a,o.s,o.d); APP.ui.vSpk={id:o.a,until:Date.now()+700}; if(APP.has3d) V3.speak(o.a); } return; }
-  if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
+  if(o.t==="tr"){ const m=APP.msgs.find(x=>x.id===o.id); if(m){ if(!m.tr) APP.mc[1]++; m.tr=o.tr; scheduleChat(); const b=APP.ui.bubbles&&APP.ui.bubbles[m.a]; if(b&&b.m.id===m.id){ b.m.tr=o.tr; if(APP.view==="game") renderChars(); } } return; }
   if(o.t==="err"){ if(o.k==="started"||o.k==="full"||o.k==="kicked"||o.k==="notInGame"){ APP.ui.joinErr=o.k; } else toast(t("e_"+o.k)); render(); }
 }
+/* messages perdus en route (réseau instable) : la vue de l'hôte dit combien on aurait dû en recevoir */
+function gapCheck(){
+  if(APP.host||!APP._synced||!APP._vmc) return; const a=APP._vmc, b=APP.mc||[0,0];
+  if(a[0]>b[0]||a[1]>b[1]){ const n=Date.now(); if(!APP._gapAt) APP._gapAt=n; else if(n-APP._gapAt>2500){ APP._gapAt=0; APP._vmc=null; send({t:"resync"}); } }
+  else APP._gapAt=0;
+}
+setInterval(gapCheck,1000);
 function toast(s){ APP.ui.toast=s; renderToast(); clearTimeout(APP._tt); APP._tt=setTimeout(()=>{ APP.ui.toast=null; renderToast(); },3500); }
 function leaveToHub(){
   if(APP.st&&(APP.st.status==="lobby"||APP.st.status==="starting")&&!APP.host) send({t:"leave"});
@@ -4040,7 +4081,7 @@ function hubSkeleton(){
       <div id="joinBox"></div>
       <button class="btn-primary big" id="createBtn">▶ ${esc(t("createGame"))}</button>
       <div class="or"><span>${esc(t("orJoin"))}</span></div>
-      <div class="row"><input id="joinCode" placeholder="${esc(t("joinPh"))}"><button class="btn-ghost" id="joinBtn">${esc(t("join"))}</button></div>
+      <div class="row"><input id="joinCode" placeholder="${esc(t("joinPh"))}" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn-ghost icon" id="pasteBtn" title="${esc(t("paste"))}">📋</button><button class="btn-ghost" id="joinBtn">${esc(t("join"))}</button></div>
       <div id="recent"></div>
     </div>
   </div>
@@ -4076,6 +4117,8 @@ function bindStatic(){
     $("#createBtn").onclick=()=>{ if(!APP.me.name){ ps.focus(); toast(t("needPseudo")); return; } openCreate(); };
     $("#navPlay").onclick=$("#createBtn").onclick;
     $("#gearHub").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
+    $("#pasteBtn").onclick=async()=>{ const x=await pasteText(); if(x){ $("#joinCode").value=x.trim(); if(/g=[a-z0-9]+\.[A-Za-z0-9_-]+/.test(x)) $("#joinBtn").click(); } else { $("#joinCode").focus(); toast(t("pasteHint")); } };
+    $("#joinCode").addEventListener("paste",()=>setTimeout(()=>{ const x=$("#joinCode").value; if(/g=[a-z0-9]+\.[A-Za-z0-9_-]{10,}/.test(x)&&APP.me.name) $("#joinBtn").click(); },30));
     $("#joinBtn").onclick=()=>{
       if(!APP.me.name){ ps.focus(); toast(t("needPseudo")); return; }
       const v=$("#joinCode").value.trim(); const m=v.match(/g=([a-z0-9]+)\.([A-Za-z0-9_-]+)(?:\.(\d))?/);
@@ -4087,7 +4130,7 @@ function bindStatic(){
   } else {
     $("#homeBtn").onclick=()=>leaveToHub();
     applyTheme();
-    $("#inviteBtn").onclick=()=>{ copyText(gameLink()); toast(t("codeCopied")); };
+    $("#inviteBtn").onclick=async()=>{ toast(t(await copyText(gameLink())?"codeCopied":"copyManual")); };
     $("#rulesBtn").onclick=()=>{ APP.ui.panel=APP.ui.panel==="chat"?"rules":"chat"; renderGame(); };
     $("#gearBtn").onclick=()=>{ APP.ui.modal={kind:"settings"}; render(); };
     $("#trBtn").onclick=()=>{ APP.set.tr=!APP.set.tr; saveSettings(); renderComposer(); renderChat(); };
@@ -4096,7 +4139,29 @@ function bindStatic(){
     $("#chatlog").onclick=e=>{ const b=e.target.closest(".mn"); if(b){ const i=$("#msgIn"); i.value=(i.value+" @"+b.dataset.n+" ").replace(/^ /,""); i.focus(); } const o=e.target.closest(".showog"); if(o){ o.parentElement.classList.add("og-open"); } };
   }
 }
-function copyText(s){ try{ navigator.clipboard.writeText(s); }catch(e){ const ta=document.createElement("textarea"); ta.value=s; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(_){} ta.remove(); } }
+/* proxy : http/socks via l'appli (tout le trafic), wss:// = relais du jeu (site + appli) */
+async function applyProxy(v,user){
+  if(v&&!/^(https?|socks[45]?|wss?):\/\/[^\s/]+/i.test(v)) return "bad";
+  const N=window.HurluneNative, relay=/^wss?:/i.test(v), sys=v&&!relay;
+  if(sys&&!(N&&N.setProxy)) return "web";
+  const prev=lsGet("proxy")||""; lsSet("proxy",v||null);
+  if(N&&N.setProxy){ try{ await N.setProxy(sys?v:""); }catch(e){ console.warn(e); } }
+  if(user){ toast(t("proxySaved")); if(APP.view==="game"&&prev!==v) setTimeout(()=>location.reload(),900); }
+  return "ok";
+}
+async function copyText(s){
+  const N=window.HurluneNative;
+  if(N&&N.copy){ try{ const r=await N.copy(s); if(r!==false) return true; }catch(e){} }
+  try{ if(navigator.clipboard&&window.isSecureContext!==false){ await navigator.clipboard.writeText(s); return true; } }catch(e){}
+  const ta=document.createElement("textarea"); ta.value=s; ta.setAttribute("readonly",""); ta.style.cssText="position:fixed;left:0;top:0;opacity:0;pointer-events:none";
+  document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,s.length); let ok=false; try{ ok=document.execCommand("copy"); }catch(_){} ta.remove(); return ok;
+}
+async function pasteText(){
+  const N=window.HurluneNative;
+  if(N&&N.paste){ try{ const r=await N.paste(); if(r) return String(r); }catch(e){} }
+  try{ if(navigator.clipboard&&navigator.clipboard.readText) return await navigator.clipboard.readText(); }catch(e){}
+  return "";
+}
 function setLang(l){ LANG=l; lsSet("lang",l); const app=$("#app"); app.dataset.view=""; render(); renderModal(true); if(APP.room&&APP._synced) send({t:"hello",name:APP.me.name,av:APP.me.av,lang:LANG}); }
 
 /* ---------- HUB ---------- */
@@ -4222,7 +4287,7 @@ function updTimer(){
 setInterval(updTimer,500);
 
 /* ---------- chat vocal ---------- */
-function vcState(){ const v=V(); return v&&v.vc||null; }
+function vcState(){ const v=V(), vc=v&&v.vc||null; if(vc&&vc.cur&&now()>vc.cur.until+1200) return {...vc,cur:null}; return vc; } // tour fini même si la mise à jour de l'hôte tarde
 function voiceSync(){
   const vc=vcState(), me=APP.me.pid; if(!vc||APP.view!=="game"){ if(VOICE.sending) VOICE.stopTx(); return; }
   const mine=vc.cur&&vc.cur.pid===me, queued=(vc.q||[]).includes(me);
@@ -4249,7 +4314,7 @@ function renderVoice(){
   h+=`</div>`;
   if(q.length) h+=`<div class="vb-q"><span class="muted">${esc(t("vQueue"))}</span>${q.map((id,i)=>`<span class="vb-qi ${id===me?"me":""}">${i+1}. ${esc(pname(id))}</span>`).join("")}</div>`;
   if(el._h!==h){ el._h=h; el.innerHTML=h;
-    const r=$("#vReq"); if(r) r.onclick=async()=>{ VOICE.unlock(); const on=pos<0; if(on){ const ok=await VOICE.openMic(); if(!ok){ toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); return; } } send({t:"vreq",on}); };
+    const r=$("#vReq"); if(r) r.onclick=async()=>{ VOICE.unlock(); const on=pos<0; if(on){ const ok=await VOICE.openMic(); if(!ok){ toast(t(VOICE.micErr==="denied"?"vMicDenied":"vNoMic")); return; } } send({t:"vreq",on}); APP._vReqAt=Date.now(); setTimeout(()=>{ const v2=vcState(); if(v2&&on&&!(v2.q||[]).includes(APP.me.pid)&&!(v2.cur&&v2.cur.pid===APP.me.pid)) send({t:"vreq",on}); },2500); };
     const d=$("#vDone"); if(d) d.onclick=()=>{ VOICE.stopTx(); send({t:"vend"}); };
   } else if(mine){ const l=el.querySelector(".vb-lvl i"); if(l) l.style.transform=`scaleY(${Math.min(1,VOICE.level()*9).toFixed(2)})`; }
 }
@@ -4411,7 +4476,7 @@ function renderCenter(){
   if(st.status==="lobby"||st.status==="starting"){
     const n=st.players.length;
     h=`<div class="card-c lobby"><div class="lb-top">${logoSVG()}<div><h3>${esc(st.name||"")}</h3><div class="muted">${esc(t("waitingPlayers",{n,m:st.seats}))} · ${esc(t(st.mode==="serious"?"serious":"fun"))} · ${esc(t(st.speed==="fast"?"fast":"normal"))}</div></div></div>
-      <div class="invite"><input readonly value="${esc(gameLink())}" id="invIn"><button class="btn-primary sm" id="copyInv">${esc(t("copy"))}</button></div>
+      <div class="invite"><input readonly value="${esc(gameLink())}" id="invIn"><button class="btn-primary sm" id="copyInv">${esc(t("copy"))}</button>${window.HurluneNative&&window.HurluneNative.share?`<button class="btn-ghost sm" id="shareInv">${esc(t("share"))}</button>`:""}</div>
       <div class="compline ${APP.host?"editable":""}" ${APP.host?`id="compEdit" title="${esc(t("editGame"))}"`:""}>${Object.entries(st.comp||{}).filter(([r,c])=>c).map(([r,c])=>`<span class="cpill c-${ROLES[r].camp}" title="${esc(roleDesc(r))}"><span class="re">${emb(r)}</span>${esc(roleName(r))}${c>1?" ×"+c:""}</span>`).join("")}</div>
       ${st.status==="starting"?`<div class="launch">${esc(t("launchingSoon"))}</div>`:""}
       ${APP.host?`<div class="row c"><button class="btn-primary sm" id="editG">✏️ ${esc(t("editGame"))}</button>${n>=3&&n<st.seats?`<button class="btn-ghost sm" id="forceG">▶ ${esc(t("startNow",{n}))}</button>`:""}</div><p class="muted sm">${esc(t("hostNote"))}</p>`:""}
@@ -4446,7 +4511,9 @@ function renderCenter(){
   if(el._h===h) return; el._h=h;
   el.innerHTML=h;
   const b=(id,fn)=>{ const x=$(id); if(x) x.onclick=fn; };
-  b("#copyInv",()=>{ copyText(gameLink()); toast(t("codeCopied")); });
+  b("#copyInv",async()=>{ const ok=await copyText(gameLink()); if(ok) toast(t("codeCopied")); else { const i=$("#invIn"); if(i){ i.focus(); i.select(); } toast(t("copyManual")); } });
+  b("#shareInv",()=>{ try{ window.HurluneNative.share(gameLink()); }catch(e){} });
+  const ii=$("#invIn"); if(ii) ii.onclick=()=>ii.select();
   b("#editG",()=>openCreate(true)); b("#compEdit",()=>openCreate(true));
   b("#forceG",()=>send({t:"forceStart"}));
   el.querySelectorAll("[data-pk]").forEach(x=>x.onclick=()=>promptPick(pr,x.dataset.pk));
@@ -4504,7 +4571,7 @@ function renderChat(){
     }
     let body=esc(m.x||"").replace(/@([^\s@]{1,18})/g,(a,n)=>`<b class="mn" data-n="${esc(n)}">@${n}</b>`);
     let trH="";
-    if(m.x&&needTr(m)){ const r=trGet(m); if(!r&&!(S().oa&&Date.now()+APP.clockOff-(m.t||0)<15000)) trRequest(m);
+    if(m.x&&needTr(m)){ const r=trGet(m); if(!r&&!(S().oa&&Date.now()+APP.clockOff-(m.t||0)<2500)) trRequest(m);
       if(r&&r.x){ body=`<div class="trx">${esc(r.x)}</div><div class="ogx">${body}</div><button class="showog">${esc(t("original"))}</button>`; }
       else if(!r){ trH=`<div class="trwait">…</div>`; } }
     const mention=m.x&&myn&&m.a!==me&&norm(m.x).includes("@"+myn);
@@ -4622,6 +4689,9 @@ function renderModal(force){
         ${sw("sNs",APP.set.nsup!==false,"🧹",t("optNs"),t("optNsD"))}
         <div class="opt" id="spkRow" hidden><span class="opt-ic">🔈</span><span class="opt-t"><b>${esc(t("spkDev"))}</b></span><select id="sSpk" class="msel"><option value="">${esc(t("micDefault"))}</option></select></div>
         <p class="muted sm">${esc(t("micHint"))}</p></div>
+      <div class="frm"><label>${esc(t("netSec"))}</label>
+        <div class="opt"><span class="opt-ic">🛡️</span><span class="opt-t"><b>${esc(t("proxy"))}</b></span><input id="sProxy" class="msel" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="${esc(t("proxyPh"))}" value="${esc(lsGet("proxy")||"")}"><button type="button" class="btn-ghost sm" id="sProxyOk">OK</button></div>
+        <p class="muted sm">${esc(t("proxyHelp"))}</p></div>
       <div class="mfoot"><button class="btn-primary" id="sOk">OK</button></div></div>`;
     el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ setLang(b.dataset.l); });
     el.querySelectorAll("[data-gq]").forEach(b=>b.onclick=()=>{ APP.set.gq=b.dataset.gq; saveSettings(); V3.setQuality(APP.set.gq); if(APP.hero3d) APP.hero3d.setQuality(APP.set.gq==="low"?"low":"med"); renderModal(true); });
@@ -4642,6 +4712,7 @@ function renderModal(force){
     $("#sAmb").onchange=e=>{ APP.set.amb=e.target.checked; saveSettings(); AUD.setVolume(); };
     $("#sVol").oninput=e=>{ APP.set.vol=+e.target.value; saveSettings(); AUD.setVolume(); VOICE.setVolume(); };
     $("#sVol").onchange=()=>AUD.play("ping");
+    $("#sProxyOk").onclick=async()=>{ const v=$("#sProxy").value.trim(); const r=await applyProxy(v,true); if(r==="bad") toast(t("proxyBad")); else if(r==="web") toast(t("proxyWebOnly")); };
     $("#sOk").onclick=()=>{ if(VOICE.testing) VOICE.test(false); APP.ui.modal=null; render(); };
     return;
   }
